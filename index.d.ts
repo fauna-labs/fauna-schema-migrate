@@ -8,3 +8,19 @@ export type MigrationConfig = {
 export type Migration = MigrationConfig & {
   label: string;
 };
+
+export type MigrationInstance = {
+  ref: faunadb.values.Ref;
+  data: {
+    migrations: string[];
+  };
+};
+
+export type MigrationPageData = {
+  data: MigrationInstance[];
+};
+
+export type MigrationError = {
+  migration?: Migration;
+  message: string;
+};

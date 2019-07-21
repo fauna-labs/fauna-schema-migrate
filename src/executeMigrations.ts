@@ -2,16 +2,16 @@ import { Migration } from "..";
 import { asyncForEach } from "./utils";
 import { Client, query as q } from "faunadb";
 
-type RunMigrationsConfig = {
+type ExecuteMigrationsConfig = {
   client: Client;
   queryBuilder: typeof q;
   migrationId?: string;
 };
 
-const runMigrations = async (
+const executeMigrations = async (
   migrations: Migration[],
   operation: "down" | "up" = "up",
-  { client, queryBuilder, migrationId }: RunMigrationsConfig
+  { client, queryBuilder, migrationId }: ExecuteMigrationsConfig
 ): Promise<Migration[]> =>
   new Promise(async (resolve, reject) => {
     let completedMigrations: Migration[] = [];
@@ -47,4 +47,4 @@ const runMigrations = async (
     }
   });
 
-export default runMigrations;
+export default executeMigrations;
