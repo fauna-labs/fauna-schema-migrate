@@ -1,7 +1,7 @@
 {
   "name": "faunadb-migrate",
   "version": "1.0.0",
-  "description": "",
+  "description": "FaunaDB migrate tool.",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
@@ -10,7 +10,7 @@
   "bin": {
     "faunadb-migrate": "./dist/index.js"
   },
-  "author": "",
+  "author": "Bruno Quaresma",
   "license": "ISC",
   "dependencies": {
     "@types/fs-extra": "^8.0.0",
