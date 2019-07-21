@@ -11,9 +11,12 @@ const setupMigrations = async (client: Client) => {
       return;
     }
 
-    await client.query(q.CreateClass({ name: "Migration" }));
+    await client.query(q.CreateCollection({ name: "Migration" }));
     await client.query(
-      q.CreateIndex({ name: "all_migrations", source: q.Class("Migration") })
+      q.CreateIndex({
+        name: "all_migrations",
+        source: q.Collection("Migration")
+      })
     );
     console.log(chalk.green("Migration setup completed"));
   } catch (error) {
