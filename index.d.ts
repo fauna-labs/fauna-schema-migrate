@@ -23,4 +23,5 @@ export type MigrationPageData = {
 export type MigrationError = {
   migration?: Migration;
   message: string;
+  stack?: any;
 };

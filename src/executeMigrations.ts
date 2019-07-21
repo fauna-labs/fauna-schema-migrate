@@ -26,7 +26,7 @@ const executeMigrations = async (
 
       if (operation === "up") {
         await client.query(
-          q.Create(q.Class("Migration"), {
+          q.Create(q.Collection("Migration"), {
             data: {
               migrations: completedMigrations.map(migration => migration.label)
             }
@@ -35,7 +35,9 @@ const executeMigrations = async (
       }
 
       if (operation === "down" && migrationId) {
-        await client.query(q.Delete(q.Ref(q.Class("Migration"), migrationId)));
+        await client.query(
+          q.Delete(q.Ref(q.Collection("Migration"), migrationId))
+        );
       }
 
       resolve(completedMigrations);
