@@ -1,5 +1,5 @@
 {
-  "name": "fauna-migrate",
+  "name": "faunadb-migrate",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,7 +8,7 @@
     "watch": "tsc -w"
   },
   "bin": {
-    "fauna-migrate": "./dist/index.js"
+    "faunadb-migrate": "./dist/index.js"
   },
   "author": "",
   "license": "ISC",
