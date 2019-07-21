@@ -3,7 +3,7 @@ FaunaDB Migrate is a tool to help [faunadb](https://fauna.com) developers setup 
 
 ## Install
 ```bash
-yarn add github.com/BrunoQuaresma/faunadb-migrate#master
+yarn add https://github.com/BrunoQuaresma/faunadb-migrate/#master
 ```
 
 ## Before start
