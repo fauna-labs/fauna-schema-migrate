@@ -6,9 +6,10 @@ import setupMigrations from "./setupMigrations";
 import createMigration from "./createMigration";
 import migrate from "./migrate";
 import rollback from "./rollback";
-const DATABASE_SECRET = process.env.FAUNA_SECRET || "";
 const MIGRATION_FOLDER = "./migrations";
-const client = new faunadb.Client({ secret: DATABASE_SECRET });
+const client = new faunadb.Client({
+  secret: String(process.env.FAUNADB_SECRET)
+});
 
 program.version("0.0.1").description("Fauna migrate tool");
 
