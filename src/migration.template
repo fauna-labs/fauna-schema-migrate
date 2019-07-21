@@ -1,0 +1,7 @@
+module.exports.up = q => {
+  return q.CreateClass({ name: 'User' })
+}
+
+module.exports.down = q => {
+  return q.Delete(q.Class('User'))
+}
