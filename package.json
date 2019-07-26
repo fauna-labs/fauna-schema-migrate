@@ -2,7 +2,7 @@
   "name": "faunadb-migrate",
   "version": "1.0.0",
   "description": "FaunaDB migrate tool.",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w"
