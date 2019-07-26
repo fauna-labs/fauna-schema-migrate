@@ -1,5 +1,6 @@
 # faunadb-migrate
 FaunaDB Migrate is a tool to help [faunadb](https://fauna.com) developers setup theirs app database.
+**This is not an official tool supported by Fauna**
 
 ## Install
 ```bash
@@ -57,4 +58,9 @@ See all available commands and params.
 ```bash
 faunadb-migrate --help
 ```
+
+## Improvements
+- Tests, tests and tests
+- Add `--force` option to ignore errors
+- Better error handling
 
