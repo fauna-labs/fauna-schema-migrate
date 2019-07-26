@@ -51,3 +51,10 @@ Rollback all the previous changes.
 ```bash
 faunadb-migrate rollback
 ```
+
+### Help
+See all available commands and params.
+```bash
+faunadb-migrate --help
+```
+
