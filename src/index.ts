@@ -11,6 +11,14 @@ const client = new faunadb.Client({
   secret: String(process.env.FAUNADB_SECRET)
 });
 
+export {
+  setupMigrations,
+  createMigration,
+  migrate,
+  rollback,
+  MIGRATION_FOLDER
+};
+
 program.version("0.0.1").description("Fauna migrate tool");
 
 program

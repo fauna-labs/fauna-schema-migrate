@@ -6,8 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var chalk_1 = __importDefault(require("chalk"));
 var fs_1 = __importDefault(require("fs"));
 var fs_extra_1 = __importDefault(require("fs-extra"));
-var createMigration = function (migrationName, migrationFolder) {
-    var templateContent = fs_1.default.readFileSync(__dirname + "/../src/migration.template", "utf8");
+var createMigration = function (migrationName, migrationFolder, templateContent) {
+    if (!templateContent) {
+        templateContent = fs_1.default.readFileSync(__dirname + "/../src/migration.template", "utf8");
+    }
     var migrationFilename = Date.now() + "_" + migrationName + ".js";
     var migrationFilepath = migrationFolder + "/" + migrationFilename;
     fs_extra_1.default.outputFileSync(migrationFilepath, templateContent);

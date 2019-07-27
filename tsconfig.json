@@ -7,6 +7,7 @@
     "strict": true,
     "target": "es5",
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "declaration": true
   }
 }
