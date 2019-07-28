@@ -9,7 +9,7 @@ const createMigration = (
 ) => {
   if (!templateContent) {
     templateContent = fs.readFileSync(
-      `${__dirname}/../src/migration.template`,
+      `${__dirname}/migration.template`,
       "utf8"
     );
   }
