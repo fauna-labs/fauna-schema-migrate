@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { Client, query as q } from "faunadb";
-import { Migration, MigrationInstance } from "..";
+import { Migration, MigrationInstance } from "./types";;
 import executeMigrations from "./executeMigrations";
 import getLocalMigrations from "./getLocalMigrations";
 import getAppliedMigrations from "./getAppliedMigrations";

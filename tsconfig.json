@@ -1,7 +1,13 @@
 {
+  "include": [
+    "src/**/*"
+  ],
   "compilerOptions": {
     "esModuleInterop": true,
-    "lib": ["dom", "esnext"],
+    "lib": [
+      "dom",
+      "esnext"
+    ],
     "module": "commonjs",
     "outDir": "./dist",
     "strict": true,
@@ -9,5 +15,10 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "declaration": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "test",
+    "dist"
+  ]
 }

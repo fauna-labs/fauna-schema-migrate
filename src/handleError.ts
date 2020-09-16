@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { MigrationError } from "..";
+import { MigrationError } from "./types";;
 
 const handleError = (error: MigrationError) => {
   let errorMessage = error.message;

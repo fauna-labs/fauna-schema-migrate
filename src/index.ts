@@ -6,6 +6,7 @@ import setupMigrations from "./setupMigrations";
 import createMigration from "./createMigration";
 import migrate from "./migrate";
 import rollback from "./rollback";
+
 const MIGRATION_FOLDER = "./migrations";
 const client = new faunadb.Client({
   secret: String(process.env.FAUNADB_SECRET)
