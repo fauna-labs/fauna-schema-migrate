@@ -5,21 +5,34 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc && cp ./src/migration.template ./dist/migration.template",
+    "build": "tsc && cpy 'templates/*.js' '../dist/' --cwd=src --parents",
     "watch": "tsc -w"
   },
   "bin": {
     "faunadb-migrate": "./dist/index.js"
   },
-  "author": "Bruno Quaresma",
+  "author": "Brecht De Rooms",
   "license": "ISC",
   "dependencies": {
+    "@babel/parser": "^7.12.7",
+    "@types/deep-equal": "^1.0.1",
     "@types/fs-extra": "^8.0.0",
-    "@types/node": "^12.0.12",
+    "@types/js-beautify": "^1.13.1",
+    "@types/lodash.clonedeep": "^4.5.6",
+    "@types/node": "^12.19.8",
+    "@types/prettier": "^2.1.5",
+    "@types/shelljs": "^0.8.8",
     "chalk": "^2.4.2",
     "commander": "^2.20.0",
-    "faunadb": "^2.7.0",
+    "cpy-cli": "^3.1.1",
+    "deep-equal": "^2.0.5",
+    "esbuild": "^0.8.17",
+    "faunadb": "^4.0.0",
     "fs-extra": "^8.1.0",
+    "js-beautify": "^1.13.0",
+    "lodash.clonedeep": "^4.5.0",
+    "prettier": "^2.2.1",
+    "shelljs": "^0.8.4",
     "ts-node": "^8.3.0",
     "ts-node-dev": "^1.0.0-pre.40"
   },

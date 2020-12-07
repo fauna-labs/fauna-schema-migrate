@@ -2,46 +2,36 @@
 
 import program from "commander";
 import faunadb from "faunadb";
-import setupMigrations from "./setupMigrations";
-import createMigration from "./createMigration";
-import migrate from "./migrate";
-import rollback from "./rollback";
+// import migrate from "./tasks/migrate";
 
-const MIGRATION_FOLDER = "./migrations";
-const client = new faunadb.Client({
-  secret: String(process.env.FAUNADB_SECRET)
+import tasks from './tasks/tasks'
+
+program.version("0.0.1").description("Fauna schema tool")
+
+// Configure all tasks to directly work with commander
+tasks.forEach((task) => {
+  program
+    .command(task.name)
+    .description(task.description)
+    .action(task.action)
+})
+
+// On unknown command, show the user some help
+program.on('command:*', function (operands) {
+  console.error(`error: unknown command '${operands[0]}, todo, prettify this'`)
+  const availableCommands = program.commands.map((cmd: any) => cmd.name())
+  console.log(operands[0], availableCommands)
+  console.log(program.helpInformation());
+  process.exitCode = 1
 });
 
-export {
-  setupMigrations,
-  createMigration,
-  migrate,
-  rollback,
-  MIGRATION_FOLDER
-};
+if (process.argv.length == 2) {
+  console.log('todo helpful interactive mode')
+  console.log(program.helpInformation());
+  process.exitCode = 1
+}
+else {
+  program.parse(process.argv);
+}
 
-program.version("0.0.1").description("Fauna migrate tool");
-
-program
-  .command("setup")
-  .description("Setup migrations")
-  .action(() => setupMigrations(client));
-
-program
-  .command("create <migrationName>")
-  .description("Create a migration file")
-  .action((migrationName: string) =>
-    createMigration(migrationName, MIGRATION_FOLDER)
-  );
-
-program
-  .command("migrate")
-  .description("Run migrations")
-  .action(() => migrate(MIGRATION_FOLDER, client));
-
-program
-  .command("rollback")
-  .description("Run rollback")
-  .action(() => rollback(MIGRATION_FOLDER, client));
-
-program.parse(process.argv);
+// And also configure tasks to work interactively

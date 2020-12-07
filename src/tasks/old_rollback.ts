@@ -1,10 +1,10 @@
 import chalk from "chalk";
 import { query as q, Client } from "faunadb";
-import { MigrationInstance, Migration } from "./types";;
-import executeMigrations from "./executeMigrations";
-import getLocalMigrations from "./getLocalMigrations";
-import getAppliedMigrations from "./getAppliedMigrations";
-import handleError from "./handleError";
+import { MigrationInstance, Migration } from "../types";;
+import executeMigrations from "../migrations/execute";
+import getLocalMigrations from "../migrations/get-local";
+import getAppliedMigrations from "../migrations/get-applied";
+import { handleError } from "../util/errors";
 
 const rollback = async (migrationFolder: string, client: Client) => {
   try {

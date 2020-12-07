@@ -1,5 +1,5 @@
 import fs from "fs";
-import { Migration, MigrationConfig } from "./types";
+import { Migration, MigrationConfig } from "../types";
 
 const getLocalMigrations = (migrationFolder: string): Migration[] => {
   const filenames: string[] = fs.readdirSync(migrationFolder).sort();

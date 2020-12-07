@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { MigrationError } from "./types";;
+import { MigrationError } from "../types";;
 
 const handleError = (error: MigrationError) => {
   let errorMessage = error.message;
@@ -12,4 +12,4 @@ const handleError = (error: MigrationError) => {
   console.log(JSON.stringify(error, null, 2));
 };
 
-export default handleError;
+export { handleError };

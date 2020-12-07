@@ -1,10 +1,10 @@
 import chalk from "chalk";
 import { Client, query as q } from "faunadb";
-import { Migration, MigrationInstance } from "./types";;
-import executeMigrations from "./executeMigrations";
-import getLocalMigrations from "./getLocalMigrations";
-import getAppliedMigrations from "./getAppliedMigrations";
-import handleError from "./handleError";
+import { Migration, MigrationInstance } from "../types";;
+import executeMigrations from "../migrations/execute";
+import getLocalMigrations from "../migrations/get-local";
+import getAppliedMigrations from "../migrations/get-applied";
+import { handleError } from "../util/errors";
 
 const migrate = async (migrationFolder: string, client: Client) => {
   try {
