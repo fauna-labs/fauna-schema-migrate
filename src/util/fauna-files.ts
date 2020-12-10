@@ -1,7 +1,6 @@
 import path from 'path'
 import fs from 'fs'
 import * as esbuild from 'esbuild'
-import * as beautify from 'js-beautify'
 
 import { evalFQLCode } from '../fql/eval'
 import toJsonDeep from '../fql/to-json-deep'
@@ -9,22 +8,21 @@ import toJsonDeep from '../fql/to-json-deep'
 import * as config from '../util/config'
 import { loadApplicationFile, loadResourceFiles } from '../util/files'
 import { isCreateUdfExpression, isCreateRoleExpression } from '../fql/types'
+import { TaggedExpression, LoadedResources } from '../types/expressions'
 
-export const getAllSnippets = async (paths: string[]) => {
-    let snippets = []
+export const getAllSnippets = async (paths: string[]): Promise<LoadedResources> => {
+    let snippets: TaggedExpression[] = []
     for (let i = 0; i < paths.length; i++) {
         const p = paths[i]
         const snippet = await loadFqlSnippet(p)
         const fql = await snippet.toFQL()
-        const formattedFql = beautify.js(fql, { indent_size: 2, keep_array_indentation: true })
         const json = toJsonDeep(snippet)
         snippets.push({
-            raw: snippet.raw,
+            fqlExpr: snippet,
             json: json,
             fql: snippet.toFQL(),
-            formattedFql: formattedFql,
             name: '',
-            jsonTransformed: {}
+            jsonData: {}
         })
     }
     // order them in categories
@@ -40,12 +38,17 @@ export const getAllSnippets = async (paths: string[]) => {
         switch (true) {
             case isCreateUdfExpression(s):
                 // code block
+                console.log(s.json)
                 s.name = s.json.create_function.object.name
+                s.type = 'function'
                 categories.functions.push(s)
                 break;
             case isCreateRoleExpression(s):
-                s.jsonTransformed = transformRoleJson(s.json)
+                console.log(s.json)
+
+                s.jsonData = extractRoleData(s.json)
                 s.name = s.json.create_role.object.name
+                s.type = 'role'
                 categories.roles.push(s)
                 break;
             default:
@@ -102,6 +105,8 @@ const loadFqlResource = async (p: string) => {
     return fql
 }
 
-const transformRoleJson = (json: any) => {
+// Transform it to be closer to how it looks when
+// you query the role from Fauna via Get(Role(..))
+const extractRoleData = (json: any) => {
     return json.create_role.object
 }

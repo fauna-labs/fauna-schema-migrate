@@ -5,6 +5,7 @@ import glob from 'glob'
 import util from 'util'
 const globPromise = util.promisify(glob)
 import * as config from './config'
+import { TaggedExpression } from '../types/expressions'
 
 export const loadLibraryFile = (file: string) => {
     return fs.readFileSync(
@@ -61,4 +62,14 @@ export const generateDefaultDirs = async () => {
 export const arrayToApplicationPath = (filePath: string[]) => {
     const fileFullPath = path.join(process.cwd(), ...filePath)
     return fileFullPath
+}
+
+export const writeNewMigration = async (migrations: TaggedExpression[]) => {
+    const fullPath = path.join(process.cwd(), await config.getMigrationsDir())
+    const time = new Date().toISOString()
+    const newMigrationDir = path.join(fullPath, time)
+    shell.mkdir('-p', newMigrationDir);
+    migrations.forEach((mig) => {
+        fs.writeFileSync(path.join(newMigrationDir, `${mig.type}-${mig.name}-` + time + '.fql'), mig.fqlFormatted)
+    })
 }

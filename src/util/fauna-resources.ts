@@ -2,6 +2,7 @@
 var cloneDeep = require('lodash.clonedeep')
 
 import * as fauna from 'faunadb'
+import { LoadedResources } from '../types/expressions'
 import { getClient } from './fauna-client'
 const q = fauna.query
 const {
@@ -24,7 +25,7 @@ const batchSize = 100
 
 
 
-export const getAllResources = async (): Promise<any> => {
+export const getAllResources = async (): Promise<LoadedResources> => {
     const collections: any[] = []
     const indexes: any[] = []
     const databases: any[] = []
@@ -34,7 +35,7 @@ export const getAllResources = async (): Promise<any> => {
     // const collections = await getAllResourcesOfType(GetCollectionsFQL)
     // const indexes = await getAllResourcesOfType(GetIndexesFQL)
     // const databases = await getAllResourcesOfType(GetDatabasesFQL)
-    const roles = await getAllResourcesOfType(GetRolesFQL, transformRoles)
+    const roles = await getAllResourcesOfType(GetRolesFQL, removeGeneratedRoleData)
     // const functions = await getAllResourcesOfType(GetFunctionsFQL)
     // const accessproviders = await getAllResourcesWithFun(GetAccessProviders)
     return {
@@ -47,7 +48,10 @@ export const getAllResources = async (): Promise<any> => {
     }
 }
 
-const transformRoles = (json: any) => {
+// Transform the roles, you don't need ts or ref.
+// We need it to be close to what we receive locally and therefore
+// remove generated fields.
+const removeGeneratedRoleData = (json: any) => {
     const clone = cloneDeep(json)
     delete clone.ts
     delete clone.ref
@@ -76,7 +80,7 @@ const GetAccessProviders = (cursor: any) =>
 const getAllResourcesOfType = async (fqlFun: FQLFun, transformFun: Fun): Promise<any> => {
     const resources = await getAllResourcesWithFun(fqlFun)
     return resources.map((el: any) => {
-        return { json: el, name: el.name, jsonTransformed: transformFun(el) }
+        return { json: el, name: el.name, jsonData: transformFun(el) }
     })
 }
 
