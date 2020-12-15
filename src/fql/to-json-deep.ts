@@ -1,32 +1,34 @@
 var cloneDeep = require('lodash.clonedeep')
 
-var o = {
-    foo: "bar",
-    arr: [1, 2, 3],
-    subo: {
-        foo2: "bar2"
-    }
-};
-
 const processFun = (object: any, key: string, value: any) => {
-    if (value.raw) {
-        object[key] = value.raw
+    if (value && value.toJSON) {
+        object[key] = value.toJSON()
     }
 }
 
-const traverse = (o: any, func: any) => {
+const traverse = (o: any, func: any): any => {
     for (var i in o) {
         func(o, i, o[i]);
         if (o[i] !== null && typeof (o[i]) == "object") {
             traverse(o[i], func);
         }
     }
-    if (o.raw) {
-        return o.raw
-    }
 }
 
 export default (obj: any) => {
-    let o = cloneDeep(obj)
-    return traverse(o, processFun)
+    try {
+        let o = cloneDeep(obj)
+        traverse(o, processFun)
+        if (o.raw) {
+            return o.raw
+        }
+        else {
+            return o
+        }
+    }
+    catch (err) {
+        console.log(err)
+        console.log(obj)
+        console.log(`failed to parse the JSON of above obj`)
+    }
 }

@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc && cpy 'templates/*.js' '../dist/' --cwd=src --parents",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "prepare": "install-peers"
   },
   "bin": {
     "faunadb-migrate": "./dist/index.js"
@@ -27,7 +28,6 @@
     "cpy-cli": "^3.1.1",
     "deep-equal": "^2.0.5",
     "esbuild": "^0.8.17",
-    "faunadb": "^4.0.0",
     "fs-extra": "^8.1.0",
     "js-beautify": "^1.13.0",
     "lodash.clonedeep": "^4.5.0",
@@ -36,5 +36,10 @@
     "ts-node": "^8.3.0",
     "ts-node-dev": "^1.0.0-pre.40"
   },
-  "devDependencies": {}
+  "peerDependencies": {
+    "faunadb": "file:.yalc/faunadb"
+  },
+  "devDependencies": {
+    "install-peers-cli": "^2.2.0"
+  }
 }

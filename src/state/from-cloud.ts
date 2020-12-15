@@ -2,8 +2,10 @@
 var cloneDeep = require('lodash.clonedeep')
 
 import * as fauna from 'faunadb'
-import { LoadedResources } from '../types/expressions'
-import { getClient } from './fauna-client'
+import toJsonDeep from '../fql/to-json-deep'
+import { LoadedResources, TaggedExpression } from '../types/expressions'
+import { ResourceTypes } from '../types/resource-types'
+import { getClient } from '../util/fauna-client'
 const q = fauna.query
 const {
     Paginate,
@@ -25,38 +27,36 @@ const batchSize = 100
 
 
 
-export const getAllResources = async (): Promise<LoadedResources> => {
-    const collections: any[] = []
-    const indexes: any[] = []
-    const databases: any[] = []
-    const functions: any[] = []
-    const accessproviders: any[] = []
-
-    // const collections = await getAllResourcesOfType(GetCollectionsFQL)
-    // const indexes = await getAllResourcesOfType(GetIndexesFQL)
-    // const databases = await getAllResourcesOfType(GetDatabasesFQL)
-    const roles = await getAllResourcesOfType(GetRolesFQL, removeGeneratedRoleData)
-    // const functions = await getAllResourcesOfType(GetFunctionsFQL)
-    // const accessproviders = await getAllResourcesWithFun(GetAccessProviders)
-    return {
-        collections: collections || [],
-        indexes: indexes || [],
-        databases: databases || [],
-        roles: roles || [],
-        functions: functions || [],
-        accessproviders: accessproviders || []
+export const getAllCloudResources = async (): Promise<LoadedResources> => {
+    // TODO, I should split up types from Cloud from other resources since
+    // they are quite different.
+    const cloudResources = await Promise.all([
+        // TODO, add other types!
+        await getAllResourcesOfType(ResourceTypes.Role, GetRolesFQL, remoteTsAndRef),
+        await getAllResourcesOfType(ResourceTypes.Function, GetFunctionsFQL, remoteTsAndRef)]
+    )
+    const categories: any = {}
+    for (let item in ResourceTypes) {
+        categories[item] = []
     }
+    cloudResources.forEach((snippets) => {
+        snippets.forEach((s: TaggedExpression) => {
+            categories[<string>s.type].push(s)
+        })
+    })
+    return categories
 }
 
 // Transform the roles, you don't need ts or ref.
 // We need it to be close to what we receive locally and therefore
 // remove generated fields.
-const removeGeneratedRoleData = (json: any) => {
+const remoteTsAndRef = (json: any) => {
     const clone = cloneDeep(json)
     delete clone.ts
     delete clone.ref
     return clone
 }
+
 
 const GetCollectionsFQL = (cursor: any) =>
     q.Map(Paginate(Collections(), { size: batchSize, after: cursor }), Lambda('x', Get(Var('x'))))
@@ -77,10 +77,11 @@ const GetAccessProviders = (cursor: any) =>
     q.Map(Paginate(AccessProviders(), { size: batchSize, after: cursor }), Lambda('x', Get(Var('x'))))
 
 
-const getAllResourcesOfType = async (fqlFun: FQLFun, transformFun: Fun): Promise<any> => {
+const getAllResourcesOfType = async (type: ResourceTypes, fqlFun: FQLFun, transformFun: Fun): Promise<any> => {
     const resources = await getAllResourcesWithFun(fqlFun)
     return resources.map((el: any) => {
-        return { json: el, name: el.name, jsonData: transformFun(el) }
+        const json = toJsonDeep(el)
+        return { json: json, name: el.name, jsonData: transformFun(json), type: type }
     })
 }
 

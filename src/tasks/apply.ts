@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { loadResourceFiles } from "../util/files"
+import { retrieveAllResourcePaths } from "../util/files"
 // import { planDatabaseResources } from "../planner"
 const apply = async () => {
     // try {

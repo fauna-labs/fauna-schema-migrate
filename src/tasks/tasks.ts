@@ -1,9 +1,9 @@
 
-import rollback from "./old_rollback";
 import init from "./init";
 import plan from "./plan";
 import apply from "./apply";
 import migrate from "./migrate";
+import validate from "./validate";
 
 export default [
     {
@@ -22,6 +22,12 @@ export default [
         name: "migrate",
         description: "Migrating",
         action: migrate
+        // options? ....
+    },
+    {
+        name: "validate",
+        description: "Validating",
+        action: validate
         // options? ....
     },
     {

@@ -1,40 +1,40 @@
+import { ResourceTypes } from "./resource-types";
+
+export enum StatementType {
+    Create,
+    Update,
+    Delete
+}
+
 export interface TaggedExpression {
     name: string,
-    type?: string,
+    type?: ResourceTypes,
     fqlExpr?: any,
     json?: any,
     jsonData?: any,
     fql?: string,
-    fqlFormatted?: string
+    fqlFormatted?: string,
+    statement?: StatementType
 }
 
-export interface LocalAndRemote {
-    local?: TaggedExpression,
-    remote?: TaggedExpression
+export interface PreviousAndCurrent {
+    current?: TaggedExpression,
+    previous?: TaggedExpression,
+    ref?: any
 }
 
 export interface PlannedDiff {
-    added: LocalAndRemote[],
-    changed: LocalAndRemote[],
-    unchanged: LocalAndRemote[],
-    deleted: LocalAndRemote[]
+    added: PreviousAndCurrent[],
+    changed: PreviousAndCurrent[],
+    unchanged: PreviousAndCurrent[],
+    deleted: PreviousAndCurrent[]
 }
 
 export interface PlannedMigrations {
-    collections: PlannedDiff,
-    indexes: PlannedDiff,
-    databases: PlannedDiff,
-    roles: PlannedDiff,
-    functions: PlannedDiff,
-    accessproviders: PlannedDiff
+    [type: string]: PlannedDiff,
+
 }
 
 export interface LoadedResources {
-    collections: TaggedExpression[],
-    indexes: TaggedExpression[],
-    databases: TaggedExpression[],
-    roles: TaggedExpression[],
-    functions: TaggedExpression[],
-    accessproviders: TaggedExpression[],
-    [_: string]: TaggedExpression[]
+    [type: string]: TaggedExpression[]
 }

@@ -1,64 +1,90 @@
 var equalDeep = require('deep-equal');
 var cloneDeep = require('lodash.clonedeep')
 
-import { TaggedExpression, LoadedResources, PlannedDiff, PlannedMigrations } from "../types/expressions";
-import { getAllSnippets } from "../util/fauna-files";
-import { getAllResources } from "../util/fauna-resources";
+import { TaggedExpression, PreviousAndCurrent, PlannedDiff, PlannedMigrations, LoadedResources, StatementType } from "../types/expressions";
+import { getAllResourceSnippets } from "../state/from-resource-files";
+import { getAllCloudResources } from "../state/from-cloud";
+import { getAllMigrationSnippets } from "../state/from-migration-files";
+import { TriedDeletingMissingCloudResourceError } from "../errors/TriedDeletingMissingCloudResourceError";
+import { TriedChangingMissingCloudResourceError } from "../errors/TriedChangingMissingCloudResourceError";
+import { retrieveReference as retrieveCloudReference } from "../fql/types";
 
 interface NamedValue {
     name: string;
 }
 
-export const planMigrations = async (paths: string[]): Promise<PlannedMigrations> => {
-    const localFQL = await getAllSnippets(paths)
-    const remoteFQL = await getAllResources()
-    localFQL.roles.map((e: any) => { console.log(JSON.stringify(e.jsonData, null, 2)) })
-    remoteFQL.roles.map((e: any) => { console.log(JSON.stringify(e.jsonData, null, 2)) })
+export const planMigrations = async (): Promise<PlannedMigrations> => {
+    // There are three inputs.
+    //  - Resources:  the FQL that describes your Fauna resources.
+    //  - Migrations: migrations derives from the resources. E.g. if you
+    //                change your resources and run migrate, it'll capture the diff.
+    //  - Cloud:      resources currently in your database.
 
-    const matched: any = {}
-    Object.keys(remoteFQL).forEach((type: string) => {
-        const remotes: any = cloneDeep(remoteFQL[type])
-        const locals: any = cloneDeep(localFQL[type])
-        matched[type] = createPairsForType(remotes, locals)
+    const resourcesFQL = await getAllResourceSnippets()
+    const migrationsFQL = await getAllMigrationSnippets()
+    // const cloudResources = await getAllCloudResources()
+    const migrationDiff: any = {}
+
+    // resources determine how your migrations look.
+    // migrations are the source of truth of how your cloud
+    // should look. The latest migration of a certain migration
+    // contains the full state, it's either created from scratch,
+    // updated (with the full new parameters) or deleted.
+    // Cloud resources are retrieved in order to know references of the resources to update.
+    // This means that if you do manual changes in cloud, those will be overwritten!
+
+    Object.keys(migrationsFQL).forEach((type: string) => {
+        const migration: any = cloneDeep(migrationsFQL[type])
+        const resource: any = cloneDeep(resourcesFQL[type])
+        migrationDiff[type] = createPairsForType(migration, resource)
     })
-    return <PlannedMigrations>matched
+
+    // We don't need the reference on second thought, currently not used.
+    // addReferences(migrationDiff, cloudResources)
+    console.log(migrationDiff)
+    return migrationDiff
 }
 
 /* We'll match them by name */
-const createPairsForType = (remotes: TaggedExpression[], locals: TaggedExpression[]) => {
+const createPairsForType = (previouss: TaggedExpression[], currents: TaggedExpression[]) => {
     const pairs: PlannedDiff = {
         added: [],
         changed: [],
         unchanged: [],
         deleted: []
     }
-    while (locals.length > 0) {
-        const local = <TaggedExpression>locals.pop()
-        const remoteIndex = findIndexRemote(local, remotes)
-        if (remoteIndex !== -1) {
-            const res = remotes.splice(remoteIndex, 1)
-            const remote = res[0]
-            if (equalDeep(remote.jsonData, local.jsonData)) {
-                pairs.unchanged.push({ local: local, remote: remote })
+    while (currents.length > 0) {
+        const current = <TaggedExpression>currents.pop()
+        const previousIndex = findIndex(current, previouss)
+        if (previousIndex !== -1) {
+            const res = previouss.splice(previousIndex, 1)
+            const previous = res[0]
+            console.log('equalDeep?', previous.jsonData, current.jsonData)
+            if (equalDeep(previous.jsonData, current.jsonData)) {
+                console.log('TRUE!')
+                pairs.unchanged.push({ current: current, previous: previous })
             }
             else {
-                pairs.changed.push({ local: local, remote: remote })
+                pairs.changed.push({ current: current, previous: previous })
             }
         }
         else {
-            pairs.added.push({ local: local })
+            pairs.added.push({ current: current })
         }
     }
 
-    while (remotes.length > 0) {
-        const remote = remotes.pop()
-        pairs.deleted.push({ remote: remote })
+    while (previouss.length > 0) {
+        const previous = previouss.pop()
+        if (previous?.statement !== StatementType.Delete) {
+            pairs.deleted.push({ previous: previous })
+        }
     }
 
     return pairs
 }
 
-const findIndexRemote = (resource1: NamedValue, resources: NamedValue[]) => {
+
+const findIndex = (resource1: NamedValue, resources: NamedValue[]) => {
     let index = 0
     for (let resource2 of resources) {
         if (resource2.name === resource1.name) {
@@ -69,3 +95,29 @@ const findIndexRemote = (resource1: NamedValue, resources: NamedValue[]) => {
     return -1
 }
 
+
+// const addReferences = (migrationDiff: PlannedMigrations, cloudResources: LoadedResources) => {
+//     Object.keys(migrationDiff).forEach((type) => {
+//         const diffForType = migrationDiff[type]
+//         diffForType.changed.forEach((v: PreviousAndCurrent) => {
+//             const index = findIndex(<NamedValue>v.current, cloudResources[type])
+//             if (index === -1) {
+//                 const res = <TaggedExpression>v.current
+//                 throw new TriedChangingMissingCloudResourceError(res)
+//             }
+//             else {
+//                 v.ref = retrieveCloudReference(cloudResources[type][index])
+//             }
+//         })
+//         diffForType.deleted.forEach((v: PreviousAndCurrent) => {
+//             const index = findIndex(<NamedValue>v.previous, cloudResources[type])
+//             if (index === -1) {
+//                 const res = <TaggedExpression>v.previous
+//                 throw new TriedDeletingMissingCloudResourceError(res)
+//             }
+//             else {
+//                 v.ref = retrieveCloudReference(cloudResources[type][index])
+//             }
+//         })
+//     })
+// }

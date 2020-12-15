@@ -1,12 +1,11 @@
 import chalk from "chalk";
-import { loadResourceFiles } from "../util/files"
+import { retrieveAllResourcePaths } from "../util/files"
 import { planMigrations } from "../main/planner"
 import { writeMigrations } from "../main/migrator"
 
 const migrate = async () => {
     try {
-        const resources = await loadResourceFiles()
-        const planned = await planMigrations(resources)
+        const planned = await planMigrations()
         console.log(planned)
         writeMigrations(planned)
     } catch (error) {

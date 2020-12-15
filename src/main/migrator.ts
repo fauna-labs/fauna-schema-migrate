@@ -1,45 +1,75 @@
 import * as beautify from 'js-beautify'
 import * as fauna from 'faunadb'
-const { Update, Delete } = fauna.query
+
+const { Update, Delete, Role, Function } = fauna.query
 
 import { PlannedDiff, PlannedMigrations, TaggedExpression } from "../types/expressions";
 import { writeNewMigration } from '../util/files';
+import { ResourceTypes } from '../types/resource-types';
 
 
 export const writeMigrations = async (planned: PlannedMigrations) => {
     const migrExprs = [
-        getRoleExpressions(planned.roles)
+        getCreateAndDeleteGeneric(planned[ResourceTypes.Role]),
+        getCreateAndDeleteGeneric(planned[ResourceTypes.Function]),
+        getUpdateRoleExpressions(planned[ResourceTypes.Role]),
+        getUpdateFuncExpressions(planned[ResourceTypes.Function])
     ].flat()
 
     migrExprs.forEach((mig) => {
         mig.fqlFormatted = prettyPrint(mig.fqlExpr)
     })
 
+    // TODO order migrations based on dependencies
+    const orderedMigrExprs = orderMigrations(migrExprs)
     writeNewMigration(migrExprs)
 }
 
+const orderMigrations = (expressions: TaggedExpression[]) => {
+    // Todo, order them, build dependency tree.
+}
 
-const getRoleExpressions = (roles: PlannedDiff) => {
+const getCreateAndDeleteGeneric = (resources: PlannedDiff) => {
     let migrExprs: TaggedExpression[] = []
-    roles.added.forEach((role) => {
-        console.log(role.local)
-        migrExprs.push(toTaggedExpr(role.local, role.local?.fqlExpr))
+    resources.added.forEach((res) => {
+        migrExprs.push(toTaggedExpr(res.current, res.current?.fqlExpr))
     })
-
-    roles.changed.forEach((role) => {
-        migrExprs.push(toTaggedExpr(role.local, Update(
-            role.remote?.json.ref,
-            { privileges: role.local?.fqlExpr.raw.create_role.raw.object.privileges }
+    resources.deleted.forEach((res) => {
+        migrExprs.push(toTaggedExpr(res.previous, Delete(
+            getReference(<TaggedExpression>res.previous, Role),
         )))
     })
-
-    roles.deleted.forEach((role) => {
-        migrExprs.push(toTaggedExpr(role.remote, Delete(
-            role.remote?.json.ref,
-        )))
-    })
-
     return migrExprs
+}
+
+
+const getUpdateRoleExpressions = (roles: PlannedDiff) => {
+    let migrExprs: TaggedExpression[] = []
+    roles.changed.forEach((role) => {
+        migrExprs.push(toTaggedExpr(role.current, Update(
+            getReference(<TaggedExpression>role.current, Role),
+            { privileges: role.current?.fqlExpr.raw.create_role.raw.object.privileges }
+        )))
+    })
+    return migrExprs
+}
+
+const getUpdateFuncExpressions = (functions: PlannedDiff) => {
+    let migrExprs: TaggedExpression[] = []
+    functions.changed.forEach((func) => {
+        migrExprs.push(toTaggedExpr(func.current, Update(
+            getReference(<TaggedExpression>func.current, Function),
+            {
+                body: func.current?.fqlExpr.raw.create_function.raw.object.body,
+                role: func.current?.fqlExpr.raw.create_function.raw.object.role
+            }
+        )))
+    })
+    return migrExprs
+}
+
+const getReference = (taggedExpr: TaggedExpression, fqlFunc: any) => {
+    return fqlFunc(taggedExpr.name)
 }
 
 
