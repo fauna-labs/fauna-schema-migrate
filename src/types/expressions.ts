@@ -15,6 +15,7 @@ export interface TaggedExpression {
     fql?: string,
     fqlFormatted?: string,
     statement?: StatementType
+    migration?: string
 }
 
 export interface PreviousAndCurrent {

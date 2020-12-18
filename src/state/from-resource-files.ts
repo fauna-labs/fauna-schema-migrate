@@ -1,7 +1,7 @@
 
-import toJsonDeep from '../fql/to-json-deep'
+import { toJsonDeep } from '../fql/json'
 import { loadFqlSnippet, retrieveAllResourcePaths, } from '../util/files'
-import { addNamesAndTypes } from '../fql/types'
+import { addNamesAndTypes } from '../fql/match'
 import { TaggedExpression, LoadedResources, StatementType } from '../types/expressions'
 import { ResourceTypes } from '../types/resource-types'
 

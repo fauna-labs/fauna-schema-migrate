@@ -4,9 +4,10 @@ import * as esbuild from 'esbuild'
 import shell from 'shelljs'
 import glob from 'glob'
 import util from 'util'
-import * as config from './config'
+import { config } from './config'
 import { TaggedExpression } from '../types/expressions'
 import { evalFQLCode } from '../fql/eval'
+import { MigrationPathAndFiles } from '../types/migrations'
 
 const globPromise = util.promisify(glob)
 
@@ -54,11 +55,6 @@ export const loadFqlResource = async (p: string) => {
     return fql
 }
 
-export const loadLibraryFile = (file: string) => {
-    return fs.readFileSync(
-        path.join(__dirname, file), "utf8"
-    ).toString()
-}
 
 export const loadApplicationFile = async (file: string): Promise<string> => {
     return fs.readFileSync(
@@ -73,22 +69,46 @@ export const writeApplicationFile = async (file: string, content: string) => {
 }
 
 export const retrieveAllResourcePaths = async () => {
-    const jsResults = await retrieveAllResourcePathsInPattern("**/*.js")
-    const fqlResults = await retrieveAllResourcePathsInPattern("**/*.fql")
+    const resourcesDir = await config.getResourcesDir()
+    const jsResults = await retrieveAllPathsInPattern(resourcesDir, "**/*.js")
+    const fqlResults = await retrieveAllPathsInPattern(resourcesDir, "**/*.fql")
     return jsResults.concat(fqlResults)
 }
 
-export const retrieveAllMigrationPaths = async () => {
+export const retrieveAllMigrationPaths = async (): Promise<MigrationPathAndFiles[]> => {
     // Migrations are always .fql files.
     const migrationsDir = await config.getMigrationsDir()
     const migrationSubdirs = getDirectories(migrationsDir)
-    return migrationSubdirs.map((subDir) => {
+    return await Promise.all(migrationSubdirs.map(async (subDir) => {
+        const jsResults = await retrieveAllPathsInPattern(migrationsDir, "**/*.js")
+        const fqlResults = await retrieveAllPathsInPattern(migrationsDir, "**/*.fql")
         return {
-            migration: subDir,
-            files: readdirSync(path.join(migrationsDir, subDir))
-                .map((fileName) => path.join(migrationsDir, subDir, fileName))
+            files: jsResults.concat(fqlResults),
+            migration: subDir
         }
-    })
+    }))
+}
+
+export const retrieveMigrationPathsForMigrationAfter = async (timestamp: string): Promise<MigrationPathAndFiles> => {
+    const migrationsDir = await config.getMigrationsDir()
+    let migrationSubdirs = getDirectories(migrationsDir)
+    let migration = getStrAfter(migrationSubdirs, timestamp)
+    const jsResults = await retrieveAllPathsInPattern(path.join(migrationsDir, migration), "**/*.js")
+    const fqlResults = await retrieveAllPathsInPattern(path.join(migrationsDir, migration), "**/*.fql")
+    return {
+        files: jsResults.concat(fqlResults),
+        migration: migration
+    }
+}
+
+const getStrAfter = (strs: string[], after: string) => {
+    strs = strs.sort()
+    for (let str in strs) {
+        if (str > after) {
+            return str
+        }
+    }
+    return strs[strs.length - 1]
 }
 
 const isDirectory = (source: string) => lstatSync(source).isDirectory()
@@ -103,11 +123,11 @@ const getDirectories = (source: string) =>
             return folder
         })
 
-const retrieveAllResourcePathsInPattern = async (pattern: string) => {
+const retrieveAllPathsInPattern = async (basedir: string, pattern: string) => {
     // Load the resources but ignore the children databases.
     // we'll load these recursively in the planner.
     const result = await globPromise(
-        path.join(await config.getResourcesDir(), pattern),
+        path.join(await basedir, pattern),
         {
             ignore: [
                 path.join("**", await config.getChildDbsDir(), "**/*"),
@@ -121,14 +141,22 @@ export const generateDefaultDirs = async () => {
     const folders = await Promise.all([
         config.getResourcesDir(),
         config.getMigrationsDir(),
-        config.getChildDbsDir(),
-        config.getTempDir()
     ])
-
+    // Todo, provide option to have nested generation!
+    // maybe --childdbs=local, local.service1,local.service2, etc..
     folders.forEach((folder) => {
         const fullPath = path.join(process.cwd(), folder)
         shell.mkdir('-p', fullPath);
     })
+}
+
+export const generateMigrationDir = async () => {
+    const fullPath = path.join(process.cwd(), await config.getMigrationsDir())
+    shell.mkdir('-p', fullPath);
+}
+
+export const deleteMigrationDir = async () => {
+    shell.rm('-rf', await config.getMigrationsDir())
 }
 
 export const arrayToApplicationPath = (filePath: string[]) => {
@@ -138,10 +166,7 @@ export const arrayToApplicationPath = (filePath: string[]) => {
 
 export const writeNewMigration = async (migrations: TaggedExpression[]) => {
     if (migrations.length) {
-        const fullPath = path.join(process.cwd(), await config.getMigrationsDir())
-        const time = new Date().toISOString()
-        const newMigrationDir = path.join(fullPath, time)
-        shell.mkdir('-p', newMigrationDir);
+        const newMigrationDir = await writeNewMigrationDir()
         migrations.forEach((mig) => {
             fs.writeFileSync(path.join(newMigrationDir, `${mig.type}-${mig.name}.fql`), mig.fqlFormatted)
         })
@@ -150,4 +175,12 @@ export const writeNewMigration = async (migrations: TaggedExpression[]) => {
         console.log("nothing to write")
     }
 
+}
+
+export const writeNewMigrationDir = async () => {
+    const fullPath = path.join(process.cwd(), await config.getMigrationsDir())
+    const time = new Date().toISOString()
+    const newMigrationDir = path.join(fullPath, time)
+    shell.mkdir('-p', newMigrationDir)
+    return newMigrationDir
 }

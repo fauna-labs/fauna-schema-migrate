@@ -3,11 +3,7 @@ var cloneDeep = require('lodash.clonedeep')
 
 import { TaggedExpression, PreviousAndCurrent, PlannedDiff, PlannedMigrations, LoadedResources, StatementType } from "../types/expressions";
 import { getAllResourceSnippets } from "../state/from-resource-files";
-import { getAllCloudResources } from "../state/from-cloud";
-import { getAllMigrationSnippets } from "../state/from-migration-files";
-import { TriedDeletingMissingCloudResourceError } from "../errors/TriedDeletingMissingCloudResourceError";
-import { TriedChangingMissingCloudResourceError } from "../errors/TriedChangingMissingCloudResourceError";
-import { retrieveReference as retrieveCloudReference } from "../fql/types";
+import { getAllLastMigrationSnippets } from "../state/from-migration-files";
 
 interface NamedValue {
     name: string;
@@ -21,7 +17,7 @@ export const planMigrations = async (): Promise<PlannedMigrations> => {
     //  - Cloud:      resources currently in your database.
 
     const resourcesFQL = await getAllResourceSnippets()
-    const migrationsFQL = await getAllMigrationSnippets()
+    const migrationsFQL = await getAllLastMigrationSnippets()
     // const cloudResources = await getAllCloudResources()
     const migrationDiff: any = {}
 
@@ -41,7 +37,6 @@ export const planMigrations = async (): Promise<PlannedMigrations> => {
 
     // We don't need the reference on second thought, currently not used.
     // addReferences(migrationDiff, cloudResources)
-    console.log(migrationDiff)
     return migrationDiff
 }
 
@@ -59,9 +54,7 @@ const createPairsForType = (previouss: TaggedExpression[], currents: TaggedExpre
         if (previousIndex !== -1) {
             const res = previouss.splice(previousIndex, 1)
             const previous = res[0]
-            console.log('equalDeep?', previous.jsonData, current.jsonData)
             if (equalDeep(previous.jsonData, current.jsonData)) {
-                console.log('TRUE!')
                 pairs.unchanged.push({ current: current, previous: previous })
             }
             else {

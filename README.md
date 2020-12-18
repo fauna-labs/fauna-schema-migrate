@@ -1,4 +1,5 @@
 # faunadb-schema-migrate
+
 FaunaDB Migrate is an opinionated tool with two objects: 
 
 - help [faunadb](https://fauna.com) developers **set up** **and manage** their FaunaDB entities such as Indexes/Collections/User Defined Functions (UDFs) **as code**, regardless of whether these are created via a GraphQL schema or via FQL. 

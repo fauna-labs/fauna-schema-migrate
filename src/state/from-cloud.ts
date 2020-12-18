@@ -2,7 +2,7 @@
 var cloneDeep = require('lodash.clonedeep')
 
 import * as fauna from 'faunadb'
-import toJsonDeep from '../fql/to-json-deep'
+import { toJsonDeep } from '../fql/json'
 import { LoadedResources, TaggedExpression } from '../types/expressions'
 import { ResourceTypes } from '../types/resource-types'
 import { getClient } from '../util/fauna-client'

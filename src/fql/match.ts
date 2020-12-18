@@ -5,9 +5,7 @@ import { ResourceTypes, TypeResult } from "../types/resource-types"
 
 export const addNamesAndTypes = (snippets: TaggedExpression[]) => {
     snippets.forEach((s) => {
-        // console.log('testing snippet', s)
         let res = getMatchingResult(s)
-        console.log('result snippet', res)
         s.type = res.type
         s.name = res.name
         s.jsonData = res.jsonData
@@ -21,16 +19,41 @@ export const retrieveReference = (snippet: TaggedExpression) => {
 
 const getMatchingResult = (s: TaggedExpression) => {
     let matchers = [
+        isCollectionExpression,
+        isIndexEpression,
         isUdfExpression,
-        isRoleExpression
+        isRoleExpression,
+        isAccessProvider
     ]
     for (let m of matchers) {
         let res = m(s)
         if (res)
             return res
     }
-    console.log(s)
     throw new Error(`Unknown snippet type ${s.toString().substring(0, 50)} ...`)
+}
+
+
+// Seems to be always the same. We could simplify the code
+const isAccessProvider = (snippet: TaggedExpression): TypeResult | false => {
+    const resType = ResourceTypes.AccessProvider
+    return isCreateFqlExpressionOfType(snippet, 'create_access_provider', resType) ||
+        isDeleteFqlExpressionOfType(snippet, 'access_provider', resType) ||
+        isUpdateFqlExpressionOfType(snippet, 'access_provider', resType)
+}
+
+const isCollectionExpression = (snippet: TaggedExpression): TypeResult | false => {
+    const resType = ResourceTypes.Collection
+    return isCreateFqlExpressionOfType(snippet, 'create_collection', resType) ||
+        isDeleteFqlExpressionOfType(snippet, 'collection', resType) ||
+        isUpdateFqlExpressionOfType(snippet, 'collection', resType)
+}
+
+const isIndexEpression = (snippet: TaggedExpression): TypeResult | false => {
+    const resType = ResourceTypes.Index
+    return isCreateFqlExpressionOfType(snippet, 'create_index', resType) ||
+        isDeleteFqlExpressionOfType(snippet, 'index', resType) ||
+        isUpdateFqlExpressionOfType(snippet, 'index', resType)
 }
 
 

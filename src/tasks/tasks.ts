@@ -1,6 +1,6 @@
 
 import init from "./init";
-import plan from "./plan";
+import newMigration from "./new";
 import apply from "./apply";
 import migrate from "./migrate";
 import validate from "./validate";
@@ -13,26 +13,26 @@ export default [
         // options? ....
     },
     {
-        name: "plan",
-        description: "Planning",
-        action: plan
+        name: "new",
+        description: "Create a new migration",
+        action: newMigration
         // options? ....
     },
     {
         name: "migrate",
-        description: "Migrating",
+        description: "Generate migrations from your resources",
         action: migrate
         // options? ....
     },
     {
         name: "validate",
-        description: "Validating",
+        description: "TODO: validate whether migrations are compatible with database.",
         action: validate
         // options? ....
     },
     {
         name: "apply",
-        description: "Applying",
+        description: "Apply the new migrations against the database",
         action: apply
         // options? ....
     }
