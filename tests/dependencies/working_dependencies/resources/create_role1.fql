@@ -1,0 +1,31 @@
+CreateRole({
+    name: 'role1',
+    privileges: [{
+        resource: Collection('collection1'),
+        actions: {
+            create: true,
+            read: true
+        }
+    },
+    {
+        resource: Collection('collection2'),
+        actions: {
+            create: true,
+            read: Query(
+                Lambda("ref", Equals(
+                    Identity(), // logged in user
+                    Select(["data", "owner"], Get(Var("ref")))
+                ))
+            )
+        }
+    },
+    {
+      resource: Index('index1'),
+      actions: { read: true }
+    },
+    {
+      resource: Index('index2'),
+      actions: { read: true }
+    }
+    ]
+})

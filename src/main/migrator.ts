@@ -1,6 +1,6 @@
 import * as fauna from 'faunadb'
 
-const { Update, Delete, Role, Function, Collection, Index } = fauna.query
+const { Update, Delete, Role, Function, Collection, Index, AccessProvider } = fauna.query
 
 import { PlannedDiff, PlannedMigrations, TaggedExpression } from "../types/expressions";
 import { writeNewMigration } from '../util/files';
@@ -19,12 +19,15 @@ export const generateMigrations = async (planned: PlannedMigrations) => {
     migrExprs.push(getCreateAndDeleteGeneric(planned[ResourceTypes.Function], Function))
     migrExprs.push(getCreateAndDeleteGeneric(planned[ResourceTypes.Collection], Collection))
     migrExprs.push(getCreateAndDeleteGeneric(planned[ResourceTypes.Index], Index))
+    migrExprs.push(getCreateAndDeleteGeneric(planned[ResourceTypes.AccessProvider], AccessProvider))
 
     // Then add the special cases.
     migrExprs.push(getUpdateRoleExpressions(planned[ResourceTypes.Role]))
     migrExprs.push(getUpdateFuncExpressions(planned[ResourceTypes.Function]))
     migrExprs.push(getUpdateCollectionExpressions(planned[ResourceTypes.Collection]))
-    migrExprs.push(getUpdateIndexExpressions(planned[ResourceTypes.Index]))
+    // migrExprs.push(getUpdateIndexEpxressions(planned[ResourceTypes.Index], Index))
+    // leaving this commented to make it clear that it's not forgotten, updating indexes is not possible.
+    migrExprs.push(getUpdateAccessProviderExpressions(planned[ResourceTypes.AccessProvider]))
 
 
     const migrExprsFlat = migrExprs.flat()
@@ -48,42 +51,46 @@ const getCreateAndDeleteGeneric = (resources: PlannedDiff, fqlFun: any) => {
     return migrExprs
 }
 
-const getUpdateCollectionExpressions = (collections: PlannedDiff) => {
+/* Currently keeping them separate forin case there are special cases later on */
+const getUpdateAccessProviderExpressions = (accessproviders: PlannedDiff) => {
     let migrExprs: TaggedExpression[] = []
-    collections.changed.forEach((col) => {
-        migrExprs.push(toTaggedExpr(col.current, Update(
-            getReference(<TaggedExpression>col.current, Collection),
-            {
-                name: col.current?.fqlExpr.raw.create_collection.raw.object.name,
-                data: col.current?.fqlExpr.raw.create_collection.raw.object.data
-            }
+    accessproviders.changed.forEach((ap) => {
+        migrExprs.push(toTaggedExpr(ap.current, Update(
+            getReference(<TaggedExpression>ap.current, AccessProvider),
+            ap.current?.fqlExpr.raw.create_access_provider.raw.object
         )))
     })
     return migrExprs
 }
 
-const getUpdateIndexExpressions = (indices: PlannedDiff) => {
+const getUpdateCollectionExpressions = (collections: PlannedDiff) => {
     let migrExprs: TaggedExpression[] = []
-    indices.changed.forEach((ind) => {
-        console.log("TODO DETERMINE STRUCTURE INDICES", ind)
-        // migrExprs.push(toTaggedExpr(col.current, Update(
-        //     getReference(<TaggedExpression>col.current, Index),
-        // TODO
-        // )))
+    collections.changed.forEach((col) => {
+        migrExprs.push(toTaggedExpr(col.current, Update(
+            getReference(<TaggedExpression>col.current, Collection),
+            col.current?.fqlExpr.raw.create_collection.raw.object
+            // {
+            //     name: col.current?.fqlExpr.raw.create_collection.raw.object.name,
+            //     history_days: col.current?.fqlExpr.raw.create_collection.raw.object.history_days,
+            //     ttl_days: col.current?.fqlExpr.raw.create_collection.raw.object.ttl_days,
+            //     data: col.current?.fqlExpr.raw.create_collection.raw.object.data,
+            // }
+        )))
     })
     return migrExprs
 }
-
 
 const getUpdateRoleExpressions = (roles: PlannedDiff) => {
     let migrExprs: TaggedExpression[] = []
     roles.changed.forEach((role) => {
         migrExprs.push(toTaggedExpr(role.current, Update(
             getReference(<TaggedExpression>role.current, Role),
-            {
-                privileges: role.current?.fqlExpr.raw.create_role.raw.object.privileges,
-                data: role.current?.fqlExpr.raw.create_role.raw.object.data
-            }
+            role.current?.fqlExpr.raw.create_role.raw.object
+            // {
+            //     privileges: role.current?.fqlExpr.raw.create_role.raw.object.privileges,
+            //     membership: role.current?.fqlExpr.raw.create_role.raw.object.membership,
+            //     data: role.current?.fqlExpr.raw.create_role.raw.object.data
+            // }
         )))
     })
     return migrExprs
@@ -94,11 +101,12 @@ const getUpdateFuncExpressions = (functions: PlannedDiff) => {
     functions.changed.forEach((func) => {
         migrExprs.push(toTaggedExpr(func.current, Update(
             getReference(<TaggedExpression>func.current, Function),
-            {
-                body: func.current?.fqlExpr.raw.create_function.raw.object.body,
-                role: func.current?.fqlExpr.raw.create_function.raw.object.role,
-                data: func.current?.fqlExpr.raw.create_function.raw.object.data
-            }
+            func.current?.fqlExpr.raw.create_function.raw.object
+            // {
+            //     body: func.current?.fqlExpr.raw.create_function.raw.object.body,
+            //     role: func.current?.fqlExpr.raw.create_function.raw.object.role,
+            //     data: func.current?.fqlExpr.raw.create_function.raw.object.data
+            // }
         )))
     })
     return migrExprs

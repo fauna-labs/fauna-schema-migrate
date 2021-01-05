@@ -5,7 +5,6 @@ import * as fauna from 'faunadb'
 import { toJsonDeep } from '../fql/json'
 import { LoadedResources, TaggedExpression } from '../types/expressions'
 import { ResourceTypes } from '../types/resource-types'
-import { getClient } from '../util/fauna-client'
 const q = fauna.query
 const {
     Paginate,
@@ -25,16 +24,17 @@ type FQLFun = (n: any) => fauna.Expr
 
 const batchSize = 100
 
-
-
-export const getAllCloudResources = async (): Promise<LoadedResources> => {
+export const getAllCloudResources = async (client: fauna.Client): Promise<LoadedResources> => {
     // TODO, I should split up types from Cloud from other resources since
     // they are quite different.
     const cloudResources = await Promise.all([
         // TODO, add other types!
-        await getAllResourcesOfType(ResourceTypes.Role, GetRolesFQL, remoteTsAndRef),
-        await getAllResourcesOfType(ResourceTypes.Function, GetFunctionsFQL, remoteTsAndRef)]
-    )
+        await getAllResourcesOfType(client, ResourceTypes.Collection, GetCollectionsFQL, remoteTsAndRef),
+        await getAllResourcesOfType(client, ResourceTypes.Index, GetIndexesFQL, remoteTsAndRef),
+        await getAllResourcesOfType(client, ResourceTypes.Role, GetRolesFQL, remoteTsAndRef),
+        await getAllResourcesOfType(client, ResourceTypes.Function, GetFunctionsFQL, remoteTsAndRef),
+        await getAllResourcesOfType(client, ResourceTypes.AccessProvider, GetAccessProviders, remoteTsAndRef)
+    ])
     const categories: any = {}
     for (let item in ResourceTypes) {
         categories[item] = []
@@ -57,7 +57,6 @@ const remoteTsAndRef = (json: any) => {
     return clone
 }
 
-
 const GetCollectionsFQL = (cursor: any) =>
     q.Map(Paginate(Collections(), { size: batchSize, after: cursor }), Lambda('x', Get(Var('x'))))
 
@@ -77,16 +76,15 @@ const GetAccessProviders = (cursor: any) =>
     q.Map(Paginate(AccessProviders(), { size: batchSize, after: cursor }), Lambda('x', Get(Var('x'))))
 
 
-const getAllResourcesOfType = async (type: ResourceTypes, fqlFun: FQLFun, transformFun: Fun): Promise<any> => {
-    const resources = await getAllResourcesWithFun(fqlFun)
+const getAllResourcesOfType = async (client: fauna.Client, type: ResourceTypes, fqlFun: FQLFun, transformFun: Fun): Promise<any> => {
+    const resources = await getAllResourcesWithFun(client, fqlFun)
     return resources.map((el: any) => {
         const json = toJsonDeep(el)
         return { json: json, name: el.name, jsonData: transformFun(json), type: type }
     })
 }
 
-const getAllResourcesWithFun = async (fqlFun: FQLFun): Promise<any> => {
-    const client = getClient()
+const getAllResourcesWithFun = async (client: fauna.Client, fqlFun: FQLFun): Promise<any> => {
     return await getAllResourcesWithFunRec(client, fqlFun)
 }
 

@@ -1,0 +1,9 @@
+CreateFunction({
+    name: "multiply",
+    body: Query(
+        Lambda(
+            ['var1', 'var2'],
+            Multiply(Var('var1'), Var('var2'))
+        )
+    )
+})

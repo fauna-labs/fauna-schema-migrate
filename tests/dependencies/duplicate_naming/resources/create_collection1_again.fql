@@ -1,0 +1,3 @@
+CreateCollection({
+    name: 'collection1'
+})

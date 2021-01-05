@@ -1,0 +1,10 @@
+CreateFunction({
+    name: "function1",
+    body: Query(
+        Lambda(
+            ['var1', 'var2'],
+            Multiply(Var('var1'), Var('var2'))
+        )
+    ),
+    role: Role('role1')
+})

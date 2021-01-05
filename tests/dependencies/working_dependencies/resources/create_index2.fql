@@ -1,0 +1,19 @@
+CreateIndex({
+  name: 'index2',
+  source: Collection('collection2'),
+  terms: [
+    {
+      field: ['data', 'attr1']
+    }
+  ],
+  values: [
+    {
+      field: ['data', 'attr2'],
+      reverse: true
+    },
+    {
+      field: ['ref']
+    }
+  ],
+  serialized: true
+})

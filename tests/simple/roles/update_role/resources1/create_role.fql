@@ -1,0 +1,4 @@
+CreateRole({
+  name: 'access_users',
+  privileges: []
+})

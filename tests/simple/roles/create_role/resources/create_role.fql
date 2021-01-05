@@ -1,0 +1,4 @@
+CreateRole({
+  name: 'powerless',
+  privileges: []
+})

@@ -4,6 +4,8 @@ var cloneDeep = require('lodash.clonedeep')
 import { TaggedExpression, PreviousAndCurrent, PlannedDiff, PlannedMigrations, LoadedResources, StatementType } from "../types/expressions";
 import { getAllResourceSnippets } from "../state/from-resource-files";
 import { getAllLastMigrationSnippets } from "../state/from-migration-files";
+import { UpdateIndexError } from "../errors/UpdateIndexError";
+import { ResourceTypes } from "../types/resource-types";
 
 interface NamedValue {
     name: string;
@@ -35,10 +37,13 @@ export const planMigrations = async (): Promise<PlannedMigrations> => {
         migrationDiff[type] = createPairsForType(migration, resource)
     })
 
-    // We don't need the reference on second thought, currently not used.
-    // addReferences(migrationDiff, cloudResources)
+    // Index updates are not supported (and can't be), throw error.
+    throwErrorOnIndexUpdates(migrationDiff[ResourceTypes.Index])
+
     return migrationDiff
 }
+
+
 
 /* We'll match them by name */
 const createPairsForType = (previouss: TaggedExpression[], currents: TaggedExpression[]) => {
@@ -88,29 +93,8 @@ const findIndex = (resource1: NamedValue, resources: NamedValue[]) => {
     return -1
 }
 
-
-// const addReferences = (migrationDiff: PlannedMigrations, cloudResources: LoadedResources) => {
-//     Object.keys(migrationDiff).forEach((type) => {
-//         const diffForType = migrationDiff[type]
-//         diffForType.changed.forEach((v: PreviousAndCurrent) => {
-//             const index = findIndex(<NamedValue>v.current, cloudResources[type])
-//             if (index === -1) {
-//                 const res = <TaggedExpression>v.current
-//                 throw new TriedChangingMissingCloudResourceError(res)
-//             }
-//             else {
-//                 v.ref = retrieveCloudReference(cloudResources[type][index])
-//             }
-//         })
-//         diffForType.deleted.forEach((v: PreviousAndCurrent) => {
-//             const index = findIndex(<NamedValue>v.previous, cloudResources[type])
-//             if (index === -1) {
-//                 const res = <TaggedExpression>v.previous
-//                 throw new TriedDeletingMissingCloudResourceError(res)
-//             }
-//             else {
-//                 v.ref = retrieveCloudReference(cloudResources[type][index])
-//             }
-//         })
-//     })
-// }
+const throwErrorOnIndexUpdates = (indices: PlannedDiff) => {
+    if (indices.changed.length > 0) {
+        throw new UpdateIndexError(indices.changed)
+    }
+}

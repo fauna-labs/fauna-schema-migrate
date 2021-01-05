@@ -1,0 +1,8 @@
+CreateRole({
+    name: 'role2',
+    privileges: [
+    {
+      resource: Function('function1'),
+      actions: { call: true }
+    }]
+})

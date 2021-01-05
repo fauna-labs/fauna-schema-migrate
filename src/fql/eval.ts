@@ -1,6 +1,7 @@
 /* eslint-disable */
 
 import { query as q } from 'faunadb'
+import { EvalFqlError } from '../errors/EvalFqlError'
 
 export function evalFQLCode(code: string) {
   return baseEvalFQL(code, q)
@@ -218,5 +219,13 @@ function baseEvalFQL(fql: string, q: any) {
   } = q
 
   // eslint-disable-next-line
-  return fql.match(/^\s*{(.*\n*)*}\s*$/) ? eval(`(${fql})`) : eval(fql)
+  try {
+    return fql.match(/^\s*{(.*\n*)*}\s*$/) ? eval(`(${fql})`) : eval(fql)
+  }
+  catch (err) {
+    if (err instanceof SyntaxError) {
+      throw new EvalFqlError(err, fql)
+    }
+  }
 }
+

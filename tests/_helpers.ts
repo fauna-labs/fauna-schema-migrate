@@ -3,13 +3,13 @@ import path from 'path'
 const fullPath = path.resolve(process.cwd(), '.env.' + process.env.NODE_ENV)
 require('dotenv').config({ path: fullPath })
 
-import { planMigrations } from "../../src/main/planner"
-import { generateMigrations, writeMigrations } from "../../src/main/migrator"
-import { applyMigrations } from "../../src/main/applier"
-import { config, Config } from '../../src/util/config'
-import { createMigrationCollection } from "../../src/fql/snippets";
-import { FaunaClientGenerator } from '../../src/util/fauna-client'
-import { deleteMigrationDir, generateMigrationDir } from '../../src/util/files'
+import { planMigrations } from "../src/main/planner"
+import { generateMigrations, writeMigrations } from "../src/main/migrator"
+import { applyMigrations } from "../src/main/applier"
+import { config, Config } from '../src/util/config'
+import { createMigrationCollection } from "../src/fql/snippets";
+import { FaunaClientGenerator } from '../src/util/fauna-client'
+import { deleteMigrationDir, generateMigrationDir } from '../src/util/files'
 import * as fauna from 'faunadb'
 import sinon from 'sinon';
 
@@ -27,7 +27,6 @@ export const fullApply = async (dir: string, resourceFolders: string[] = ['resou
         fun.restore()
     }
 }
-
 
 export const setupFullTest = async (dir: string) => {
     sinon.stub(Config.prototype, 'readConfig')
@@ -53,6 +52,7 @@ export const setupFullTest = async (dir: string) => {
         .returns(childDbClient)
 
     await generateMigrationDir()
+    return childDbClient
 }
 
 export const destroyFullTest = async (dir: string) => {
@@ -62,6 +62,17 @@ export const destroyFullTest = async (dir: string) => {
 }
 
 export const deleteIfExists = async (dir: string) => {
+    const client = getClient(process.env.FAUNA_ADMIN_KEY)
+    const db = await client.query(
+        If(
+            Exists(Database(toDbName(dir))),
+            Delete(Database(toDbName(dir))),
+            true
+        )
+    )
+}
+
+export const retrieve = async (dir: string) => {
     const client = getClient(process.env.FAUNA_ADMIN_KEY)
     const db = await client.query(
         If(

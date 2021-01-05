@@ -1,0 +1,5 @@
+q.CreateAccessProvider({
+    name: 'Auth0-myapp',
+    issuer: 'https://myapp.auth0.com/',
+    jwks_uri: 'https://myapp.auth0.com/.well-known/jwks.json',
+  })

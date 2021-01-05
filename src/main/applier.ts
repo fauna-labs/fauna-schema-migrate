@@ -11,6 +11,7 @@ import { clientGenerator } from "../util/fauna-client"
 import { evalFQLCode } from "../fql/eval"
 import { config } from '../util/config';
 import { retrieveMigrations } from "../fql/snippets"
+import { prettyPrintExpr } from '../fql/print';
 
 const { Let, Create, Collection } = fauna.query
 
@@ -97,12 +98,15 @@ export const applyMigrations = async () => {
             nameTOVar[indexableName] = `var${varIndex}`
             obj[`var${varIndex}`] = evalFQLCode(<string>e.fql)
         })
-
-        await client.query(Let(obj,
+        const query = Let(obj,
             // At the end of the let we'll create the migration.
             Create(Collection(await config.getMigrationCollection()),
                 { data: { migration: migrationsFQL.migration, migrated: getMigrationMetadata(migrationsFQL.categories) } }
-            )))
+            ))
+
+        // Todo: prettyprint query in case of verbose option.
+        console.log(prettyPrintExpr(query))
+        await client.query(query)
     }
     catch (err) {
         console.error(err)
@@ -184,7 +188,7 @@ const toPattern = (mig: TaggedExpression, type: ResourceTypes): PatternAndIndexN
         case ResourceTypes.Index:
             return { pattern: { index: mig.name }, indexName: toIndexableName(mig) }
         case ResourceTypes.AccessProvider:
-            return { pattern: { access_privder: mig.name }, indexName: toIndexableName(mig) }
+            return { pattern: { access_provider: mig.name }, indexName: toIndexableName(mig) }
         default:
             throw new Error(`unknown type in toPattern ${type}`)
     }

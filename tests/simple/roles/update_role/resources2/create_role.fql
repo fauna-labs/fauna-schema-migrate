@@ -1,0 +1,12 @@
+CreateRole({
+  name: 'access_users',
+  privileges: [
+    {
+      resource: Collection('users'),
+      actions: {
+        create: true,
+        read: true
+      }
+    }
+  ]
+})
