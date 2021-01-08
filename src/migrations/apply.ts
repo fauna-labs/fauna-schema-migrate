@@ -3,13 +3,14 @@
 
 import { CircularMigrationError } from "../errors/CircularMigrationError"
 import { findPatterns } from "../fql/json"
-import { TaggedExpression } from "../types/expressions"
+import { StatementType, TaggedExpression } from "../types/expressions"
 import { PatternAndIndexName } from "../types/patterns"
 import { ResourceTypes } from "../types/resource-types"
 import { toIndexableName } from "../util/unique-naming"
 
 import * as fauna from 'faunadb'
 import { evalFQLCode } from "../fql/eval"
+import { DeletedReferenceError } from "../errors/DeletedReferenceError"
 
 export interface NameToDependencyNames {
     [type: string]: string[]
@@ -65,7 +66,12 @@ const orderAccordingToDependencies = (dependenciesArray: DependenciesArrayEl[], 
         }
         const dep = <DependenciesArrayEl>dependenciesArray.shift()
         popLength++
-        const allDepsPresent = dep?.dependencyIndexNames.every((el) => namesPresent[el])
+        const allDepsPresent = dep?.dependencyIndexNames.every((el) => {
+            if (indexedMigrations[el].statement === StatementType.Delete) {
+                throw new DeletedReferenceError(indexedMigrations[el], indexedMigrations[dep.indexedName])
+            }
+            return namesPresent[el] || indexedMigrations[el].statement === StatementType.Update
+        })
         if (allDepsPresent) {
             namesPresent[dep.indexedName] = true
             orderedExpressions.push(indexedMigrations[dep.indexedName])
@@ -76,7 +82,6 @@ const orderAccordingToDependencies = (dependenciesArray: DependenciesArrayEl[], 
             dependenciesArray.push(dep)
         }
     }
-    console.log('ordered', orderedExpressions)
     return orderedExpressions
 }
 
@@ -94,17 +99,22 @@ const generateLetBindingObject = (
             const dependencies = dependencyIndex[indexableName]
             dependencies.forEach((dep: string) => {
                 const depExpr = indexedMigrations[dep]
-                const depIndexableName = toIndexableName(depExpr)
-                // replace a refernece to another resource
-                // with the variable that was bound to it.
-                // Todo, currently done via the string which is probably
-                // a silly inefficient way to do it (but easier).
-                // Might want to change this and do an expression manipulation
-                // instead directly.
-                e.fql = replaceAll(
-                    <string>e.fql,
-                    `${depExpr.type}("${depExpr.name}")`,
-                    `Select(['ref'],Var("${nameToVar[depIndexableName]}"))`)
+                // If it's a create we need to reference it by the
+                // variable since Fauna won't know it yet
+                if (depExpr.statement === StatementType.Create) {
+                    const depIndexableName = toIndexableName(depExpr)
+                    // replace a refernece to another resource
+                    // with the variable that was bound to it.
+                    // Todo, currently done via the string which is probably
+                    // a silly inefficient way to do it (but easier).
+                    // Might want to change this and do an expression manipulation
+                    // instead directly.
+                    e.fql = replaceAll(
+                        <string>e.fql,
+                        `${depExpr.type}("${depExpr.name}")`,
+                        `Select(['ref'],Var("${nameToVar[depIndexableName]}"))`)
+                }
+
             })
             nameToVar[indexableName] = `var${varIndex}`
             // Bind the variable to the code.
@@ -142,7 +152,6 @@ const indexMigrations = (flattened: TaggedExpression[]): NameToExpressions => {
 
 const indexReferencedDependencies = (flattened: TaggedExpression[], jsonPatterns: PatternAndIndexName[]) => {
     const index: NameToDependencyNames = {}
-
     flattened.forEach((expr) => {
         const indexableName = toIndexableName(expr)
         let found = findPatterns(expr.jsonData, jsonPatterns)

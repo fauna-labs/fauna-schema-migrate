@@ -1,0 +1,5 @@
+CreateCollection({
+  name: "collection1",
+  history_days: 5,
+  ttl_days: 5
+})

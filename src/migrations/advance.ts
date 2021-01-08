@@ -9,6 +9,7 @@ import { config } from '../util/config';
 import { retrieveLastCloudMigration } from "../fql/fql-snippets"
 import { generateMigrationQuery } from "./apply"
 import { clientGenerator } from "../util/fauna-client";
+import { prettyPrintExpr } from "../fql/print";
 
 const { Let, Create, Collection } = fauna.query
 
@@ -49,7 +50,7 @@ export const advanceMigrations = async () => {
 
     // Todo: prettyprint query in case of verbose option, add that option.
     //       or a 'plan' option to see the query.
-    // console.log(' Pretty printed FQL Result \n ---------------- ', prettyPrintExpr(query))
+    console.log(' Pretty printed FQL Result \n ---------------- ', prettyPrintExpr(query))
     await client.query(query)
 }
 
