@@ -3,11 +3,12 @@ import path from 'path'
 const fullPath = path.resolve(process.cwd(), '.env.' + process.env.NODE_ENV)
 require('dotenv').config({ path: fullPath })
 
-import { planMigrations } from "../src/main/planner"
-import { generateMigrations, writeMigrations } from "../src/main/migrator"
-import { applyMigrations } from "../src/main/applier"
+import { planMigrations } from "../src/migrations/plan"
+import { rollbackMigrations } from "../src/migrations/rollback"
+import { generateMigrations, writeMigrations } from "../src/migrations/generate"
+import { advanceMigrations } from "../src/migrations/advance"
 import { config, Config } from '../src/util/config'
-import { createMigrationCollection } from "../src/fql/snippets";
+import { createMigrationCollection } from "../src/fql/fql-snippets";
 import { FaunaClientGenerator } from '../src/util/fauna-client'
 import { deleteMigrationDir, generateMigrationDir } from '../src/util/files'
 import * as fauna from 'faunadb'
@@ -22,11 +23,16 @@ export const fullApply = async (dir: string, resourceFolders: string[] = ['resou
         const planned = await planMigrations()
         const migrations = await generateMigrations(planned)
         await writeMigrations(migrations)
-        await applyMigrations()
+        await advanceMigrations()
         const fun: any = Config.prototype.getResourcesDir
         fun.restore()
     }
 }
+
+export const rollback = async (amount: number) => {
+    await rollbackMigrations(amount)
+}
+
 
 export const setupFullTest = async (dir: string) => {
     sinon.stub(Config.prototype, 'readConfig')

@@ -16,10 +16,18 @@ export interface TaggedExpression {
     fqlFormatted?: string,
     statement?: StatementType
     migration?: string
+    previousVersions?: TaggedExpression[]
+}
+
+export interface ReferencedResource {
+    name: string,
+    indexableName: string,
+    type: ResourceTypes,
+    resource: TaggedExpression
 }
 
 export interface PreviousAndCurrent {
-    current?: TaggedExpression,
+    target?: TaggedExpression,
     previous?: TaggedExpression,
     ref?: any
 }
@@ -38,4 +46,21 @@ export interface PlannedMigrations {
 
 export interface LoadedResources {
     [type: string]: TaggedExpression[]
+}
+
+export interface LoadedResourcesAndLastMigration {
+    migrations: LoadedResources,
+    lastMigration: string
+}
+
+export interface ReferencedResources {
+    [type: string]: ReferencedResource[]
+}
+
+export interface MigrationRefAndTimestamp { timestamp: string, ref: any }
+
+export interface TargetCurrentAndSkippedMigrations {
+    target: MigrationRefAndTimestamp,
+    current: MigrationRefAndTimestamp,
+    skipped: MigrationRefAndTimestamp[]
 }

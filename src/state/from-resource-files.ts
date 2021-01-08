@@ -4,11 +4,12 @@ import { loadFqlSnippet, retrieveAllResourcePaths, } from '../util/files'
 import { addNamesAndTypes } from '../fql/match'
 import { TaggedExpression, LoadedResources, StatementType } from '../types/expressions'
 import { ResourceTypes } from '../types/resource-types'
-import { toIndexableName } from '../util'
+import { toIndexableName } from '../util/unique-naming'
 import { DuplicateResourceError } from '../errors/DuplicateResourceError'
 
 export const getAllResourceSnippets = async (): Promise<LoadedResources> => {
     const paths = await retrieveAllResourcePaths()
+
     let snippets: TaggedExpression[] = []
     for (let i = 0; i < paths.length; i++) {
         const p = paths[i]

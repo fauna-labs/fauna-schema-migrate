@@ -1,8 +1,5 @@
 export interface PatternAndIndexName {
-    pattern: {
-        [type: string]: string
-    },
+    pattern: any
     indexName: string
 }
-
 

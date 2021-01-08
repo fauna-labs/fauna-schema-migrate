@@ -3,7 +3,7 @@ import chalk from "chalk";
 import { config } from '../util/config'
 import * as files from "../util/files";
 import { clientGenerator } from "../util/fauna-client"
-import { createMigrationCollection } from "../fql/snippets";
+import { createMigrationCollection } from "../fql/fql-snippets";
 
 const init = async () => {
     try {

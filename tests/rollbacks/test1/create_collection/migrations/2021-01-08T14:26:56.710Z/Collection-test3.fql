@@ -1,0 +1,6 @@
+Update(Collection("test3"), {
+  name: "test3",
+  data: {
+    foo: "migration2"
+  }
+})

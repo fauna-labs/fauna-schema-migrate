@@ -1,9 +1,9 @@
 import chalk from "chalk";
-import { applyMigrations } from "../main/applier";
+import { advanceMigrations } from "../migrations/advance";
 
 const apply = async () => {
     try {
-        applyMigrations()
+        advanceMigrations()
     } catch (error) {
         console.log(error)
         console.error(chalk.red(`${chalk.bold("Error")}: ${error.message}`));

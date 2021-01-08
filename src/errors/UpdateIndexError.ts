@@ -3,7 +3,7 @@ import { PreviousAndCurrent, TaggedExpression } from "../types/expressions";
 export class UpdateIndexError extends Error {
     constructor(m: PreviousAndCurrent[]) {
         const names = m.map((e) => {
-            return '- ' + e.current?.name
+            return '- ' + e.target?.name
         })
         const message = `Tried to update indexes with names:
         ${names.join('\n  ')}

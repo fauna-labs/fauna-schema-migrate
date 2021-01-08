@@ -1,17 +1,17 @@
 
 import { toJsonDeep } from '../fql/json'
-import { loadFqlSnippet, retrieveAllMigrationPaths, retrieveMigrationPathsForMigrationAfter, } from '../util/files'
+import { loadFqlSnippet, retrieveAllMigrationPaths as retrieveLastMigrationVersionAndPaths, retrieveLastMigrationVersionAndPathsForMigrationBefore, retrieveMigrationPathsForMigrationAfter, } from '../util/files'
 import { addNamesAndTypes } from '../fql/match'
-import { TaggedExpression, LoadedResources } from '../types/expressions'
+import { TaggedExpression, LoadedResources, LoadedResourcesAndLastMigration, StatementType } from '../types/expressions'
 import { MigrationPathAndFiles, MigrationPathAndExpressions } from '../types/migrations'
 import { ResourceTypes } from '../types/resource-types'
-import { toIndexableName } from '../util'
+import { toIndexableName } from '../util/unique-naming'
 import { DuplicateMigrationError } from '../errors/DuplicateMigrationError'
 
 // Gets snippets from next migration after given timestamp.
 // If no timestamp is provided, we will retrieve the last migration.
-export const getSnippetsFromNextMigration = async (timestamp: string = "Z"): Promise<{ categories: LoadedResources, migration: string }> => {
-    const pathAndfile = await retrieveMigrationPathsForMigrationAfter(timestamp)
+export const getSnippetsFromNextMigration = async (after: string = "Z"): Promise<{ categories: LoadedResources, migration: string }> => {
+    const pathAndfile = await retrieveMigrationPathsForMigrationAfter(after)
     pathAndfile.expressions = await Promise.all(pathAndfile.files.map(async (f) => {
         const snippet = await loadFqlSnippet(f)
         const json = toJsonDeep(snippet)
@@ -38,15 +38,19 @@ export const getSnippetsFromNextMigration = async (timestamp: string = "Z"): Pro
     return { migration: pathAndfile.migration, categories: categories }
 }
 
-
 // This will get All migrations but only retain the last version
 // of the migration for each type and name.
 // this is in stark contrast with getSnippetsFromLastMigration
-export const getAllLastMigrationSnippets = async (): Promise<LoadedResources> => {
+export const getAllLastMigrationSnippets = async (before: string | null = null): Promise<LoadedResourcesAndLastMigration> => {
     // Retrieve all migration folders and their files.
     // the return value is an ordered array containin the
     // migration and the file paths.
-    const pathsAndFiles: MigrationPathAndFiles[] = await retrieveAllMigrationPaths()
+    let pathsAndFiles: MigrationPathAndFiles[] = []
+    // sort on migration to be certain.
+    pathsAndFiles = await retrieveLastMigrationVersionAndPathsForMigrationBefore(before)
+    pathsAndFiles.sort((a, b) => (a.migration > b.migration) ? 1 : ((b.migration > a.migration) ? -1 : 0))
+    let lastMigration = pathsAndFiles.length > 0 ? pathsAndFiles[pathsAndFiles.length - 1].migration : "0"
+
     for (let i = 0; i < pathsAndFiles.length; i++) {
         const pathAndfile = pathsAndFiles[i]
         pathAndfile.expressions = await Promise.all(pathAndfile.files.map(async (f) => {
@@ -58,7 +62,8 @@ export const getAllLastMigrationSnippets = async (): Promise<LoadedResources> =>
                 fql: snippet.toFQL(),
                 name: '',
                 jsonData: {},
-                migration: pathAndfile.migration
+                migration: pathAndfile.migration,
+                previousVersions: []
             }
         }))
     }
@@ -67,8 +72,8 @@ export const getAllLastMigrationSnippets = async (): Promise<LoadedResources> =>
 
     // Then we filter out all previous versions of a resource. We only want the information
     // of the last migration.
-
     const latestByNameAndType: any = {}
+    const previousVersionsByNameAndType: any = {}
     pathsAndExpressions.forEach((pathAndExpressions) => {
         addNamesAndTypes(pathAndExpressions.expressions)
         pathAndExpressions.expressions.forEach((expr) => {
@@ -80,20 +85,33 @@ export const getAllLastMigrationSnippets = async (): Promise<LoadedResources> =>
             }
             // Else, just override, pathsAndExpressions are ordered.
             // That way we get the latest migrations.
+            if (latestByNameAndType[key]) {
+                if (!previousVersionsByNameAndType[key]) {
+                    previousVersionsByNameAndType[key] = []
+                }
+                previousVersionsByNameAndType[key].push(latestByNameAndType[key])
+            }
             latestByNameAndType[key] = expr
         })
     })
 
-    const latestExpressions: TaggedExpression[] = Object.values(latestByNameAndType)
 
     // order them in categories
     const categories: any = {}
     for (let item in ResourceTypes) {
         categories[item] = []
     }
-    latestExpressions.forEach((s) => {
-        categories[<string>s.type].push(s)
+    Object.keys(latestByNameAndType).forEach((key) => {
+        const latestExpression = latestByNameAndType[key]
+        // Deletes are only useful information if they are the last migration.
+        // else we can just ignore the migration.
+        if (latestExpression.statement !== StatementType.Delete || latestExpression.migration === lastMigration) {
+            categories[<string>latestExpression.type].push(latestExpression)
+        }
+        latestExpression.previousVersions = previousVersionsByNameAndType[key] ?
+            previousVersionsByNameAndType[key].reverse() : []
     })
 
-    return categories
+    return { lastMigration: lastMigration, migrations: categories }
 }
+

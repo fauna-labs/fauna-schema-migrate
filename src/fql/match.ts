@@ -30,7 +30,7 @@ const getMatchingResult = (s: TaggedExpression) => {
         if (res)
             return res
     }
-    throw new Error(`Unknown snippet type ${s.toString().substring(0, 50)} ...`)
+    throw new Error(`Unknown snippet type ${s.toString().substring(0, 50)} ... TODO, PRETTY MESSAGE OF WHAT TYPES ARE ALLOWED`)
 }
 
 

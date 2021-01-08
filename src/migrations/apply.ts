@@ -1,19 +1,15 @@
+
+
+
 import { CircularMigrationError } from "../errors/CircularMigrationError"
-import { findPattern } from "../fql/json"
-import { getSnippetsFromNextMigration } from "../state/from-migration-files"
-import { LoadedResources, TaggedExpression } from "../types/expressions"
+import { findPatterns } from "../fql/json"
+import { TaggedExpression } from "../types/expressions"
 import { PatternAndIndexName } from "../types/patterns"
 import { ResourceTypes } from "../types/resource-types"
-import { toIndexableName } from "../util"
+import { toIndexableName } from "../util/unique-naming"
 
 import * as fauna from 'faunadb'
-import { clientGenerator } from "../util/fauna-client"
 import { evalFQLCode } from "../fql/eval"
-import { config } from '../util/config';
-import { retrieveMigrations } from "../fql/snippets"
-import { prettyPrintExpr } from '../fql/print';
-
-const { Let, Create, Collection } = fauna.query
 
 export interface NameToDependencyNames {
     [type: string]: string[]
@@ -36,18 +32,26 @@ export interface DependenciesArrayEl {
 }
 
 
-export const applyMigrations = async () => {
-    const client = clientGenerator.getClient()
-    const lastCloudMigration = await retrieveMigrations(client)
-    const migrationsFQL = await getSnippetsFromNextMigration(lastCloudMigration)
-    const flattenedMigrations = flattenMigrations(migrationsFQL.categories)
-    const indexedMigrations = indexMigrations(flattenedMigrations)
-    const dependencyIndex = findDependencies(flattenedMigrations)
+export const generateMigrationQuery = async (client: fauna.Client, migrations: TaggedExpression[]) => {
+    const indexedMigrations = indexMigrations(migrations)
+    const dependencyIndex = findDependencies(migrations)
     // transform index to sorted array, sorted on amount of dependencies.
     // since we can safely start with the ones that don't have dependencies
     const dependenciesArray = indexToDependenciesArray(dependencyIndex)
     // Todo, add names of previous migrations for extra verification
     // to make sure no unexisting resource is deleted/updated.
+    const orderedExpressions = orderAccordingToDependencies(dependenciesArray, indexedMigrations)
+
+    // Generate Let with variables.
+    // Instead of adding all statements to a Do which will not work in some cases
+    // where resources depend on other resources.
+    // we will create a Let and replace references to other statements
+    // that are created in the statement with their variable. 
+    const letBindingObject = generateLetBindingObject(orderedExpressions, indexedMigrations, dependencyIndex)
+    return letBindingObject
+}
+
+const orderAccordingToDependencies = (dependenciesArray: DependenciesArrayEl[], indexedMigrations: NameToExpressions) => {
     const namesPresent: NameToBool = {}
     const orderedExpressions = []
     let popLength = 0
@@ -72,9 +76,18 @@ export const applyMigrations = async () => {
             dependenciesArray.push(dep)
         }
     }
+    console.log('ordered', orderedExpressions)
+    return orderedExpressions
+}
 
-    const nameTOVar: NameToVar = {}
+const generateLetBindingObject = (
+    orderedExpressions: TaggedExpression[],
+    indexedMigrations: NameToExpressions,
+    dependencyIndex: NameToDependencyNames) => {
+
+    const nameToVar: NameToVar = {}
     try {
+        // obj is the object with variable bindings that will be fet to the Let.
         const obj: any = {}
         orderedExpressions.forEach((e, varIndex) => {
             const indexableName = toIndexableName(e)
@@ -82,6 +95,8 @@ export const applyMigrations = async () => {
             dependencies.forEach((dep: string) => {
                 const depExpr = indexedMigrations[dep]
                 const depIndexableName = toIndexableName(depExpr)
+                // replace a refernece to another resource
+                // with the variable that was bound to it.
                 // Todo, currently done via the string which is probably
                 // a silly inefficient way to do it (but easier).
                 // Might want to change this and do an expression manipulation
@@ -89,60 +104,22 @@ export const applyMigrations = async () => {
                 e.fql = replaceAll(
                     <string>e.fql,
                     `${depExpr.type}("${depExpr.name}")`,
-                    `Select(['ref'],Var("${nameTOVar[depIndexableName]}"))`)
-                e.fql = replaceAll(
-                    <string>e.fql,
-                    `${depExpr.type}('${depExpr.name}')`,
-                    `Select(['ref'], Var("${nameTOVar[depIndexableName]}"))`)
+                    `Select(['ref'],Var("${nameToVar[depIndexableName]}"))`)
             })
-            nameTOVar[indexableName] = `var${varIndex}`
+            nameToVar[indexableName] = `var${varIndex}`
+            // Bind the variable to the code.
             obj[`var${varIndex}`] = evalFQLCode(<string>e.fql)
         })
-        const query = Let(obj,
-            // At the end of the let we'll create the migration.
-            Create(Collection(await config.getMigrationCollection()),
-                { data: { migration: migrationsFQL.migration, migrated: getMigrationMetadata(migrationsFQL.categories) } }
-            ))
-
-        // Todo: prettyprint query in case of verbose option.
-        console.log(prettyPrintExpr(query))
-        await client.query(query)
+        return obj
     }
     catch (err) {
         console.error(err)
     }
-
 }
 
-const getMigrationMetadata = (migrationcategories: LoadedResources) => {
-    const migrationMetaData: any = {}
-    Object.keys(migrationcategories).forEach((key) => {
-        const migrations = migrationcategories[key]
-        const metadata = migrations.map((m) => {
-            return {
-                name: m.name, type: m.type
-            }
-        })
-        migrationMetaData[key] = metadata
-    })
-    return migrationMetaData
-}
 
 const replaceAll = (str: string, old: string, newStr: string) => {
     return str.split(old).join(newStr)
-}
-
-
-const flattenMigrations = (migrationsPerType: LoadedResources) => {
-    const grouped: TaggedExpression[][] = []
-    Object.keys(migrationsPerType).forEach((typeStr: string) => {
-        const type = ResourceTypes[typeStr as keyof typeof ResourceTypes]
-        const migrations = migrationsPerType[type]
-        grouped.push(migrations)
-
-    })
-    const flattened = grouped.flat()
-    return flattened
 }
 
 const findDependencies = (migrations: TaggedExpression[]) => {
@@ -168,7 +145,7 @@ const indexReferencedDependencies = (flattened: TaggedExpression[], jsonPatterns
 
     flattened.forEach((expr) => {
         const indexableName = toIndexableName(expr)
-        let found = findPattern(expr.jsonData, jsonPatterns)
+        let found = findPatterns(expr.jsonData, jsonPatterns)
         // exclude self in case that would happen (although it shouldn't)
         found = found.filter((e) => e !== indexableName)
         index[indexableName] = found

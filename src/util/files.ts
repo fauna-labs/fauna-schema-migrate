@@ -76,23 +76,23 @@ export const retrieveAllResourcePaths = async () => {
 }
 
 export const retrieveAllMigrationPaths = async (): Promise<MigrationPathAndFiles[]> => {
-    // Migrations are always .fql files.
     const migrationsDir = await config.getMigrationsDir()
     const migrationSubdirs = getDirectories(migrationsDir)
-    return await Promise.all(migrationSubdirs.map(async (subDir) => {
-        const jsResults = await retrieveAllPathsInPattern(migrationsDir, "**/*.js")
-        const fqlResults = await retrieveAllPathsInPattern(migrationsDir, "**/*.fql")
+    return await Promise.all(migrationSubdirs.map(async (migration) => {
+        const jsResults = await retrieveAllPathsInPattern(path.join(migrationsDir, migration), "**/*.js")
+        const fqlResults = await retrieveAllPathsInPattern(path.join(migrationsDir, migration), "**/*.fql")
         return {
             files: jsResults.concat(fqlResults),
-            migration: subDir
+            migration: migration
         }
     }))
 }
 
-export const retrieveMigrationPathsForMigrationAfter = async (timestamp: string): Promise<MigrationPathAndFiles> => {
+// retrieves the next migration folder after a given timestamp.
+export const retrieveMigrationPathsForMigrationAfter = async (after: string): Promise<MigrationPathAndFiles> => {
     const migrationsDir = await config.getMigrationsDir()
     let migrationSubdirs = getDirectories(migrationsDir)
-    let migration = getStrAfter(migrationSubdirs, timestamp)
+    let migration = getStrAfter(migrationSubdirs, after)
     const jsResults = await retrieveAllPathsInPattern(path.join(migrationsDir, migration), "**/*.js")
     const fqlResults = await retrieveAllPathsInPattern(path.join(migrationsDir, migration), "**/*.fql")
     return {
@@ -101,14 +101,45 @@ export const retrieveMigrationPathsForMigrationAfter = async (timestamp: string)
     }
 }
 
+// retrieves the last version of each migration resource before a given timestamp
+// since we are rolling back that migration we need to know what the original state was
+// of that resource.
+export const retrieveLastMigrationVersionAndPathsForMigrationBefore = async (before: string | null): Promise<MigrationPathAndFiles[]> => {
+    const migrationsDir = await config.getMigrationsDir()
+    let migrationSubdirs = getDirectories(migrationsDir)
+    migrationSubdirs = getAllStrsBeforeEqual(migrationSubdirs, before)
+    return await Promise.all(migrationSubdirs.map(async (migration) => {
+        const jsResults = await retrieveAllPathsInPattern(path.join(migrationsDir, migration), "**/*.js")
+        const fqlResults = await retrieveAllPathsInPattern(path.join(migrationsDir, migration), "**/*.fql")
+        return {
+            files: jsResults.concat(fqlResults),
+            migration: migration
+        }
+    }))
+}
+
 const getStrAfter = (strs: string[], after: string) => {
     strs = strs.sort()
-    for (let str in strs) {
+    for (let str of strs) {
         if (str > after) {
             return str
         }
     }
     return strs[strs.length - 1]
+}
+
+const getAllStrsBeforeEqual = (strs: string[], before: string | null) => {
+    strs = strs.sort()
+    let res = []
+    for (let str of strs) {
+        if (before === null || str <= before) {
+            res.push(str)
+        }
+        else {
+            return res
+        }
+    }
+    return res
 }
 
 const isDirectory = (source: string) => lstatSync(source).isDirectory()

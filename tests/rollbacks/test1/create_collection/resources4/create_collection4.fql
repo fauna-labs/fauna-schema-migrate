@@ -1,0 +1,1 @@
+CreateCollection({ name: 'test4', data: { foo: "migration4" }})
