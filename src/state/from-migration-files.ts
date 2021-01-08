@@ -83,15 +83,24 @@ export const getAllLastMigrationSnippets = async (before: string | null = null):
             if (latestByNameAndType[key] && latestByNameAndType[key].migration === expr.migration) {
                 throw new DuplicateMigrationError(expr)
             }
+            // We do not include Delete statements in the 'last version'.
+            // the result of this function is only Create/Delete statements.
+            if (expr.statement === StatementType.Delete) {
+                previousVersionsByNameAndType[key] = []
+                delete latestByNameAndType[key]
+            }
             // Else, just override, pathsAndExpressions are ordered.
             // That way we get the latest migrations.
-            if (latestByNameAndType[key]) {
+            else if (latestByNameAndType[key]) {
                 if (!previousVersionsByNameAndType[key]) {
                     previousVersionsByNameAndType[key] = []
                 }
                 previousVersionsByNameAndType[key].push(latestByNameAndType[key])
+                latestByNameAndType[key] = expr
             }
-            latestByNameAndType[key] = expr
+            else {
+                latestByNameAndType[key] = expr
+            }
         })
     })
 

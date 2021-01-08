@@ -12,18 +12,14 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('generate dependent migrations test 1', async (t: ExecutionContext) => {
-    try {
-        await fullApply(testPath)
-        const result = await getAllCloudResources(faunaClient)
-        t.is(result.Collection.length, 3)
-        t.is(result.Function.length, 1)
-        t.is(result.Index.length, 2)
-        t.is(result.Role.length, 2)
-        t.is(result.AccessProvider.length, 1)
-    }
-    catch (err) {
-        console.log(err)
-    }
+    await fullApply(testPath)
+    const result = await getAllCloudResources(faunaClient)
+    t.is(result.Collection.length, 3)
+    t.is(result.Function.length, 1)
+    t.is(result.Index.length, 2)
+    t.is(result.Role.length, 2)
+    t.is(result.AccessProvider.length, 1)
+
 })
 
 test.after(async (t: ExecutionContext) => {

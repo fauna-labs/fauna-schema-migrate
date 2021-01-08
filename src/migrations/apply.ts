@@ -33,7 +33,7 @@ export interface DependenciesArrayEl {
 }
 
 
-export const generateMigrationQuery = async (client: fauna.Client, migrations: TaggedExpression[]) => {
+export const generateMigrationQuery = async (migrations: TaggedExpression[]) => {
     const indexedMigrations = indexMigrations(migrations)
     const dependencyIndex = findDependencies(migrations)
     // transform index to sorted array, sorted on amount of dependencies.
@@ -67,9 +67,6 @@ const orderAccordingToDependencies = (dependenciesArray: DependenciesArrayEl[], 
         const dep = <DependenciesArrayEl>dependenciesArray.shift()
         popLength++
         const allDepsPresent = dep?.dependencyIndexNames.every((el) => {
-            if (indexedMigrations[el].statement === StatementType.Delete) {
-                throw new DeletedReferenceError(indexedMigrations[el], indexedMigrations[dep.indexedName])
-            }
             return namesPresent[el] || indexedMigrations[el].statement === StatementType.Update
         })
         if (allDepsPresent) {
@@ -90,11 +87,13 @@ const generateLetBindingObject = (
     indexedMigrations: NameToExpressions,
     dependencyIndex: NameToDependencyNames) => {
 
+
     const nameToVar: NameToVar = {}
     try {
         // obj is the object with variable bindings that will be fet to the Let.
         const obj: any = {}
         orderedExpressions.forEach((e, varIndex) => {
+
             const indexableName = toIndexableName(e)
             const dependencies = dependencyIndex[indexableName]
             dependencies.forEach((dep: string) => {
@@ -114,7 +113,6 @@ const generateLetBindingObject = (
                         `${depExpr.type}("${depExpr.name}")`,
                         `Select(['ref'],Var("${nameToVar[depIndexableName]}"))`)
                 }
-
             })
             nameToVar[indexableName] = `var${varIndex}`
             // Bind the variable to the code.

@@ -12,18 +12,14 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('generate create_collection and delete it again in next step', async (t: ExecutionContext) => {
-    try {
-        await fullApply(testPath, ['resources1'])
-        let result = await getAllCloudResources(faunaClient)
-        t.is(result.Function.length, 1)
-        t.truthy(result.Function.find(x => x.name === 'multiply'))
-        await fullApply(testPath, ['resources2'])
-        result = await getAllCloudResources(faunaClient)
-        t.is(result.Function.length, 0)
-    }
-    catch (err) {
-        console.log(err)
-    }
+    await fullApply(testPath, ['resources1'])
+    let result = await getAllCloudResources(faunaClient)
+    t.is(result.Function.length, 1)
+    t.truthy(result.Function.find(x => x.name === 'multiply'))
+    await fullApply(testPath, ['resources2'])
+    result = await getAllCloudResources(faunaClient)
+    t.is(result.Function.length, 0)
+
 })
 
 test.after.always(async (t: ExecutionContext) => {

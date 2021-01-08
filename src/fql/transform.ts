@@ -1,11 +1,13 @@
 import * as fauna from 'faunadb'
+import cloneDeep from 'lodash.clonedeep'
 
 const { Update, Delete,
     CreateFunction, CreateCollection, CreateAccessProvider, CreateIndex, CreateRole,
     Role, Function, Collection, Index, AccessProvider } = fauna.query
 
-import { TaggedExpression } from "../types/expressions"
+import { StatementType, TaggedExpression } from "../types/expressions"
 import { ResourceTypes } from '../types/resource-types'
+import { toJsonDeep } from './json'
 
 export const transformUpdateToCreate = (expr: TaggedExpression) => {
     if (!expr.type) {
@@ -13,13 +15,49 @@ export const transformUpdateToCreate = (expr: TaggedExpression) => {
         throw new Error(`Expression type undefined ${expr}`)
     }
     else {
-        console.log(expr.fqlExpr.raw.params)
         const obj1 = expr.fqlExpr.raw.params.raw.object
         obj1.name = expr.name
         const fqlFunction = resourceTypeToFqlCreateFunction(expr)
-        return toTaggedExpr(expr, fqlFunction(obj1))
+        return toTaggedExpr(expr, fqlFunction(obj1), StatementType.Create)
     }
 }
+
+export const explicitelySetAllParameters = (expr: TaggedExpression) => {
+    if (expr.statement !== StatementType.Update) {
+        throw new Error(`explicitelySetAllParameters is only meant for update expressions, received: ${expr.statement}`)
+    }
+    // update only updates what is set.
+    switch (expr.type) {
+        case ResourceTypes.Collection:
+            setExplicitUpdateParameters({ data: null, history_days: 30, ttl_days: null, permissions: null }, expr)
+            return toTaggedExpr(expr, expr.fqlExpr, StatementType.Update)
+        // case ResourceTypes.Index:
+        // ignore, indexes are never updated
+        case ResourceTypes.Function:
+            setExplicitUpdateParameters({ data: null, body: null, role: null }, expr)
+            return toTaggedExpr(expr, expr.fqlExpr, StatementType.Update)
+        case ResourceTypes.Role:
+            setExplicitUpdateParameters({ data: null, privileges: null, membership: null }, expr)
+            return toTaggedExpr(expr, expr.fqlExpr, StatementType.Update)
+        case ResourceTypes.AccessProvider:
+            setExplicitUpdateParameters({ data: null, issuer: null, jwks_uri: null, roles: null }, expr)
+            return toTaggedExpr(expr, expr.fqlExpr, StatementType.Update)
+        default:
+            throw new Error(`Unknown type ${expr.type}`)
+    }
+}
+
+const setExplicitUpdateParameters = (params: { [str: string]: any }, expr: TaggedExpression) => {
+    Object.keys(params).forEach((key) => {
+        if (expr.fqlExpr.raw.params.raw.object[key] === undefined) {
+            expr.fqlExpr.raw.params.raw.object[key] = params[key]
+        }
+    })
+}
+
+/*
+ * Transform from one type to another
+ **/
 
 export const transformCreateToUpdate = (expr: TaggedExpression) => {
     if (!expr.type) {
@@ -27,12 +65,14 @@ export const transformCreateToUpdate = (expr: TaggedExpression) => {
         throw new Error(`Expression type undefined ${expr}`)
     }
     else {
-        return toTaggedExpr(expr,
+        return explicitelySetAllParameters(toTaggedExpr(expr,
             Update(
                 getReference(<TaggedExpression>expr, resourceTypeToFqlReferenceFunction(expr)),
                 expr.fqlExpr.raw["create_" + camelToSnakeCase(expr.type)].raw.object
             )
-        )
+            ,
+            StatementType.Update
+        ))
     }
 }
 
@@ -40,16 +80,21 @@ export const transformCreateToDelete = (expr: TaggedExpression) => {
     return toTaggedExpr(expr,
         Delete(
             getReference(<TaggedExpression>expr, resourceTypeToFqlReferenceFunction(expr)),
-        )
+        ),
+        StatementType.Delete
     )
 }
 
+export const transformUpdateToUpdate = (expr: TaggedExpression) => {
+    return explicitelySetAllParameters(expr)
+}
 
 export const transformUpdateToDelete = (expr: TaggedExpression) => {
     return toTaggedExpr(expr,
         Delete(
             getReference(<TaggedExpression>expr, resourceTypeToFqlReferenceFunction(expr)),
-        )
+        ),
+        StatementType.Delete
     )
 }
 
@@ -61,16 +106,23 @@ export const camelToSnakeCase = (str: string) => {
     return snakeCase
 }
 
-export const toTaggedExpr = (taggedExpr: TaggedExpression | undefined, expr: fauna.Expr) => {
+export const toTaggedExpr = (taggedExpr: TaggedExpression | undefined, fqlExpr: fauna.Expr, statement: StatementType) => {
     if (taggedExpr === undefined) {
         throw new Error('toTaggedExpr: received undefined expr')
     }
     else {
-        return {
+        const type: any = taggedExpr.type
+        const json = toJsonDeep(fqlExpr)
+        const newExpr = {
             name: taggedExpr.name,
-            type: taggedExpr.type,
-            fqlExpr: expr
+            type: type,
+            fqlExpr: fqlExpr,
+            fql: (<any>fqlExpr).toFQL(),
+            statement: statement,
+            json: toJsonDeep(fqlExpr),
+            jsonData: getJsonData(json, type, statement)
         }
+        return newExpr
     }
 }
 
@@ -110,4 +162,21 @@ const resourceTypeToFqlCreateFunction = (expr: TaggedExpression) => {
         default:
             throw new Error(`Unknown type ${expr.type}`)
     }
+}
+
+export const getJsonData = (json: any, resourceType: ResourceTypes, statement: StatementType) => {
+    if (statement === StatementType.Create) {
+        const key = 'create_' + camelToSnakeCase(resourceType)
+        const jsonData = cloneDeep(json[key].object)
+        delete jsonData.name
+        return jsonData
+    }
+    else if (statement === StatementType.Update) {
+        const jsonData = json.params.object
+        return jsonData
+    }
+    else {
+        return {}
+    }
+
 }

@@ -12,16 +12,12 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('generate create_index and update_index migration', async (t: ExecutionContext) => {
-    try {
-        await fullApply(testPath, ['resources1'])
-        await t.throwsAsync(async () => {
-            // indexes can't be updated.
-            await fullApply(testPath, ['resources2'])
-        }, { instanceOf: UpdateIndexError })
-    }
-    catch (err) {
-        console.log(err)
-    }
+    await fullApply(testPath, ['resources1'])
+    await t.throwsAsync(async () => {
+        // indexes can't be updated.
+        await fullApply(testPath, ['resources2'])
+    }, { instanceOf: UpdateIndexError })
+
 })
 
 

@@ -12,16 +12,12 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('generate create_collection migration', async (t: ExecutionContext) => {
-    try {
-        await fullApply(testPath)
-        const result = await getAllCloudResources(faunaClient)
-        t.is(result.Collection.length, 2)
-        t.truthy(result.Collection.find(x => x.name === 'migrations'))
-        t.truthy(result.Collection.find(x => x.name === 'test1'))
-    }
-    catch (err) {
-        console.log(err)
-    }
+    await fullApply(testPath)
+    const result = await getAllCloudResources(faunaClient)
+    t.is(result.Collection.length, 2)
+    t.truthy(result.Collection.find(x => x.name === 'migrations'))
+    t.truthy(result.Collection.find(x => x.name === 'test1'))
+
 })
 
 test.after(async (t: ExecutionContext) => {

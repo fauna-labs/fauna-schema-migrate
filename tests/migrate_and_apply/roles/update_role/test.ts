@@ -13,40 +13,34 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('generate create_role and update_role migration', async (t: ExecutionContext) => {
-    try {
-        await fullApply(testPath, ['resources1'])
-        let result = await getAllCloudResources(faunaClient)
-        t.is(result.Role.length, 1)
-        t.truthy(result.Role.find(x => x.name === 'access_users'))
+    await fullApply(testPath, ['resources1'])
+    let result = await getAllCloudResources(faunaClient)
+    t.is(result.Role.length, 1)
+    t.truthy(result.Role.find(x => x.name === 'access_users'))
 
-        await fullApply(testPath, ['resources2'])
-        result = await getAllCloudResources(faunaClient)
-        t.is(result.Role.length, 1)
-        t.is(result.Collection.length, 2)
-        t.truthy(result.Role.find(x => x.name === 'access_users'))
-        t.truthy(result.Collection.find(x => x.name === 'users'))
-        // Verify whether the body is correct.
-        let rolePrivileges = [
+    await fullApply(testPath, ['resources2'])
+    result = await getAllCloudResources(faunaClient)
+    t.is(result.Role.length, 1)
+    t.is(result.Collection.length, 2)
+    t.truthy(result.Role.find(x => x.name === 'access_users'))
+    t.truthy(result.Collection.find(x => x.name === 'users'))
+    // Verify whether the body is correct.
+    let rolePrivileges = [
+        {
+            "resource":
             {
-                "resource":
+                "@ref":
                 {
-                    "@ref":
-                    {
-                        "id": "users", "collection":
-                            { "@ref": { "id": "collections" } }
-                    }
-                },
-                "actions": { "create": true, "read": true }
-            }]
-        t.is(
-            JSON.stringify(result.Role[0].json.privileges, null, 2),
-            JSON.stringify(rolePrivileges, null, 2)
-        )
-
-    }
-    catch (err) {
-        console.log(err)
-    }
+                    "id": "users", "collection":
+                        { "@ref": { "id": "collections" } }
+                }
+            },
+            "actions": { "create": true, "read": true }
+        }]
+    t.is(
+        JSON.stringify(result.Role[0].json.privileges, null, 2),
+        JSON.stringify(rolePrivileges, null, 2)
+    )
 })
 
 

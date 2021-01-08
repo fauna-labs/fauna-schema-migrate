@@ -12,15 +12,11 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('generate create_role migration', async (t: ExecutionContext) => {
-    try {
-        await fullApply(testPath)
-        const result = await getAllCloudResources(faunaClient)
-        t.is(result.Role.length, 1)
-        t.truthy(result.Role.find(x => x.name === 'powerless'))
-    }
-    catch (err) {
-        console.log(err)
-    }
+    await fullApply(testPath)
+    const result = await getAllCloudResources(faunaClient)
+    t.is(result.Role.length, 1)
+    t.truthy(result.Role.find(x => x.name === 'powerless'))
+
 })
 
 test.after.always(async (t: ExecutionContext) => {

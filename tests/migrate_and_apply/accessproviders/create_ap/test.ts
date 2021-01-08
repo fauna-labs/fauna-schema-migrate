@@ -12,15 +12,11 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('generate create access provider migration', async (t: ExecutionContext) => {
-    try {
-        await fullApply(testPath)
-        const result = await getAllCloudResources(faunaClient)
-        t.is(result.AccessProvider.length, 1)
-        t.truthy(result.AccessProvider.find(x => x.name === 'Auth0-myapp'))
-    }
-    catch (err) {
-        console.log(err)
-    }
+    await fullApply(testPath)
+    const result = await getAllCloudResources(faunaClient)
+    t.is(result.AccessProvider.length, 1)
+    t.truthy(result.AccessProvider.find(x => x.name === 'Auth0-myapp'))
+
 })
 
 test.after(async (t: ExecutionContext) => {

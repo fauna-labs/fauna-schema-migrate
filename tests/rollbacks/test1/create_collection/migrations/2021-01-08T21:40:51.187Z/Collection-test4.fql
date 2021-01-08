@@ -2,5 +2,8 @@ Update(Collection("test4"), {
   name: "test4",
   data: {
     foo: "migration4"
-  }
+  },
+  history_days: 30,
+  ttl_days: null,
+  permissions: null
 })

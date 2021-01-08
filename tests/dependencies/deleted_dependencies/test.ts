@@ -13,24 +13,20 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('referencing undefined dependencies test', async (t: ExecutionContext) => {
-    try {
 
-        // first resource folder contains a collection that references a function.
-        await fullApply(testPath, ['resources1'])
-        let result = await getAllCloudResources(faunaClient)
-        t.is(result.Collection.length, 2)
-        t.truthy(result.Collection.find(x => x.name === 'migrations'))
-        t.truthy(result.Collection.find(x => x.name === 'collection1'))
-        // Second resource folder contains the same collection but the function
-        // has been deleted. Since the collection still referneces it, this throws
-        // an error.
-        await t.throwsAsync(async () => {
-            await fullApply(testPath, ['resources2'])
-        }, { instanceOf: UndefinedReferenceError })
-    }
-    catch (err) {
-        console.log(err)
-    }
+    // first resource folder contains a collection that references a function.
+    await fullApply(testPath, ['resources1'])
+    let result = await getAllCloudResources(faunaClient)
+    t.is(result.Collection.length, 2)
+    t.truthy(result.Collection.find(x => x.name === 'migrations'))
+    t.truthy(result.Collection.find(x => x.name === 'collection1'))
+    // Second resource folder contains the same collection but the function
+    // has been deleted. Since the collection still referneces it, this throws
+    // an error.
+    await t.throwsAsync(async () => {
+        await fullApply(testPath, ['resources2'])
+    }, { instanceOf: UndefinedReferenceError })
+
 })
 
 test.after(async (t: ExecutionContext) => {

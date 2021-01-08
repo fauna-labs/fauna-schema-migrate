@@ -1,9 +1,0 @@
-Update(Collection("collection1"), {
-  name: "collection1",
-  data: {
-    metadata: "some metadata for this collection, even if it's strange we'll link it to some other collection",
-    role: Collection("collection2")
-  },
-  history_days: 5,
-  ttl_days: 5
-})

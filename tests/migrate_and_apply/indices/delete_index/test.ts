@@ -12,22 +12,18 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('generate create_collection with index and delete index again in next step', async (t: ExecutionContext) => {
-    try {
-        await fullApply(testPath, ['resources1'])
-        let result = await getAllCloudResources(faunaClient)
-        t.is(result.Index.length, 1)
-        t.is(result.Collection.length, 2)
-        t.truthy(result.Index.find(x => x.name === 'users_by_email'))
-        await fullApply(testPath, ['resources2'])
-        result = await getAllCloudResources(faunaClient)
-        // the index is gone.
-        t.is(result.Index.length, 0)
-        // the collection is still there
-        t.is(result.Collection.length, 2)
-    }
-    catch (err) {
-        console.log(err)
-    }
+    await fullApply(testPath, ['resources1'])
+    let result = await getAllCloudResources(faunaClient)
+    t.is(result.Index.length, 1)
+    t.is(result.Collection.length, 2)
+    t.truthy(result.Index.find(x => x.name === 'users_by_email'))
+    await fullApply(testPath, ['resources2'])
+    result = await getAllCloudResources(faunaClient)
+    // the index is gone.
+    t.is(result.Index.length, 0)
+    // the collection is still there
+    t.is(result.Collection.length, 2)
+
 })
 
 test.after.always(async (t: ExecutionContext) => {

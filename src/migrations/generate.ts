@@ -1,6 +1,6 @@
 import * as fauna from 'faunadb'
 
-import { PlannedDiff, PlannedMigrations, TaggedExpression } from "../types/expressions";
+import { PlannedDiff, PlannedMigrations, StatementType, TaggedExpression } from "../types/expressions";
 import { writeNewMigration } from '../util/files';
 import { ResourceTypes } from '../types/resource-types';
 import { prettyPrintExpr } from '../fql/print';
@@ -31,7 +31,7 @@ export const generateMigrations = async (planned: PlannedMigrations) => {
 const transformStatements = (resources: PlannedDiff,) => {
     let migrExprs: TaggedExpression[] = []
     resources.added.forEach((res) => {
-        migrExprs.push(toTaggedExpr(res.target, res.target?.fqlExpr))
+        migrExprs.push(toTaggedExpr(res.target, res.target?.fqlExpr, StatementType.Create))
     })
     resources.changed.forEach((res) => {
         // indexes can't be updated.

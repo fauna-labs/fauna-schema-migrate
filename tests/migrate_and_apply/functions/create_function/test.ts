@@ -12,41 +12,37 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('generate create_function migration', async (t: ExecutionContext) => {
-    try {
-        await fullApply(testPath)
-        const result = await getAllCloudResources(faunaClient)
-        // Verify whether the function exists
-        t.is(result.Function.length, 1)
-        t.truthy(result.Function.find(x => x.name === 'multiply'))
-        // Verify whether the body is correct.
-        const functionBody = {
-            "@query": {
-                "lambda": [
-                    "var1",
-                    "var2"
-                ],
-                "expr": {
+    await fullApply(testPath)
+    const result = await getAllCloudResources(faunaClient)
+    // Verify whether the function exists
+    t.is(result.Function.length, 1)
+    t.truthy(result.Function.find(x => x.name === 'multiply'))
+    // Verify whether the body is correct.
+    const functionBody = {
+        "@query": {
+            "lambda": [
+                "var1",
+                "var2"
+            ],
+            "expr": {
 
-                    "multiply": [
-                        {
-                            "var": "var1"
-                        },
-                        {
-                            "var": "var2"
-                        }
-                    ]
-                }
+                "multiply": [
+                    {
+                        "var": "var1"
+                    },
+                    {
+                        "var": "var2"
+                    }
+                ]
             }
         }
-        delete result.Function[0].json.body["@query"]['api_version']
-        t.is(
-            JSON.stringify(result.Function[0].json.body, null, 2),
-            JSON.stringify(functionBody, null, 2)
-        )
     }
-    catch (err) {
-        console.log(err)
-    }
+    delete result.Function[0].json.body["@query"]['api_version']
+    t.is(
+        JSON.stringify(result.Function[0].json.body, null, 2),
+        JSON.stringify(functionBody, null, 2)
+    )
+
 })
 
 test.after(async (t: ExecutionContext) => {

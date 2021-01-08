@@ -12,15 +12,11 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('circular updates should of course remain possible', async (t: ExecutionContext) => {
-    try {
-        await fullApply(testPath, ["resources1"])
-        await fullApply(testPath, ["resources2"])
-        // pass since the test did not throw an error.
-        t.pass()
-    }
-    catch (err) {
-        console.log(err)
-    }
+    await fullApply(testPath, ["resources1"])
+    await fullApply(testPath, ["resources2"])
+    // pass since the test did not throw an error.
+    t.pass()
+
 })
 
 test.after(async (t: ExecutionContext) => {

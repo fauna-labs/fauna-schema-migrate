@@ -12,15 +12,11 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('conflicting (duplicate naming) dependencies test', async (t: ExecutionContext) => {
-    try {
-        await t.throwsAsync(async () => {
-            // indexes can't be updated.
-            await fullApply(testPath)
-        }, { instanceOf: DuplicateResourceError })
-    }
-    catch (err) {
-        console.log(err)
-    }
+    await t.throwsAsync(async () => {
+        // indexes can't be updated.
+        await fullApply(testPath)
+    }, { instanceOf: DuplicateResourceError })
+
 })
 
 test.after(async (t: ExecutionContext) => {

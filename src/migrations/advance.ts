@@ -1,6 +1,6 @@
 
 import { getSnippetsFromNextMigration } from "../state/from-migration-files"
-import { LoadedResources, TaggedExpression } from "../types/expressions"
+import { LoadedResources, StatementType, TaggedExpression } from "../types/expressions"
 import { ResourceTypes } from "../types/resource-types"
 
 import * as fauna from 'faunadb'
@@ -10,6 +10,7 @@ import { retrieveLastCloudMigration } from "../fql/fql-snippets"
 import { generateMigrationQuery } from "./apply"
 import { clientGenerator } from "../util/fauna-client";
 import { prettyPrintExpr } from "../fql/print";
+import { transformUpdateToUpdate } from "../fql/transform";
 
 const { Let, Create, Collection } = fauna.query
 
@@ -38,8 +39,9 @@ export const advanceMigrations = async () => {
     const client = clientGenerator.getClient()
     const lastCloudMigration = await retrieveLastCloudMigration(client)
     const migrationsFQL = await getSnippetsFromNextMigration(lastCloudMigration)
-    const flattenedMigrations = flattenMigrations(migrationsFQL.categories)
-    const letQueryObject = await generateMigrationQuery(client, flattenedMigrations)
+    let flattenedMigrations = flattenMigrations(migrationsFQL.categories)
+    flattenedMigrations = fixUpdates(flattenedMigrations)
+    const letQueryObject = await generateMigrationQuery(flattenedMigrations)
     const query = Let(
         // add all statements as Let variable bindings
         letQueryObject,
@@ -78,4 +80,17 @@ const flattenMigrations = (migrationsPerType: LoadedResources) => {
     })
     const flattened = grouped.flat()
     return flattened
+}
+
+// Updates only update the explicitely mentioned keys. To be certain
+// we have to fill in all the keys for a given type with key: null.
+const fixUpdates = (expressions: TaggedExpression[]) => {
+    return expressions.map((e) => {
+        if (e.statement === StatementType.Update) {
+            return transformUpdateToUpdate(e)
+        }
+        else {
+            return e
+        }
+    })
 }

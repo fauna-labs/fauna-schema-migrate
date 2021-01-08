@@ -6,10 +6,12 @@ import { retrieveAllCloudMigrations } from "../fql/fql-snippets"
 import { ResourceTypes } from '../types/resource-types'
 import { MigrationRefAndTimestamp, PlannedMigrations, StatementType, TaggedExpression, TargetCurrentAndSkippedMigrations } from '../types/expressions'
 import { retrieveDiffBetweenResourcesAndMigrations } from './plan'
-import { transformCreateToDelete, transformCreateToUpdate, transformUpdateToCreate, transformUpdateToDelete } from '../fql/transform'
+import { transformCreateToDelete, transformCreateToUpdate, transformUpdateToCreate, transformUpdateToDelete, transformUpdateToUpdate } from '../fql/transform'
 import { prettyPrintExpr } from '../fql/print'
 import { generateMigrationQuery } from './apply'
 
+const q = fauna.query
+const { Let, Lambda, Delete } = fauna.query
 
 export const rollbackMigrations = async (amount: number) => {
     const client = clientGenerator.getClient()
@@ -17,15 +19,20 @@ export const rollbackMigrations = async (amount: number) => {
         = await getCurrentAndTargetMigration(amount)
     const diff = await retrieveDiff(currentMigration, targetMigration)
     const expressions = transformDiffToExpressions(diff)
+    const letQueryObject = await generateMigrationQuery(expressions)
+    const toDeleteReferences = skippedMigrations.concat([currentMigration])
+        .map((e) => e.ref)
+    const query = Let(
+        // add all statements as Let variable bindings
+        letQueryObject,
+        q.Map(toDeleteReferences, Lambda(ref => Delete(ref)))
+    )
 
-    console.log('----- rollback expressions')
-    expressions.forEach((e) => {
-        console.log(prettyPrintExpr(e.fqlExpr))
-    })
-
-    const letQueryObject = generateMigrationQuery(client, expressions)
-    console.log('query', letQueryObject)
-
+    console.log('----- rollback query')
+    // Todo: prettyprint query in case of verbose option, add that option.
+    //       or a 'plan' option to see the query.
+    console.log(' Pretty printed FQL Result \n ---------------- ', prettyPrintExpr(query))
+    await client.query(query)
 }
 
 const getCurrentAndTargetMigration = async (amount: number): Promise<TargetCurrentAndSkippedMigrations> => {
@@ -44,7 +51,6 @@ const getCurrentAndTargetMigration = async (amount: number): Promise<TargetCurre
         throw new Error('Asked for rollback that goes back further than the first migration')
     }
     const skippedMigrations = cloudMigrations.slice(rollbackToIndex + 1, cloudMigrations.length - 1)
-    console.log(skippedMigrations)
     return { current: currentMigration, target: targetMigration, skipped: skippedMigrations }
 }
 
@@ -59,24 +65,12 @@ const retrieveDiff = async (currentMigration: MigrationRefAndTimestamp, targetMi
         const { migrations: previousMigrations, lastMigration: previousLastMigration }
             = await getAllLastMigrationSnippets(targetMigration.timestamp)
         // just to be clear these vars should be the same.
-        console.log(targetMigration)
         if (previousLastMigration !== targetMigration.timestamp) {
             throw Error(`did not receive the same migration,
                 rollbackMigration should be equal to previousLastMigration
                 ${previousLastMigration}, ${targetMigration.timestamp}
             `)
         }
-        console.log('rollbackToMigration', targetMigration)
-        console.log('fql previous',
-            JSON.stringify(
-                previousMigrations[ResourceTypes.Collection]
-                    .map((mig) => mig.fql), null, 2))
-
-        console.log('fql current',
-            JSON.stringify(
-                currentMigrations[ResourceTypes.Collection]
-                    .map((mig) => mig.fql), null, 2))
-
         // We need to calculate the diff. But we already have such a function
         // which we used to plan migrations.
         // we can consider the previousMigrations as the new source of truth (we have to go there)
@@ -85,6 +79,7 @@ const retrieveDiff = async (currentMigration: MigrationRefAndTimestamp, targetMi
         // In essence, previousMigrations is equivalent to the 'resources' now
         // while currentMigrations are the 'migrations'.
         const diff = retrieveDiffBetweenResourcesAndMigrations(currentMigrations, previousMigrations)
+        console.log(diff)
         return diff
     }
 }
@@ -95,27 +90,15 @@ const transformDiffToExpressions = (diff: PlannedMigrations): TaggedExpression[]
     for (let resourceType in ResourceTypes) {
         const diffForType = diff[resourceType]
         diffForType.added.map((prevCurr) => {
-            // DELETED
-            // added in rollback means that the migration(s) we are rolling back deleted a resource.
-            // deleted statements don't hold any information though so.
-            // which means we need to get the statement for this collection
-            // prior to the delete (can be an update or a create)
-            if (prevCurr.previous?.previousVersions && prevCurr.previous?.previousVersions.length > 0) {
-                const lastMeaningful = prevCurr.previous?.previousVersions[0]
-                if (lastMeaningful.statement === StatementType.Update) {
-                    // if it's an update, given that we rolled back a delete, we have to turn it into a create.
-                    expressions.push(transformUpdateToCreate(lastMeaningful))
-                }
-                else if (lastMeaningful.statement === StatementType.Create) {
-                    // if it's a create. Keep it.
-                    expressions.push(lastMeaningful)
-                }
-                else {
-                    throw Error(`Unexpected type in rollback ${prevCurr.target?.statement}`)
-                }
+            if (prevCurr.target?.statement === StatementType.Update) {
+                expressions.push(transformUpdateToCreate(prevCurr.target))
+            }
+            else if (prevCurr.target?.statement === StatementType.Create) {
+                expressions.push(prevCurr.target)
             }
             else {
-                throw new Error("Delete migration does not have an earlier Create/Update migration which is impossible.")
+                console.log(prevCurr.target)
+                throw Error(`Unexpected type in rollback ${prevCurr.target?.statement}`)
             }
         })
 
@@ -126,7 +109,7 @@ const transformDiffToExpressions = (diff: PlannedMigrations): TaggedExpression[]
             // already exists it needs to be trasnformed to an Update.
             if (prevCurr.target?.statement === StatementType.Update) {
                 // if it's an update, keep it
-                expressions.push(prevCurr.target)
+                expressions.push(transformUpdateToUpdate(prevCurr.target))
             }
             else if (prevCurr.target?.statement === StatementType.Create) {
                 // if it's a create. trasnform to an update.
@@ -152,6 +135,7 @@ const transformDiffToExpressions = (diff: PlannedMigrations): TaggedExpression[]
                 expressions.push(transformUpdateToDelete(prevCurr.previous))
             }
             else {
+                console.log(prevCurr.target)
                 throw Error(`Unexpected type in rollback ${prevCurr.target?.statement}`)
             }
         })

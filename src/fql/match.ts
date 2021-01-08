@@ -2,6 +2,7 @@ var cloneDeep = require('lodash.clonedeep')
 
 import { TaggedExpression, StatementType } from "../types/expressions"
 import { ResourceTypes, TypeResult } from "../types/resource-types"
+import { camelToSnakeCase, getJsonData } from "./transform"
 
 export const addNamesAndTypes = (snippets: TaggedExpression[]) => {
     snippets.forEach((s) => {
@@ -19,11 +20,11 @@ export const retrieveReference = (snippet: TaggedExpression) => {
 
 const getMatchingResult = (s: TaggedExpression) => {
     let matchers = [
-        isCollectionExpression,
-        isIndexEpression,
-        isUdfExpression,
-        isRoleExpression,
-        isAccessProvider
+        createMatcher(ResourceTypes.Collection),
+        createMatcher(ResourceTypes.Index),
+        createMatcher(ResourceTypes.Function),
+        createMatcher(ResourceTypes.Role),
+        createMatcher(ResourceTypes.AccessProvider)
     ]
     for (let m of matchers) {
         let res = m(s)
@@ -35,51 +36,21 @@ const getMatchingResult = (s: TaggedExpression) => {
 
 
 // Seems to be always the same. We could simplify the code
-const isAccessProvider = (snippet: TaggedExpression): TypeResult | false => {
-    const resType = ResourceTypes.AccessProvider
-    return isCreateFqlExpressionOfType(snippet, 'create_access_provider', resType) ||
-        isDeleteFqlExpressionOfType(snippet, 'access_provider', resType) ||
-        isUpdateFqlExpressionOfType(snippet, 'access_provider', resType)
+const createMatcher = (resType: ResourceTypes): any => {
+    return (snippet: TaggedExpression,) => {
+        return isCreateFqlExpressionOfType(snippet, resType) ||
+            isDeleteFqlExpressionOfType(snippet, resType) ||
+            isUpdateFqlExpressionOfType(snippet, resType)
+    }
 }
 
-const isCollectionExpression = (snippet: TaggedExpression): TypeResult | false => {
-    const resType = ResourceTypes.Collection
-    return isCreateFqlExpressionOfType(snippet, 'create_collection', resType) ||
-        isDeleteFqlExpressionOfType(snippet, 'collection', resType) ||
-        isUpdateFqlExpressionOfType(snippet, 'collection', resType)
-}
-
-const isIndexEpression = (snippet: TaggedExpression): TypeResult | false => {
-    const resType = ResourceTypes.Index
-    return isCreateFqlExpressionOfType(snippet, 'create_index', resType) ||
-        isDeleteFqlExpressionOfType(snippet, 'index', resType) ||
-        isUpdateFqlExpressionOfType(snippet, 'index', resType)
-}
-
-
-const isUdfExpression = (snippet: TaggedExpression) => {
-    const resType = ResourceTypes.Function
-    return isCreateFqlExpressionOfType(snippet, 'create_function', resType) ||
-        isDeleteFqlExpressionOfType(snippet, 'function', resType) ||
-        isUpdateFqlExpressionOfType(snippet, 'function', resType)
-}
-
-const isRoleExpression = (snippet: TaggedExpression): TypeResult | false => {
-    const resType = ResourceTypes.Role
-    return isCreateFqlExpressionOfType(snippet, 'create_role', resType) ||
-        isDeleteFqlExpressionOfType(snippet, 'role', resType) ||
-        isUpdateFqlExpressionOfType(snippet, 'role', resType)
-}
-
-const isCreateFqlExpressionOfType = (snippet: TaggedExpression, exprType: string, resType: ResourceTypes): TypeResult | false => {
-    if (Object.keys(snippet.fqlExpr.raw).includes(exprType)) {
+const isCreateFqlExpressionOfType = (snippet: TaggedExpression, resType: ResourceTypes): TypeResult | false => {
+    const stringResType = 'create_' + camelToSnakeCase(resType)
+    if (Object.keys(snippet.fqlExpr.raw).includes(stringResType)) {
         // remove the name so it compared more easily to an Update statement.
-        const name = snippet.json[exprType].object.name
-        const jsonData = cloneDeep(snippet.json[exprType].object)
-        delete jsonData.name
         return {
-            jsonData: jsonData,
-            name: name,
+            jsonData: getJsonData(snippet.json, resType, StatementType.Create),
+            name: snippet.json[stringResType].object.name,
             type: resType,
             statement: StatementType.Create
         }
@@ -89,11 +60,13 @@ const isCreateFqlExpressionOfType = (snippet: TaggedExpression, exprType: string
     }
 }
 
-const isUpdateFqlExpressionOfType = (snippet: TaggedExpression, exprType: string, resType: ResourceTypes): TypeResult | false => {
-    if (snippet.fqlExpr.raw.update && Object.keys(snippet.fqlExpr.raw.update.raw).includes(exprType)) {
+const isUpdateFqlExpressionOfType = (snippet: TaggedExpression, resType: ResourceTypes): TypeResult | false => {
+    const stringResType = camelToSnakeCase(resType)
+
+    if (snippet.fqlExpr.raw.update && Object.keys(snippet.fqlExpr.raw.update.raw).includes(stringResType)) {
         return {
-            jsonData: snippet.json.params.object,
-            name: snippet.json.update[exprType],
+            jsonData: getJsonData(snippet.json, resType, StatementType.Update),
+            name: snippet.json.update[stringResType],
             type: resType,
             statement: StatementType.Update
         }
@@ -103,11 +76,13 @@ const isUpdateFqlExpressionOfType = (snippet: TaggedExpression, exprType: string
     }
 }
 
-const isDeleteFqlExpressionOfType = (snippet: TaggedExpression, exprType: string, resType: ResourceTypes): TypeResult | false => {
-    if (snippet.fqlExpr.raw.delete && Object.keys(snippet.fqlExpr.raw.delete.raw).includes(exprType)) {
+const isDeleteFqlExpressionOfType = (snippet: TaggedExpression, resType: ResourceTypes): TypeResult | false => {
+    const stringResType = camelToSnakeCase(resType)
+
+    if (snippet.fqlExpr.raw.delete && Object.keys(snippet.fqlExpr.raw.delete.raw).includes(stringResType)) {
         return {
             jsonData: {},
-            name: snippet.json.delete[exprType],
+            name: snippet.json.delete[stringResType],
             type: resType,
             statement: StatementType.Delete
         }

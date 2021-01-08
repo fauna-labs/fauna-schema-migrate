@@ -12,19 +12,15 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('generate create_collection and create_index migration', async (t: ExecutionContext) => {
-    try {
-        await fullApply(testPath)
-        const result = await getAllCloudResources(faunaClient)
-        t.is(result.Collection.length, 2)
-        t.truthy(result.Collection.find(x => x.name === 'migrations'))
-        t.truthy(result.Collection.find(x => x.name === 'users'))
+    await fullApply(testPath)
+    const result = await getAllCloudResources(faunaClient)
+    t.is(result.Collection.length, 2)
+    t.truthy(result.Collection.find(x => x.name === 'migrations'))
+    t.truthy(result.Collection.find(x => x.name === 'users'))
 
-        t.is(result.Index.length, 1)
-        t.truthy(result.Index.find(x => x.name === 'users_by_email'))
-    }
-    catch (err) {
-        console.log(err)
-    }
+    t.is(result.Index.length, 1)
+    t.truthy(result.Index.find(x => x.name === 'users_by_email'))
+
 })
 
 

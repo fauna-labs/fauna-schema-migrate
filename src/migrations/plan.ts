@@ -119,7 +119,10 @@ const createPairsForType = (previouss: TaggedExpression[], currents: TaggedExpre
         // as well as comparing migrations (which contain Create/Update/Delete)
         const current = <TaggedExpression>currents.pop()
         const previousIndex = findIndex(current, previouss)
-        if (previousIndex !== -1) {
+        if (current?.statement === StatementType.Delete) {
+            // ignore deletes
+        }
+        else if (previousIndex !== -1) {
             const res = previouss.splice(previousIndex, 1)
             const previous = res[0]
             if (equalDeep(previous.jsonData, current.jsonData)) {
@@ -129,16 +132,14 @@ const createPairsForType = (previouss: TaggedExpression[], currents: TaggedExpre
                 pairs.changed.push({ target: current, previous: previous })
             }
         }
-        else if (current.statement === StatementType.Create) {
+        else {
             pairs.added.push({ target: current })
         }
     }
 
     while (previouss.length > 0) {
         const previous = previouss.pop()
-        if (previous?.statement !== StatementType.Delete) {
-            pairs.deleted.push({ previous: previous })
-        }
+        pairs.deleted.push({ previous: previous })
     }
 
     return pairs

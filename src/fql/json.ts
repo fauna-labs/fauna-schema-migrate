@@ -116,6 +116,7 @@ export const toJsonDeep = (obj: any) => {
 
 export const findPatterns = (o: any, patterns: PatternAndIndexName[]) => {
     try {
+
         return patterns
             .map((pattern) => {
                 const res = findNamedPattern(o, pattern)
