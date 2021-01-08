@@ -32,14 +32,14 @@ test('generate create_collection migration', async (t: ExecutionContext) => {
     // then turn back.
 
     console.log('====== rolling back ========')
-    await rollback(1)
-    const result3b = await getAllCloudResources(faunaClient)
-    await rollback(1)
+    // await rollback(1)
+    // const result3b = await getAllCloudResources(faunaClient)
+    await rollback(2)
     const result2b = await getAllCloudResources(faunaClient)
     // await rollback(1)
     // const result1b = await getAllCloudResources(faunaClient)
 
-    compareResults(t, result3, result3b)
+    // compareResults(t, result3, result3b)
     compareResults(t, result2, result2b)
     // compareResults(t, result1, result1b)
 

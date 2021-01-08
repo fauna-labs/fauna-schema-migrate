@@ -79,7 +79,6 @@ const retrieveDiff = async (currentMigration: MigrationRefAndTimestamp, targetMi
         // In essence, previousMigrations is equivalent to the 'resources' now
         // while currentMigrations are the 'migrations'.
         const diff = retrieveDiffBetweenResourcesAndMigrations(currentMigrations, previousMigrations)
-        console.log(diff)
         return diff
     }
 }
