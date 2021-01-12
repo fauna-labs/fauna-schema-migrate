@@ -36,7 +36,7 @@ export interface DependenciesArrayEl {
 
 
 export const advanceMigrations = async () => {
-    const client = clientGenerator.getClient()
+    const client = await clientGenerator.getClient()
     const lastCloudMigration = await retrieveLastCloudMigration(client)
     const migrationsFQL = await getSnippetsFromNextMigration(lastCloudMigration)
     let flattenedMigrations = flattenMigrations(migrationsFQL.categories)

@@ -9,7 +9,7 @@ const init = async () => {
     try {
         await config.writeConfig()
         await files.generateDefaultDirs()
-        const client = clientGenerator.getClient()
+        const client = await clientGenerator.getClient()
         await createMigrationCollection(client)
     } catch (error) {
         console.log(error)

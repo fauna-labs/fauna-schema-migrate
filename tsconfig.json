@@ -12,6 +12,7 @@
     "outDir": "./dist",
     "strict": true,
     "target": "es5",
+    "jsx": "react",
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "declaration": true

@@ -26,6 +26,7 @@ program.on('command:*', function (operands) {
 });
 
 if (process.argv.length == 2) {
+
   console.log('todo helpful interactive mode')
   console.log(program.helpInformation());
   process.exitCode = 1

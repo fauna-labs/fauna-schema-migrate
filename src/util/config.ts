@@ -3,6 +3,8 @@ import chalk from "chalk"
 
 import * as files from './files'
 import defaults from './defaults'
+import { interactiveShell } from '../interactive-shell/interactive-shell'
+import { Message } from '../interactive-shell/messages/message'
 
 export class Config {
 
@@ -50,7 +52,7 @@ export class Config {
     async writeConfig() {
         const content = this.configDefault()
         const fullPath = await files.writeApplicationFile(path.join(defaults.configFile), content)
-        console.error(chalk.green(`Writing configuration file ${fullPath}`));
+        interactiveShell.addMessage(new Message(`Writing configuration file ${fullPath}`))
     }
 
     async getMigrationsDir() {

@@ -14,7 +14,7 @@ const q = fauna.query
 const { Let, Lambda, Delete } = fauna.query
 
 export const rollbackMigrations = async (amount: number) => {
-    const client = clientGenerator.getClient()
+    const client = await clientGenerator.getClient()
     const { current: currentMigration, target: targetMigration, skipped: skippedMigrations }
         = await getCurrentAndTargetMigration(amount)
     const diff = await retrieveDiff(currentMigration, targetMigration)
@@ -36,7 +36,7 @@ export const rollbackMigrations = async (amount: number) => {
 }
 
 const getCurrentAndTargetMigration = async (amount: number): Promise<TargetCurrentAndSkippedMigrations> => {
-    const client = clientGenerator.getClient()
+    const client = await clientGenerator.getClient()
     // Retrieve all migration timestamps that have been processed from cloud
     const cloudMigrations = (await retrieveAllCloudMigrations(client)).sort()
     // get the migration timestmap we are currently at.
