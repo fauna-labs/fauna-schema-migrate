@@ -11,6 +11,7 @@ import { generateMigrationQuery } from "./apply"
 import { clientGenerator } from "../util/fauna-client";
 import { prettyPrintExpr } from "../fql/print";
 import { transformUpdateToUpdate } from "../fql/transform";
+import { interactiveShell } from "../interactive-shell/interactive-shell";
 
 const { Let, Create, Collection } = fauna.query
 
@@ -49,10 +50,8 @@ export const advanceMigrations = async () => {
         Create(Collection(await config.getMigrationCollection()),
             { data: { migration: migrationsFQL.migration, migrated: getMigrationMetadata(migrationsFQL.categories) } }
         ))
-
-    // Todo: prettyprint query in case of verbose option, add that option.
-    //       or a 'plan' option to see the query.
-    console.log(' Pretty printed FQL Result \n ---------------- ', prettyPrintExpr(query))
+    console.log(JSON.stringify(letQueryObject, null, 2))
+    interactiveShell.printBoxedInfo(prettyPrintExpr(query))
     await client.query(query)
 }
 

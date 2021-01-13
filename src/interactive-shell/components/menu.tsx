@@ -2,7 +2,7 @@ const version = require('./../../../package.json').version
 
 import * as React from 'react';
 import SelectInput from './select-input';
-import tasks from '../../tasks/tasks';
+import { tasks, Task } from '../../tasks/tasks';
 import { faunaPurple2 } from '../colors';
 
 interface Props {
@@ -14,8 +14,8 @@ function Menu(props: Props): JSX.Element {
 
     const renderOptions = () => {
         const items = tasks
-            .filter((t) => t.name !== 'run')
-            .map((t) => {
+            .filter((t: Task) => t.name !== 'run')
+            .map((t: Task) => {
                 return {
                     label: t.name,
                     action: t.action,

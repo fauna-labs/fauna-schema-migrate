@@ -8,9 +8,13 @@ const { CreateCollection, Documents, Collection, Paginate, Select,
 } = fauna.query
 
 export const createMigrationCollection = async (client: fauna.Client) => {
-    await client.query(
-        CreateCollection({ name: await config.getMigrationCollection() })
-    )
+    const name = await config.getMigrationCollection()
+    return await client.query(
+        If(
+            Exists(Collection(name)),
+            false,
+            CreateCollection({ name: await config.getMigrationCollection() })
+        ))
 }
 
 export const retrieveLastCloudMigration = async (client: fauna.Client) => {

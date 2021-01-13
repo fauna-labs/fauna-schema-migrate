@@ -1,12 +1,12 @@
 
 import path from 'path'
 import test, { ExecutionContext } from 'ava';
-import { fullApply, setupFullTest, destroyFullTest, rollback } from '../../../_helpers'
-import { getAllCloudResources } from '../../../../src/state/from-cloud'
-import { LoadedResources } from '../../../../src/types/expressions';
-import { ResourceTypes } from '../../../../src/types/resource-types';
+import { fullApply, setupFullTest, destroyFullTest, rollback } from '../../_helpers'
+import { getAllCloudResources } from '../../../src/state/from-cloud'
+import { LoadedResources } from '../../../src/types/expressions';
+import { ResourceTypes } from '../../../src/types/resource-types';
 import deepEqual from 'deep-equal';
-import { transformUpdateToDelete } from '../../../../src/fql/transform';
+import { transformUpdateToDelete } from '../../../src/fql/transform';
 
 const testPath = path.relative(process.cwd(), __dirname)
 
@@ -16,33 +16,30 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('generate create_collection migration', async (t: ExecutionContext) => {
+    // increase timeout since we'll have caching errors.
+    t.timeout(70000)
     // first generate and apply migrations
-    console.log('====== migration 1 ========')
     await fullApply(testPath, ['resources1'])
     const result1 = await getAllCloudResources(faunaClient)
-    console.log('====== migration 2  ========')
     await fullApply(testPath, ['resources2'])
     const result2 = await getAllCloudResources(faunaClient)
-    console.log('====== migration 3  ========')
     await fullApply(testPath, ['resources3'])
     const result3 = await getAllCloudResources(faunaClient)
-    console.log('====== migration 4  ========')
 
     await fullApply(testPath, ['resources4'])
     // then turn back.
 
-    console.log('====== rolling back ========')
-    // await rollback(1)
-    // const result3b = await getAllCloudResources(faunaClient)
-    await rollback(2)
+    await rollback(1)
+    const result3b = await getAllCloudResources(faunaClient)
+    compareResults(t, result3, result3b)
+
+    await rollback(1)
     const result2b = await getAllCloudResources(faunaClient)
-    // await rollback(1)
-    // const result1b = await getAllCloudResources(faunaClient)
-
-    // compareResults(t, result3, result3b)
     compareResults(t, result2, result2b)
-    // compareResults(t, result1, result1b)
 
+    await rollback(1)
+    const result1b = await getAllCloudResources(faunaClient)
+    compareResults(t, result1, result1b)
 
 })
 

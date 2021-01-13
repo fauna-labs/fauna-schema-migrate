@@ -1,11 +1,10 @@
 import * as React from 'react';
-import Messages from './messages';
+import MessageList from './message-list';
 import Menu from './menu';
 import { useStore } from 'react-hookstore';
 import { ShellState } from '../interactive-shell'
-import { Static, Text } from 'ink';
-import Header from './header';
 import UserInput from './user-input';
+import { MessageFun } from '../messages/numbered-message';
 
 interface Props {
     handleMenuSelection: any
@@ -15,16 +14,22 @@ interface Props {
 
 // eslint-disable-next-line react/function-component-definition
 function Shell(props: Props): JSX.Element {
-    const [cliState, setCliState] = useStore('cliState');
-
+    const [cliState] = useStore('cliState');
+    const [task] = useStore('task');
     return <>
-        < Messages ></Messages>
+        < MessageList ></MessageList>
+        { task !== null ?
+            task as JSX.Element :
+            null}
+
         { cliState === ShellState.UserInput ?
             <UserInput handleUserInput={props.handleUserInput}></UserInput> :
             null}
         { cliState === ShellState.Menu ?
             <Menu handleTaskChoice={props.handleMenuSelection}></Menu> :
             null}
+
+
     </>
 }
 

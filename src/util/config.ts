@@ -1,10 +1,7 @@
 import path from 'path'
-import chalk from "chalk"
-
 import * as files from './files'
 import defaults from './defaults'
-import { interactiveShell } from '../interactive-shell/interactive-shell'
-import { Message } from '../interactive-shell/messages/message'
+import { existsSync } from 'fs'
 
 export class Config {
 
@@ -51,8 +48,14 @@ export class Config {
 
     async writeConfig() {
         const content = this.configDefault()
-        const fullPath = await files.writeApplicationFile(path.join(defaults.configFile), content)
-        interactiveShell.addMessage(new Message(`Writing configuration file ${fullPath}`))
+        const p = path.join(defaults.configFile)
+        if (existsSync(p)) {
+            return false
+        }
+        else {
+            const fullPath = await files.writeApplicationFile(p, content)
+            return fullPath
+        }
     }
 
     async getMigrationsDir() {

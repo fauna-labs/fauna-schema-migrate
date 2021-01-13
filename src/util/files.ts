@@ -179,6 +179,7 @@ export const generateDefaultDirs = async () => {
         const fullPath = path.join(process.cwd(), folder)
         shell.mkdir('-p', fullPath);
     })
+
 }
 
 export const generateMigrationDir = async () => {

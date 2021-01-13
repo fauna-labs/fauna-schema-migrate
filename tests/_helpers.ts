@@ -13,6 +13,7 @@ import { FaunaClientGenerator } from '../src/util/fauna-client'
 import { deleteMigrationDir, generateMigrationDir } from '../src/util/files'
 import * as fauna from 'faunadb'
 import sinon from 'sinon';
+import { runTaskByName } from '../src/tasks/tasks'
 
 const { If, Exists, CreateKey, Database, CreateDatabase, Select, Delete, CreateCollection } = fauna.query
 
@@ -30,9 +31,8 @@ export const fullApply = async (dir: string, resourceFolders: string[] = ['resou
 }
 
 export const rollback = async (amount: number) => {
-    await rollbackMigrations(amount)
+    await runTaskByName('rollback', { amount: amount })
 }
-
 
 export const setupFullTest = async (dir: string) => {
     sinon.stub(Config.prototype, 'readConfig')
@@ -43,32 +43,34 @@ export const setupFullTest = async (dir: string) => {
         }))
     await deleteIfExists(dir)
     await deleteMigrationDir()
-    const client = getClient(process.env.FAUNA_ADMIN_KEY)
+    const clientPromise = getClient(process.env.FAUNA_ADMIN_KEY)
+    const client = await clientPromise
     const key: any = await client.query(CreateKey({
         database: Select(['ref'], CreateDatabase({ name: toDbName(dir) })),
         role: 'admin'
     }))
 
-    const childDbClient = getClient(key.secret)
+    const childDbClientPromise = getClient(key.secret)
+    const childDbClient = await childDbClientPromise
     await createMigrationCollection(childDbClient)
 
     // we will redirect all fauna calls to this specific test database
     // by creating a different client for each test.
     sinon.stub(FaunaClientGenerator.prototype, 'getClient')
-        .returns(childDbClient)
+        .returns(childDbClientPromise)
 
     await generateMigrationDir()
     return childDbClient
 }
 
 export const destroyFullTest = async (dir: string) => {
-    const client = getClient(process.env.FAUNA_ADMIN_KEY)
+    const client = await getClient(process.env.FAUNA_ADMIN_KEY)
     const db = await client.query(Delete(Database(toDbName(dir))))
     await deleteMigrationDir()
 }
 
 export const deleteIfExists = async (dir: string) => {
-    const client = getClient(process.env.FAUNA_ADMIN_KEY)
+    const client = await getClient(process.env.FAUNA_ADMIN_KEY)
     const db = await client.query(
         If(
             Exists(Database(toDbName(dir))),
@@ -79,7 +81,7 @@ export const deleteIfExists = async (dir: string) => {
 }
 
 export const retrieve = async (dir: string) => {
-    const client = getClient(process.env.FAUNA_ADMIN_KEY)
+    const client = await getClient(process.env.FAUNA_ADMIN_KEY)
     const db = await client.query(
         If(
             Exists(Database(toDbName(dir))),
@@ -93,7 +95,7 @@ const toDbName = (p: string) => {
     return p.split(path.sep).join("-")
 }
 
-const getClient = (secret: string | undefined) => {
+const getClient = async (secret: string | undefined) => {
     const opts: any = { secret: secret }
     if (process.env.FAUNADB_DOMAIN) opts.domain = process.env.FAUNADB_DOMAIN
     if (process.env.FAUNADB_SCHEME) opts.scheme = process.env.FAUNADB_SCHEME

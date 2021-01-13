@@ -9,39 +9,42 @@ import { retrieveDiffBetweenResourcesAndMigrations } from './plan'
 import { transformCreateToDelete, transformCreateToUpdate, transformUpdateToCreate, transformUpdateToDelete, transformUpdateToUpdate } from '../fql/transform'
 import { prettyPrintExpr } from '../fql/print'
 import { generateMigrationQuery } from './apply'
+import { interactiveShell } from '../interactive-shell/interactive-shell'
 
 const q = fauna.query
 const { Let, Lambda, Delete } = fauna.query
 
 export const rollbackMigrations = async (amount: number) => {
     const client = await clientGenerator.getClient()
-    const { current: currentMigration, target: targetMigration, skipped: skippedMigrations }
-        = await getCurrentAndTargetMigration(amount)
-    const diff = await retrieveDiff(currentMigration, targetMigration)
-    const expressions = transformDiffToExpressions(diff)
-    const letQueryObject = await generateMigrationQuery(expressions)
-    const toDeleteReferences = skippedMigrations.concat([currentMigration])
-        .map((e) => e.ref)
-    const query = Let(
-        // add all statements as Let variable bindings
-        letQueryObject,
-        q.Map(toDeleteReferences, Lambda(ref => Delete(ref)))
-    )
+    const cloudMigrations = (await retrieveAllCloudMigrations(client)).sort()
+    if (amount == cloudMigrations.length) {
+        console.log("Todo, completely revert database.")
+    }
+    else {
+        const { current: currentMigration, target: targetMigration, skipped: skippedMigrations }
+            = await getCurrentAndTargetMigration(cloudMigrations, amount)
+        const diff = await retrieveDiff(currentMigration, targetMigration)
+        const expressions = transformDiffToExpressions(diff)
+        const letQueryObject = await generateMigrationQuery(expressions)
+        const toDeleteReferences = skippedMigrations.concat([currentMigration])
+            .map((e) => e.ref)
+        const query = Let(
+            // add all statements as Let variable bindings
+            letQueryObject,
+            q.Map(toDeleteReferences, Lambda(ref => Delete(ref)))
+        )
+        interactiveShell.printBoxedInfo(prettyPrintExpr(query))
+        await client.query(query)
+    }
 
-    console.log('----- rollback query')
-    // Todo: prettyprint query in case of verbose option, add that option.
-    //       or a 'plan' option to see the query.
-    console.log(' Pretty printed FQL Result \n ---------------- ', prettyPrintExpr(query))
-    await client.query(query)
 }
 
-const getCurrentAndTargetMigration = async (amount: number): Promise<TargetCurrentAndSkippedMigrations> => {
+const getCurrentAndTargetMigration = async (cloudMigrations: MigrationRefAndTimestamp[], amount: number): Promise<TargetCurrentAndSkippedMigrations> => {
     const client = await clientGenerator.getClient()
     // Retrieve all migration timestamps that have been processed from cloud
-    const cloudMigrations = (await retrieveAllCloudMigrations(client)).sort()
     // get the migration timestmap we are currently at.
     const currentMigration = cloudMigrations.length > 0 ? cloudMigrations[cloudMigrations.length - 1] : null
-    if (!currentMigration) {
+    if (amount > cloudMigrations.length || !currentMigration) {
         throw new Error('Asked for rollback but the target database has no migrations')
     }
     // get the migration timestamp we we want to roll back to.

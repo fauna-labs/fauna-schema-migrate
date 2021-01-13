@@ -1,11 +1,7 @@
 #!/usr/bin/env node
 
 import program from "commander";
-import faunadb from "faunadb";
-// import migrate from "./tasks/migrate";
-
-import tasks from './tasks/tasks'
-
+import { tasks, runTask } from './tasks/tasks'
 program.version("0.0.1").description("Fauna schema tool")
 
 // Configure all tasks to directly work with commander
@@ -13,7 +9,7 @@ tasks.forEach((task) => {
   program
     .command(task.name)
     .description(task.description)
-    .action(task.action)
+    .action(() => runTask(task))
 })
 
 // On unknown command, show the user some help
@@ -26,7 +22,6 @@ program.on('command:*', function (operands) {
 });
 
 if (process.argv.length == 2) {
-
   console.log('todo helpful interactive mode')
   console.log(program.helpInformation());
   process.exitCode = 1

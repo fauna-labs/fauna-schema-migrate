@@ -7,8 +7,8 @@
   "scripts": {
     "build": "tsc && cpy 'templates/*.js' '../dist/' --cwd=src --parents",
     "watch": "tsc -w",
-    "prepare": "install-peers",
-    "test": "ava"
+    "test": "ava -T 20s",
+    "install-peers": "install-peers -f"
   },
   "bin": {
     "faunadb-migrate": "./dist/index.js"
@@ -42,6 +42,7 @@
     "ink-gradient": "^2.0.0",
     "ink-link": "^2.0.0",
     "ink-select-input": "github:fauna-brecht/ink-select-input",
+    "ink-spinner": "^4.0.1",
     "js-beautify": "^1.13.0",
     "lodash.clonedeep": "^4.5.0",
     "prettier": "^2.2.1",
