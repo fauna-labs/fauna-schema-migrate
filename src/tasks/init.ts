@@ -1,16 +1,13 @@
 
-import chalk from "chalk";
 import { config } from '../util/config'
 import * as files from "../util/files";
 import { clientGenerator } from "../util/fauna-client"
 import { createMigrationCollection } from "../fql/fql-snippets";
 import { interactiveShell } from "../interactive-shell/interactive-shell";
 
-const init = async () => {
+const init = async (options: any, interactive: boolean) => {
     try {
-
         // Create configuration file
-        interactiveShell.start()
         interactiveShell.startSubtask(`Writing configuration file}`)
         const fullPath = await config.writeConfig()
         if (fullPath) {

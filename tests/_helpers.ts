@@ -4,10 +4,8 @@ const fullPath = path.resolve(process.cwd(), '.env.' + process.env.NODE_ENV)
 require('dotenv').config({ path: fullPath })
 
 import { planMigrations } from "../src/migrations/plan"
-import { rollbackMigrations } from "../src/migrations/rollback"
-import { generateMigrations, writeMigrations } from "../src/migrations/generate"
-import { advanceMigrations } from "../src/migrations/advance"
-import { config, Config } from '../src/util/config'
+import { generateMigrations, writeMigrations } from "../src/migrations/generate-migration"
+import { Config } from '../src/util/config'
 import { createMigrationCollection } from "../src/fql/fql-snippets";
 import { FaunaClientGenerator } from '../src/util/fauna-client'
 import { deleteMigrationDir, generateMigrationDir } from '../src/util/files'
@@ -24,14 +22,19 @@ export const fullApply = async (dir: string, resourceFolders: string[] = ['resou
         const planned = await planMigrations()
         const migrations = await generateMigrations(planned)
         await writeMigrations(migrations)
-        await advanceMigrations()
+        await apply(1)
         const fun: any = Config.prototype.getResourcesDir
         fun.restore()
     }
 }
 
+
+export const apply = async (amount: number) => {
+    return await runTaskByName('apply', { amount: amount })
+}
+
 export const rollback = async (amount: number) => {
-    await runTaskByName('rollback', { amount: amount })
+    return await runTaskByName('rollback', { amount: amount })
 }
 
 export const setupFullTest = async (dir: string) => {

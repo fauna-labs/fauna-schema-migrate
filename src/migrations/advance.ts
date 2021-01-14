@@ -7,11 +7,9 @@ import * as fauna from 'faunadb'
 
 import { config } from '../util/config';
 import { retrieveLastCloudMigration } from "../fql/fql-snippets"
-import { generateMigrationQuery } from "./apply"
-import { clientGenerator } from "../util/fauna-client";
-import { prettyPrintExpr } from "../fql/print";
+import { generateMigrationQuery } from "./generate-query"
 import { transformUpdateToUpdate } from "../fql/transform";
-import { interactiveShell } from "../interactive-shell/interactive-shell";
+import { retrieveAllMigrations } from "../util/files";
 
 const { Let, Create, Collection } = fauna.query
 
@@ -35,24 +33,34 @@ export interface DependenciesArrayEl {
     dependencyIndexNames: string[]
 }
 
-
-export const advanceMigrations = async () => {
-    const client = await clientGenerator.getClient()
+export const retrieveNextMigration = async (client: fauna.Client) => {
     const lastCloudMigration = await retrieveLastCloudMigration(client)
-    const migrationsFQL = await getSnippetsFromNextMigration(lastCloudMigration)
-    let flattenedMigrations = flattenMigrations(migrationsFQL.categories)
+    const allMigrations = await retrieveAllMigrations()
+    return {
+        lastCloudMigration: lastCloudMigration,
+        allMigrations: allMigrations
+    }
+}
+
+export const verifyLastMigration = (lastCloudMigration: string, allMigrations: string[]): boolean => {
+    return (lastCloudMigration !== allMigrations[allMigrations.length - 1])
+}
+
+export const generateMigrations = async (lastCloudMigration: string) => {
+    const migrationSnippets = await getSnippetsFromNextMigration(lastCloudMigration)
+    let flattenedMigrations = flattenMigrations(migrationSnippets.categories)
     flattenedMigrations = fixUpdates(flattenedMigrations)
     const letQueryObject = await generateMigrationQuery(flattenedMigrations)
+    const migrationMetadata = { migration: migrationSnippets.migration, migrated: getMigrationMetadata(migrationSnippets.categories) }
     const query = Let(
         // add all statements as Let variable bindings
         letQueryObject,
         // add the migration metadata
         Create(Collection(await config.getMigrationCollection()),
-            { data: { migration: migrationsFQL.migration, migrated: getMigrationMetadata(migrationsFQL.categories) } }
+            { data: migrationMetadata }
         ))
-    console.log(JSON.stringify(letQueryObject, null, 2))
-    interactiveShell.printBoxedInfo(prettyPrintExpr(query))
-    await client.query(query)
+
+    return { query: query, fqlStatement: letQueryObject, migrationMetadata: migrationMetadata }
 }
 
 const getMigrationMetadata = (migrationcategories: LoadedResources) => {

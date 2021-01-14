@@ -10,8 +10,12 @@ import { DuplicateMigrationError } from '../errors/DuplicateMigrationError'
 
 // Gets snippets from next migration after given timestamp.
 // If no timestamp is provided, we will retrieve the last migration.
-export const getSnippetsFromNextMigration = async (after: string = "Z"): Promise<{ categories: LoadedResources, migration: string }> => {
+export const getSnippetsFromNextMigration = async (after: string): Promise<{ categories: LoadedResources, migration: string }> => {
+    if (!after) {
+        after = "0"
+    }
     const pathAndfile = await retrieveMigrationPathsForMigrationAfter(after)
+    console.log(pathAndfile)
     pathAndfile.expressions = await Promise.all(pathAndfile.files.map(async (f) => {
         const snippet = await loadFqlSnippet(f)
         const json = toJsonDeep(snippet)

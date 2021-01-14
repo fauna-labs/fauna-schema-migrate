@@ -1,5 +1,7 @@
 import chalk from "chalk";
 import { writeNewMigrationDir } from "../util/files";
+
+// Not used atm.
 const newMigration = async () => {
     try {
         await writeNewMigrationDir()

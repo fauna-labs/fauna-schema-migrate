@@ -3,7 +3,7 @@ import { render, Instance } from 'ink'
 import { createStore } from 'react-hookstore';
 
 import Shell from './components/shell';
-import { notifyBoxedInfo, notifyTaskCompleted, notifyTaskProcessing, notifyUnexpectedError, notifyWarning, renderHeader } from './messages/messages';
+import { notifyBoxedCode, notifyBoxedInfo, notifyTaskCompleted, notifyTaskProcessing, notifyUnexpectedError, notifyWarning, renderHeader } from './messages/messages';
 import { NumberedMessage, MessageFun } from './messages/numbered-message';
 import { runTask } from '../tasks/tasks';
 
@@ -27,14 +27,25 @@ class InteractiveShell {
     private userInput: string = ""
 
     constructor() {
+        this.start = this.start.bind(this)
+        this.close = this.close.bind(this)
         this.handleMenuSelection = this.handleMenuSelection.bind(this)
         this.handleUserInput = this.handleUserInput.bind(this)
         this.addMessage(renderHeader())
     }
 
-    start() {
+    start(interactive: boolean = true) {
         if (!this.result && process.env.NODE_ENV !== 'test') {
             this.result = render(this.renderComponents())
+        }
+        if (!interactive) {
+            this.cliState.setState(ShellState.Executing)
+        }
+    }
+
+    close() {
+        if (this.result) {
+            this.result.unmount()
         }
     }
 
@@ -46,7 +57,7 @@ class InteractiveShell {
 
     async handleMenuSelection(item: any) {
         this.cliState.setState(ShellState.Executing)
-        await runTask(item)
+        await runTask(item, true)
         this.cliState.setState(ShellState.Menu)
     }
 
@@ -62,11 +73,20 @@ class InteractiveShell {
         this.task.setState(notifyTaskProcessing(input))
     }
 
+    printBoxedCode(message: string) {
+        if (process.env.NODE_ENV === 'test') {
+            console.log(`==============================================`)
+            console.log(message)
+        }
+        else {
+            this.addMessage(notifyBoxedCode(message))
+        }
+    }
+
     printBoxedInfo(message: string) {
         if (process.env.NODE_ENV === 'test') {
-            console.log(`==============================================
-${message}
-`)
+            console.log(`==============================================`)
+            console.log(message)
         }
         else {
             this.addMessage(notifyBoxedInfo(message))
@@ -94,7 +114,7 @@ ${message}
 
     reportError(err: Error) {
         if (process.env.NODE_ENV === 'test') {
-            console.error(err)
+            throw err
         }
         this.task.setState(null)
         this.addMessage(notifyUnexpectedError(err))

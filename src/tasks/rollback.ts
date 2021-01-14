@@ -1,16 +1,35 @@
 import chalk from "chalk";
 import { isSchemaCachingFaunaError } from "../errors/detect-errors";
+import { prettyPrintExpr } from "../fql/print";
 import { interactiveShell } from "../interactive-shell/interactive-shell";
-import { notifyUnexpectedError } from "../interactive-shell/messages/messages";
-import { rollbackMigrations } from "../migrations/rollback";
+import { renderMigrationState } from "../interactive-shell/messages/messages";
+import { retrieveRollbackMigrations, retrieveDiff, transformDiffToExpressions, generateRollbackQuery } from "../migrations/rollback";
+import { clientGenerator } from "../util/fauna-client";
 
 const rollback = async (options: any) => {
+    const client = await clientGenerator.getClient()
     try {
-        // Create configuration file
-        interactiveShell.startSubtask(`Rolling back ${options.amount} migrations`)
-        // todo more details
-        await rollbackMigrations(options.amount)
-        interactiveShell.completeSubtask(`Rolled back`)
+        const amount = options ? options.amount : 1
+        interactiveShell.startSubtask(`Retrieving current cloud migration state`)
+        const rMigs = await retrieveRollbackMigrations(client, amount)
+        interactiveShell.completeSubtask(`Retrieved current migration state`)
+        interactiveShell.addMessage(renderMigrationState(rMigs.toRollback.current.timestamp, rMigs.allMigrations))
+
+        interactiveShell.startSubtask(`Calculating diff`)
+        const diff = await retrieveDiff(rMigs.toRollback.current, rMigs.toRollback.target)
+        const expressions = transformDiffToExpressions(diff)
+        interactiveShell.completeSubtask(`Calculated diff`)
+
+        interactiveShell.startSubtask(`Generating query`)
+        const query = await generateRollbackQuery(expressions, rMigs.toRollback.skipped, rMigs.toRollback.current)
+        interactiveShell.completeSubtask(`Generating query`)
+
+        interactiveShell.printBoxedCode(prettyPrintExpr(query))
+
+        interactiveShell.startSubtask(`Applying rollback`)
+        await client.query(query)
+        interactiveShell.completeSubtask(`Applied rollback`)
+
     } catch (error) {
         const description = isSchemaCachingFaunaError(error)
         if (description) {

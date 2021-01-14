@@ -3,18 +3,22 @@ import { Box, Newline, Text, } from 'ink'
 import Gradient from 'ink-gradient'
 import BigText from 'ink-big-text'
 import Divider from 'ink-divider';
-import { faunaPurple1, faunaPurple2, white, gray, lightgray } from '../colors';
+import { faunaPurple1, faunaPurple2, white, lightgray } from '../colors';
 import Link from 'ink-link';
 import { MessageFun } from './numbered-message';
 import { Task } from '../../tasks/tasks';
 import Spinner from 'ink-spinner';
+import SyntaxHighlight from 'ink-syntax-highlight';
 
 const version = require('./../../../package.json').version
 
 
+// Todo, provide textual versions and a commandline option for in case
+// we are running a terminal that doesn't support it.
+
 export const endTaskLine = () => {
     return (id?: number) => {
-        return <Box key={"divider_container_" + id} height={5} width={50} flexDirection="column">
+        return <Box key={"divider_container_" + id} height={2} width={50} flexDirection="column">
             <Divider dividerColor={lightgray} key={"divider_" + id} />
         </Box>
     }
@@ -22,7 +26,7 @@ export const endTaskLine = () => {
 
 export const startCommand = (task: Task): MessageFun => {
     return (id?: number) => {
-        return <Box key={"task_" + id} flexDirection={'column'} marginTop={1} marginBottom={1}>
+        return <Box key={"task_" + id} flexDirection={'column'} marginBottom={1}>
             <Text> Executing command: {task.description} </Text>
         </Box>
     }
@@ -34,18 +38,26 @@ export const notifyUnexpectedError = (error: Error): MessageFun => {
             <Box>
                 <Text color={faunaPurple1} bold={true}> ! </Text><Text color="red">{error.toString()}</Text>
             </Box>
-            <Box marginLeft={3} width={80} borderStyle="round" borderColor={'grey'} key={"error_stack_" + id}>
-                <Text color={gray}>{JSON.stringify(error, null, 2)}</Text>
+            <Box marginLeft={3} width={80} borderStyle="round" key={"error_stack_" + id}>
+                <Text >{error.stack ? error.stack : JSON.stringify(error, null, 2)}</Text>
             </Box>
         </Box>
 
     }
 }
 
+export const notifyBoxedCode = (message: string): MessageFun => {
+    return (id?: number) => {
+        return <Box marginLeft={6} key={"info_" + id} borderStyle="round" >
+            <SyntaxHighlight code={message} language="js"></SyntaxHighlight>
+        </Box>
+    }
+}
+
 export const notifyBoxedInfo = (message: string): MessageFun => {
     return (id?: number) => {
-        return <Box marginLeft={3} key={"info_" + id}>
-            <Text color={gray} bold={true}> ! </Text><Text color={white}>{message}</Text>
+        return <Box marginLeft={6} key={"info_" + id} borderStyle="round" >
+            <Text>{message}</Text>
         </Box>
     }
 }
@@ -72,7 +84,6 @@ export const notifyTaskProcessing = (message: string): JSX.Element => {
     </Box>
 }
 
-
 export const renderHeader = (): MessageFun => {
     const title = "Fauna"
     const subtitle = "Schema Migrate " + version
@@ -82,11 +93,41 @@ export const renderHeader = (): MessageFun => {
                 <BigText font="tiny" text={title} lineHeight={2} />
             </Gradient>
             <Box marginLeft={2} height="100%" paddingTop={3}>
-                <Text color={gray}>{subtitle}</Text>
+                <Text>{subtitle}</Text>
             </Box>
         </Box>
         <Divider dividerColor={faunaPurple2} key={"divider_" + id} />
     </Box>
+}
+
+export const renderMigrationState = (lastCloudMigration: string, localMigrations: string[]): MessageFun => {
+    return (id?: number) => <Box marginLeft={6} key={"migration_state_" + id} flexDirection="column" borderStyle="round" >
+        {renderMigrationItems(lastCloudMigration, localMigrations, id)}
+    </Box>
+}
+
+const renderMigrationItems = (lastCloudMigration: string, localMigrations: string[], id?: number,) => {
+    const toApplyIndex = null
+    let result = localMigrations.map((l, index) => {
+        if (l === lastCloudMigration) {
+            const toApplyIndex = index + 1
+            return renderMigrationItem(`migration_item_${id}_${index}`, l, "cloud state")
+        }
+        else if (toApplyIndex === index) {
+            return renderMigrationItem(`migration_item_${id}_${index}`, l, "next migration to apply")
+        }
+        else {
+            return renderMigrationItem(`migration_item_${id}_${index}`, l, null)
+        }
+    })
+    if (lastCloudMigration === null) {
+        result = [renderMigrationItem(`migration_item_${id}_${-1}`, " ".repeat(24), "cloud state")].concat(result)
+    }
+    return result
+}
+
+const renderMigrationItem = (id: string, migrationItem: string, type: string | null) => {
+    return <Text key={`${id}_${migrationItem}_${type}`}><Text>{migrationItem}</Text> ← {type ? <Text>{type}</Text> : ""}</Text>
 }
 
 export const askAdminKey = (): MessageFun => {
@@ -104,9 +145,9 @@ export const askAdminKey = (): MessageFun => {
 }
 
 const askQuestion = (id: number, content: any) => {
-    return <Box marginLeft={6} height="100%" marginTop={1} marginBottom={1} key={"question_" + id}>
+    return <Box marginLeft={6} height="100%" marginTop={1} marginBottom={1} key={"question_" + id} >
         {/* <Text color={faunaPurple1} bold={true}> ? </Text> */}
-        <Text color={gray} key={"question_" + id}>
+        <Text key={"question_" + id}>
             {content}
         </Text>
     </Box>

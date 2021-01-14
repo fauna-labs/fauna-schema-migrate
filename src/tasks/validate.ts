@@ -1,6 +1,8 @@
 import chalk from "chalk";
 import { retrieveAllResourcePaths } from "../util/files"
 
+// Not used atm.
+
 // This is a hypothetical state that I might implement later on.
 
 // There are three 'states' of your Fauna resources since due to the way that

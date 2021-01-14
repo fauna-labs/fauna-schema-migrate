@@ -60,7 +60,7 @@ export interface ReferencedResources {
 export interface MigrationRefAndTimestamp { timestamp: string, ref: any }
 
 export interface TargetCurrentAndSkippedMigrations {
-    target: MigrationRefAndTimestamp,
+    target: MigrationRefAndTimestamp | null,
     current: MigrationRefAndTimestamp,
     skipped: MigrationRefAndTimestamp[]
 }

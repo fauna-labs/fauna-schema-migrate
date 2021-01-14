@@ -9,7 +9,7 @@ tasks.forEach((task) => {
   program
     .command(task.name)
     .description(task.description)
-    .action(() => runTask(task))
+    .action(() => runTask(task, task.name === 'run'))
 })
 
 // On unknown command, show the user some help

@@ -88,6 +88,12 @@ export const retrieveAllMigrationPaths = async (): Promise<MigrationPathAndFiles
     }))
 }
 
+export const retrieveAllMigrations = async (): Promise<string[]> => {
+    const migrationsDir = await config.getMigrationsDir()
+    const migrationSubdirs = getDirectories(migrationsDir)
+    return migrationSubdirs
+}
+
 // retrieves the next migration folder after a given timestamp.
 export const retrieveMigrationPathsForMigrationAfter = async (after: string): Promise<MigrationPathAndFiles> => {
     const migrationsDir = await config.getMigrationsDir()

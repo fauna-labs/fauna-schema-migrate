@@ -6,8 +6,10 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc && cpy 'templates/*.js' '../dist/' --cwd=src --parents",
+    "build-temp-with-libs": "npm install && npm run install-peers && npm run build && rm -rf node_modules/faunadb && yalc publish && cd ../../Repos/fwitter-node-migrate && npm install && yalc update  && rm -rf .yalc/faunadb-migrate/node_modules && cd .yalc/faunadb-migrate && npm install && cd ../../ && cd ../../Packages/fauna-migrate",
+    "build-temp": "npm run build && yalc publish && cd ../../Repos/fwitter-node-migrate && yalc update && npm install  && rm -rf .yalc/faunadb-migrate/node_modules && cd .yalc/faunadb-migrate && npm install && cd ../../ && cd ../../Packages/fauna-migrate",
     "watch": "tsc -w",
-    "test": "ava -T 20s",
+    "test": "ava -T 20s --fail-fast",
     "install-peers": "install-peers -f"
   },
   "bin": {
@@ -43,6 +45,7 @@
     "ink-link": "^2.0.0",
     "ink-select-input": "github:fauna-brecht/ink-select-input",
     "ink-spinner": "^4.0.1",
+    "ink-syntax-highlight": "^1.0.1",
     "js-beautify": "^1.13.0",
     "lodash.clonedeep": "^4.5.0",
     "prettier": "^2.2.1",

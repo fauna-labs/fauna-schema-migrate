@@ -4,40 +4,40 @@ import { clientGenerator } from "../util/fauna-client"
 import { getAllLastMigrationSnippets } from "../state/from-migration-files"
 import { retrieveAllCloudMigrations } from "../fql/fql-snippets"
 import { ResourceTypes } from '../types/resource-types'
-import { MigrationRefAndTimestamp, PlannedMigrations, StatementType, TaggedExpression, TargetCurrentAndSkippedMigrations } from '../types/expressions'
+import { LoadedResources, MigrationRefAndTimestamp, PlannedMigrations, StatementType, TaggedExpression, TargetCurrentAndSkippedMigrations } from '../types/expressions'
 import { retrieveDiffBetweenResourcesAndMigrations } from './plan'
 import { transformCreateToDelete, transformCreateToUpdate, transformUpdateToCreate, transformUpdateToDelete, transformUpdateToUpdate } from '../fql/transform'
 import { prettyPrintExpr } from '../fql/print'
-import { generateMigrationQuery } from './apply'
+import { generateMigrationQuery } from './generate-query'
 import { interactiveShell } from '../interactive-shell/interactive-shell'
+import { retrieveAllMigrations } from '../util/files'
 
 const q = fauna.query
 const { Let, Lambda, Delete } = fauna.query
 
-export const rollbackMigrations = async (amount: number) => {
-    const client = await clientGenerator.getClient()
+export const retrieveRollbackMigrations = async (client: fauna.Client, amount: number) => {
     const cloudMigrations = (await retrieveAllCloudMigrations(client)).sort()
-    if (amount == cloudMigrations.length) {
-        console.log("Todo, completely revert database.")
-    }
-    else {
-        const { current: currentMigration, target: targetMigration, skipped: skippedMigrations }
-            = await getCurrentAndTargetMigration(cloudMigrations, amount)
-        const diff = await retrieveDiff(currentMigration, targetMigration)
-        const expressions = transformDiffToExpressions(diff)
-        const letQueryObject = await generateMigrationQuery(expressions)
-        const toDeleteReferences = skippedMigrations.concat([currentMigration])
-            .map((e) => e.ref)
-        const query = Let(
-            // add all statements as Let variable bindings
-            letQueryObject,
-            q.Map(toDeleteReferences, Lambda(ref => Delete(ref)))
-        )
-        interactiveShell.printBoxedInfo(prettyPrintExpr(query))
-        await client.query(query)
-    }
-
+    const allMigrations = await retrieveAllMigrations()
+    const res = await getCurrentAndTargetMigration(cloudMigrations, amount)
+    return { allMigrations: allMigrations, toRollback: res }
 }
+
+export const generateRollbackQuery = async (
+    expressions: TaggedExpression[],
+    skippedMigrations: MigrationRefAndTimestamp[],
+    currentMigration: MigrationRefAndTimestamp) => {
+
+    const letQueryObject = await generateMigrationQuery(expressions)
+    const toDeleteReferences = skippedMigrations.concat([currentMigration])
+        .map((e) => e.ref)
+    const query = Let(
+        // add all statements as Let variable bindings
+        letQueryObject,
+        q.Map(toDeleteReferences, Lambda(ref => Delete(ref)))
+    )
+    return query
+}
+
 
 const getCurrentAndTargetMigration = async (cloudMigrations: MigrationRefAndTimestamp[], amount: number): Promise<TargetCurrentAndSkippedMigrations> => {
     const client = await clientGenerator.getClient()
@@ -50,44 +50,51 @@ const getCurrentAndTargetMigration = async (cloudMigrations: MigrationRefAndTime
     // get the migration timestamp we we want to roll back to.
     const rollbackToIndex = cloudMigrations.length - 1 - amount
     const targetMigration = rollbackToIndex < cloudMigrations.length ? cloudMigrations[rollbackToIndex] : null
-    if (!targetMigration) {
-        throw new Error('Asked for rollback that goes back further than the first migration')
-    }
     const skippedMigrations = cloudMigrations.slice(rollbackToIndex + 1, cloudMigrations.length - 1)
     return { current: currentMigration, target: targetMigration, skipped: skippedMigrations }
 }
 
-const retrieveDiff = async (currentMigration: MigrationRefAndTimestamp, targetMigration: MigrationRefAndTimestamp) => {
-    if (targetMigration === null) {
-        console.log('todo, this basically is nuking the whole database, delete ALL the things')
-        throw new Error("todo")
-    }
-    else {
-        const { migrations: currentMigrations, lastMigration: currentLastMigration }
-            = await getAllLastMigrationSnippets(currentMigration.timestamp)
+export const retrieveDiff = async (currentMigration: MigrationRefAndTimestamp, targetMigration: null | MigrationRefAndTimestamp) => {
+    const { migrations: currentMigrations, lastMigration: currentLastMigration }
+        = await getAllLastMigrationSnippets(currentMigration.timestamp)
+
+    const previousMigrations = await getTargetMigrations(targetMigration)
+
+    // We need to calculate the diff. But we already have such a function
+    // which we used to plan migrations.
+    // we can consider the previousMigrations as the new source of truth (we have to go there)
+    // while currentMigrations is the migration state we have to move forward from.
+    // or in this case backward since it's a rollback.
+    // In essence, previousMigrations is equivalent to the 'resources' now
+    // while currentMigrations are the 'migrations'.
+    const diff = retrieveDiffBetweenResourcesAndMigrations(currentMigrations, previousMigrations)
+    return diff
+}
+
+const getTargetMigrations = async (targetMigration: MigrationRefAndTimestamp | null): Promise<LoadedResources> => {
+    if (targetMigration) {
         const { migrations: previousMigrations, lastMigration: previousLastMigration }
             = await getAllLastMigrationSnippets(targetMigration.timestamp)
         // just to be clear these vars should be the same.
         if (previousLastMigration !== targetMigration.timestamp) {
             throw Error(`did not receive the same migration,
-                rollbackMigration should be equal to previousLastMigration
-                ${previousLastMigration}, ${targetMigration.timestamp}
-            `)
+                    rollbackMigration should be equal to previousLastMigration
+                    ${previousLastMigration}, ${targetMigration.timestamp}
+                `)
         }
-        // We need to calculate the diff. But we already have such a function
-        // which we used to plan migrations.
-        // we can consider the previousMigrations as the new source of truth (we have to go there)
-        // while currentMigrations is the migration state we have to move forward from.
-        // or in this case backward since it's a rollback.
-        // In essence, previousMigrations is equivalent to the 'resources' now
-        // while currentMigrations are the 'migrations'.
-        const diff = retrieveDiffBetweenResourcesAndMigrations(currentMigrations, previousMigrations)
-        return diff
+        return previousMigrations
+    }
+    else {
+        const categories: any = {}
+        for (let item in ResourceTypes) {
+            categories[item] = []
+        }
+        return categories
     }
 }
 
 
-const transformDiffToExpressions = (diff: PlannedMigrations): TaggedExpression[] => {
+export const transformDiffToExpressions = (diff: PlannedMigrations): TaggedExpression[] => {
     const expressions: TaggedExpression[] = []
     for (let resourceType in ResourceTypes) {
         const diffForType = diff[resourceType]

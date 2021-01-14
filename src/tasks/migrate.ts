@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { planMigrations } from "../migrations/plan"
-import { writeMigrations, generateMigrations } from "../migrations/generate"
+import { writeMigrations, generateMigrations } from "../migrations/generate-migration"
 
 const migrate = async () => {
     try {

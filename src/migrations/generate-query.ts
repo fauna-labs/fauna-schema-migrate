@@ -7,10 +7,7 @@ import { StatementType, TaggedExpression } from "../types/expressions"
 import { PatternAndIndexName } from "../types/patterns"
 import { ResourceTypes } from "../types/resource-types"
 import { toIndexableName } from "../util/unique-naming"
-
-import * as fauna from 'faunadb'
 import { evalFQLCode } from "../fql/eval"
-import { DeletedReferenceError } from "../errors/DeletedReferenceError"
 
 export interface NameToDependencyNames {
     [type: string]: string[]
@@ -41,8 +38,8 @@ export const generateMigrationQuery = async (migrations: TaggedExpression[]) => 
     const dependenciesArray = indexToDependenciesArray(dependencyIndex)
     // Todo, add names of previous migrations for extra verification
     // to make sure no unexisting resource is deleted/updated.
-    const orderedExpressions = orderAccordingToDependencies(dependenciesArray, indexedMigrations)
-
+    let orderedExpressions = orderAccordingToDependencies(dependenciesArray, indexedMigrations)
+    orderedExpressions = reOrderDeleted(orderedExpressions)
     // Generate Let with variables.
     // Instead of adding all statements to a Do which will not work in some cases
     // where resources depend on other resources.
@@ -50,6 +47,20 @@ export const generateMigrationQuery = async (migrations: TaggedExpression[]) => 
     // that are created in the statement with their variable. 
     const letBindingObject = generateLetBindingObject(orderedExpressions, indexedMigrations, dependencyIndex)
     return letBindingObject
+}
+
+const reOrderDeleted = (orderedExpressions: TaggedExpression[]) => {
+    // Deleting an index after a colleciton doesn't work.
+    // Since deleting the collection also triggers a delete of the index.
+    const deleted = orderedExpressions.filter((e) =>
+        e.statement === StatementType.Delete)
+    const rest = orderedExpressions.filter((e) =>
+        e.statement !== StatementType.Delete)
+    const deletedIndexes = deleted.filter((e) =>
+        e.type === ResourceTypes.Index)
+    const deletedRest = deleted.filter((e) =>
+        e.type !== ResourceTypes.Index)
+    return deletedIndexes.concat(deletedRest).concat(rest)
 }
 
 const orderAccordingToDependencies = (dependenciesArray: DependenciesArrayEl[], indexedMigrations: NameToExpressions) => {
@@ -89,40 +100,36 @@ const generateLetBindingObject = (
 
 
     const nameToVar: NameToVar = {}
-    try {
-        // obj is the object with variable bindings that will be fet to the Let.
-        const obj: any = {}
-        orderedExpressions.forEach((e, varIndex) => {
+    // obj is the object with variable bindings that will be fet to the Let.
+    const obj: any = {}
+    orderedExpressions.forEach((e, varIndex) => {
 
-            const indexableName = toIndexableName(e)
-            const dependencies = dependencyIndex[indexableName]
-            dependencies.forEach((dep: string) => {
-                const depExpr = indexedMigrations[dep]
-                // If it's a create we need to reference it by the
-                // variable since Fauna won't know it yet
-                if (depExpr.statement === StatementType.Create) {
-                    const depIndexableName = toIndexableName(depExpr)
-                    // replace a refernece to another resource
-                    // with the variable that was bound to it.
-                    // Todo, currently done via the string which is probably
-                    // a silly inefficient way to do it (but easier).
-                    // Might want to change this and do an expression manipulation
-                    // instead directly.
-                    e.fql = replaceAll(
-                        <string>e.fql,
-                        `${depExpr.type}("${depExpr.name}")`,
-                        `Select(['ref'],Var("${nameToVar[depIndexableName]}"))`)
-                }
-            })
-            nameToVar[indexableName] = `var${varIndex}`
-            // Bind the variable to the code.
-            obj[`var${varIndex}`] = evalFQLCode(<string>e.fql)
+        const indexableName = toIndexableName(e)
+        const dependencies = dependencyIndex[indexableName]
+        dependencies.forEach((dep: string) => {
+            const depExpr = indexedMigrations[dep]
+            // If it's a create we need to reference it by the
+            // variable since Fauna won't know it yet
+            if (depExpr.statement === StatementType.Create) {
+                const depIndexableName = toIndexableName(depExpr)
+                // replace a refernece to another resource
+                // with the variable that was bound to it.
+                // Todo, currently done via the string which is probably
+                // a silly inefficient way to do it (but easier).
+                // Might want to change this and do an expression manipulation
+                // instead directly.
+                e.fql = replaceAll(
+                    <string>e.fql,
+                    `${depExpr.type}("${depExpr.name}")`,
+                    `Select(['ref'],Var("${nameToVar[depIndexableName]}"))`)
+            }
         })
-        return obj
-    }
-    catch (err) {
-        console.error(err)
-    }
+        nameToVar[indexableName] = `var${varIndex}`
+        // Bind the variable to the code.
+        obj[`var${varIndex}`] = evalFQLCode(<string>e.fql)
+    })
+    return obj
+
 }
 
 
