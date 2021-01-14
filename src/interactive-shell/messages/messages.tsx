@@ -155,21 +155,24 @@ export const renderResource = (index: number, resource: TaggedExpression | undef
     </Text>
 }
 
-export const renderMigrationState = (lastCloudMigration: string, localMigrations: string[], inc: number): MessageFun => {
+export const renderMigrationState = (lastCloudMigration: string, localMigrations: string[], direction: string): MessageFun => {
     return (id?: number) => <Box marginLeft={6} key={"migration_state_" + id} flexDirection="column" borderStyle="round" >
-        {renderMigrationItems(lastCloudMigration, localMigrations, inc, id)}
+        {renderMigrationItems(lastCloudMigration, localMigrations, id, direction)}
     </Box>
 }
 
-const renderMigrationItems = (lastCloudMigration: string, localMigrations: string[], inc: number, id?: number) => {
+const renderMigrationItems = (lastCloudMigration: string, localMigrations: string[], id: number | undefined, direction: string) => {
     let toApplyIndex: any = null
+    if (direction === 'rollback') {
+        localMigrations.reverse()
+    }
     let result = localMigrations.map((l, index) => {
         if (l === lastCloudMigration) {
-            toApplyIndex = index + inc
+            toApplyIndex = index + 1
             return renderMigrationItem(`migration_item_${id}_${index}`, l, "cloud state")
         }
         else if (toApplyIndex === index) {
-            return renderMigrationItem(`migration_item_${id}_${index}`, l, "target")
+            return renderMigrationItem(`migration_item_${id}_${index}`, l, direction + " target")
         }
         else {
             return renderMigrationItem(`migration_item_${id}_${index}`, l, null)
@@ -178,7 +181,11 @@ const renderMigrationItems = (lastCloudMigration: string, localMigrations: strin
     if (lastCloudMigration === null) {
         result = [renderMigrationItem(`migration_item_${id}_${-1}`, " ".repeat(24), "cloud state")].concat(result)
     }
+    if (direction === 'rollback') {
+        result.reverse()
+    }
     return result
+
 }
 
 const renderMigrationItem = (id: string, migrationItem: string, type: string | null) => {

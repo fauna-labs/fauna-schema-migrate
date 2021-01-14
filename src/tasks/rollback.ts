@@ -13,7 +13,7 @@ const rollback = async (options: any) => {
         interactiveShell.startSubtask(`Retrieving current cloud migration state`)
         const rMigs = await retrieveRollbackMigrations(client, amount)
         interactiveShell.completeSubtask(`Retrieved current migration state`)
-        interactiveShell.addMessage(renderMigrationState(rMigs.toRollback.current.timestamp, rMigs.allMigrations, -1))
+        interactiveShell.addMessage(renderMigrationState(rMigs.toRollback.current.timestamp, rMigs.allMigrations, "rollback"))
 
         interactiveShell.startSubtask(`Calculating diff`)
         const diff = await retrieveDiff(rMigs.toRollback.current, rMigs.toRollback.target)
