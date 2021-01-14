@@ -14,7 +14,7 @@ const apply = async (options: any, interactive: boolean) => {
         interactiveShell.startSubtask(`Retrieving current cloud migration state`)
         const nextAndAll = await retrieveNextMigration(client)
         interactiveShell.completeSubtask(`Retrieved current migration state`)
-        interactiveShell.addMessage(renderMigrationState(nextAndAll.lastCloudMigration, nextAndAll.allMigrations))
+        interactiveShell.addMessage(renderMigrationState(nextAndAll.lastCloudMigration, nextAndAll.allMigrations, 1))
         const verified = verifyLastMigration(nextAndAll.lastCloudMigration, nextAndAll.allMigrations)
         if (verified) {
             interactiveShell.startSubtask(`Generate migration code`)

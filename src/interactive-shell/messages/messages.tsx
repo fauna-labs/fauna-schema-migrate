@@ -9,6 +9,8 @@ import { MessageFun } from './numbered-message';
 import { Task } from '../../tasks/tasks';
 import Spinner from 'ink-spinner';
 import SyntaxHighlight from 'ink-syntax-highlight';
+import { PlannedMigrations, PreviousAndCurrent, TaggedExpression } from '../../types/expressions';
+import { ResourceTypes } from '../../types/resource-types';
 
 const version = require('./../../../package.json').version
 
@@ -100,21 +102,74 @@ export const renderHeader = (): MessageFun => {
     </Box>
 }
 
-export const renderMigrationState = (lastCloudMigration: string, localMigrations: string[]): MessageFun => {
+export const renderPlan = (plan: PlannedMigrations) => {
+    return (id?: number) => {
+        let index = 0
+        const toDisplay = []
+        for (let item in ResourceTypes) {
+            let toDisplayPerResource: any[] = []
+
+            index++
+            const changesPerResource = plan[item]
+            changesPerResource.added.forEach((r) => {
+                toDisplayPerResource.push(renderResource(index, r.target, 'added', id))
+                index++
+            })
+            changesPerResource.changed.forEach((r) => {
+                toDisplayPerResource.push(renderResource(index, r.target, 'changed', id))
+                index++
+            })
+            changesPerResource.deleted.forEach((r) => {
+                toDisplayPerResource.push(renderResource(index, r.previous, 'deleted', id))
+                index++
+            })
+            toDisplay.push(renderResourceType(index, item, toDisplayPerResource, id))
+            toDisplayPerResource = []
+        }
+        return <Box flexDirection="column" key={"plan_" + id}>{toDisplay}</Box>
+    }
+
+}
+
+export const renderResourceType = (index: number, type: string, toDisplayPerResource: any[], id?: number) => {
+    if (toDisplayPerResource.length > 0) {
+        return <Box flexDirection="row" marginLeft={6} key={"resource_" + id + "_" + index}>
+            <Box width={16} >
+                <Box  >
+                    <Text bold={true} >{type}</Text>
+                </Box>
+            </Box>
+            <Box flexDirection="column" paddingTop={0}>
+                {toDisplayPerResource}
+            </Box>
+        </Box>
+    }
+    else {
+        return null
+    }
+}
+
+export const renderResource = (index: number, resource: TaggedExpression | undefined, type: string, id?: number) => {
+    return <Text key={"resource_" + id + "_" + index}>
+        {type}: {resource?.name}
+    </Text>
+}
+
+export const renderMigrationState = (lastCloudMigration: string, localMigrations: string[], inc: number): MessageFun => {
     return (id?: number) => <Box marginLeft={6} key={"migration_state_" + id} flexDirection="column" borderStyle="round" >
-        {renderMigrationItems(lastCloudMigration, localMigrations, id)}
+        {renderMigrationItems(lastCloudMigration, localMigrations, inc, id)}
     </Box>
 }
 
-const renderMigrationItems = (lastCloudMigration: string, localMigrations: string[], id?: number,) => {
-    const toApplyIndex = null
+const renderMigrationItems = (lastCloudMigration: string, localMigrations: string[], inc: number, id?: number) => {
+    let toApplyIndex: any = null
     let result = localMigrations.map((l, index) => {
         if (l === lastCloudMigration) {
-            const toApplyIndex = index + 1
+            toApplyIndex = index + inc
             return renderMigrationItem(`migration_item_${id}_${index}`, l, "cloud state")
         }
         else if (toApplyIndex === index) {
-            return renderMigrationItem(`migration_item_${id}_${index}`, l, "next migration to apply")
+            return renderMigrationItem(`migration_item_${id}_${index}`, l, "target")
         }
         else {
             return renderMigrationItem(`migration_item_${id}_${index}`, l, null)
@@ -127,7 +182,7 @@ const renderMigrationItems = (lastCloudMigration: string, localMigrations: strin
 }
 
 const renderMigrationItem = (id: string, migrationItem: string, type: string | null) => {
-    return <Text key={`${id}_${migrationItem}_${type}`}><Text>{migrationItem}</Text> ← {type ? <Text>{type}</Text> : ""}</Text>
+    return <Text key={`${id}_${migrationItem}_${type}`}><Text>{migrationItem}</Text> {type ? <Text> ← {type}</Text> : ""}</Text>
 }
 
 export const askAdminKey = (): MessageFun => {

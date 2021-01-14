@@ -209,9 +209,6 @@ export const writeNewMigration = async (migrations: TaggedExpression[]) => {
             fs.writeFileSync(path.join(newMigrationDir, `${mig.type}-${mig.name}.fql`), mig.fqlFormatted)
         })
     }
-    else {
-        console.log("nothing to write")
-    }
 
 }
 

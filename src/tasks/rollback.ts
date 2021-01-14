@@ -13,7 +13,7 @@ const rollback = async (options: any) => {
         interactiveShell.startSubtask(`Retrieving current cloud migration state`)
         const rMigs = await retrieveRollbackMigrations(client, amount)
         interactiveShell.completeSubtask(`Retrieved current migration state`)
-        interactiveShell.addMessage(renderMigrationState(rMigs.toRollback.current.timestamp, rMigs.allMigrations))
+        interactiveShell.addMessage(renderMigrationState(rMigs.toRollback.current.timestamp, rMigs.allMigrations, -1))
 
         interactiveShell.startSubtask(`Calculating diff`)
         const diff = await retrieveDiff(rMigs.toRollback.current, rMigs.toRollback.target)
@@ -23,7 +23,6 @@ const rollback = async (options: any) => {
         interactiveShell.startSubtask(`Generating query`)
         const query = await generateRollbackQuery(expressions, rMigs.toRollback.skipped, rMigs.toRollback.current)
         interactiveShell.completeSubtask(`Generating query`)
-
         interactiveShell.printBoxedCode(prettyPrintExpr(query))
 
         interactiveShell.startSubtask(`Applying rollback`)

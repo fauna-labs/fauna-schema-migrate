@@ -15,7 +15,6 @@ export const getSnippetsFromNextMigration = async (after: string): Promise<{ cat
         after = "0"
     }
     const pathAndfile = await retrieveMigrationPathsForMigrationAfter(after)
-    console.log(pathAndfile)
     pathAndfile.expressions = await Promise.all(pathAndfile.files.map(async (f) => {
         const snippet = await loadFqlSnippet(f)
         const json = toJsonDeep(snippet)
