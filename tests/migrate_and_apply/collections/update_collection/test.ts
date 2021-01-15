@@ -21,7 +21,7 @@ test('generate create_collection and update_collection migration', async (t: Exe
     const test1Collection: any = result.Collection.find(x => x.name === 'test1')
     t.falsy(test1Collection.json.data)
     // Apply the new resources.
-    await fullApply(testPath, ['resources2'])
+    const res = await fullApply(testPath, ['resources2'])
     const result2 = await getAllCloudResources(faunaClient)
     const test1Collection2: any = result2.Collection.find(x => x.name === 'test1')
     t.is(test1Collection2.json.data.foo, "barmetadata")

@@ -59,8 +59,14 @@ export interface ReferencedResources {
 
 export interface MigrationRefAndTimestamp { timestamp: string, ref: any }
 
-export interface TargetCurrentAndSkippedMigrations {
+export interface RollbackTargetCurrentAndSkippedMigrations {
     target: MigrationRefAndTimestamp | null,
     current: MigrationRefAndTimestamp,
     skipped: MigrationRefAndTimestamp[]
+}
+
+export interface ApplyTargetCurrentAndSkippedMigrations {
+    target: string,
+    current: MigrationRefAndTimestamp | null,
+    skipped: string[]
 }

@@ -10,6 +10,7 @@ import { findStructure } from "../fql/json";
 import { toIndexableName, toIndexableNameFromTypeAndName } from "../util/unique-naming";
 import { UndefinedReferenceError } from "../errors/UndefinedReferenceError";
 import { camelToSnakeCase } from "../fql/transform";
+import { transformCreateToDelete, transformCreateToUpdate, transformUpdateToCreate, transformUpdateToDelete, transformUpdateToUpdate } from '../fql/transform'
 
 interface NamedValue {
     name: string;
@@ -84,6 +85,63 @@ const findAllReferences = (resourcesFQL: LoadedResources): ReferencedResources =
         }
     }
     return categories
+}
+
+
+export const transformDiffToExpressions = (diff: PlannedMigrations): TaggedExpression[] => {
+    const expressions: TaggedExpression[] = []
+    for (let resourceType in ResourceTypes) {
+        const diffForType = diff[resourceType]
+        diffForType.added.map((prevCurr) => {
+            if (prevCurr.target?.statement === StatementType.Update) {
+                expressions.push(transformUpdateToCreate(prevCurr.target))
+            }
+            else if (prevCurr.target?.statement === StatementType.Create) {
+                expressions.push(prevCurr.target)
+            }
+            else {
+                throw Error(`Unexpected type in rollback ${prevCurr.target?.statement}`)
+            }
+        })
+
+        diffForType.changed.map((prevCurr) => {
+            // CHANGED
+            // changed in rollback means that the migrations we are rolling back did an update.
+            // The previous statement can be both a Create as an Update and since the resource
+            // already exists it needs to be trasnformed to an Update.
+            if (prevCurr.target?.statement === StatementType.Update) {
+                // if it's an update, keep it
+                expressions.push(transformUpdateToUpdate(prevCurr.target))
+            }
+            else if (prevCurr.target?.statement === StatementType.Create) {
+                // if it's a create. trasnform to an update.
+                expressions.push(transformCreateToUpdate(prevCurr.target))
+            }
+            else {
+                throw Error(`Unexpected type in rollback ${prevCurr.target?.statement}`)
+            }
+
+        })
+
+        diffForType.deleted.map((prevCurr) => {
+            // ADDED
+            // deleted in rollback means that the migrations we are rolling back added a resource.
+            // The previous statement should therefore be a CREATE or UDPATE statement and
+            // the current will not exist. We need to replace it with a DELETE
+            if (prevCurr.previous?.statement === StatementType.Update) {
+                // if it's an update, keep it
+                expressions.push(transformCreateToDelete(prevCurr.previous))
+            }
+            else if (prevCurr.previous?.statement === StatementType.Create) {
+                // if it's a create. trasnform to an update.
+                expressions.push(transformUpdateToDelete(prevCurr.previous))
+            }
+            else {
+                throw Error(`Unexpected type in rollback ${prevCurr.target?.statement}`)
+            }
+        })
+    }
+    return expressions
 }
 
 

@@ -6,11 +6,12 @@ import Divider from 'ink-divider';
 import { faunaPurple1, faunaPurple2, white, lightgray } from '../colors';
 import Link from 'ink-link';
 import { MessageFun } from './numbered-message';
-import { Task } from '../../tasks/tasks';
+import { Task } from '../../tasks';
 import Spinner from 'ink-spinner';
 import SyntaxHighlight from 'ink-syntax-highlight';
 import { PlannedMigrations, PreviousAndCurrent, TaggedExpression } from '../../types/expressions';
 import { ResourceTypes } from '../../types/resource-types';
+import migrate from '../../tasks/migrate';
 
 const version = require('./../../../package.json').version
 
@@ -155,35 +156,60 @@ export const renderResource = (index: number, resource: TaggedExpression | undef
     </Text>
 }
 
-export const renderMigrationState = (lastCloudMigration: string, localMigrations: string[], direction: string): MessageFun => {
+export const renderMigrationState = (allCloudMigrations: string[], localMigrations: string[], direction: string, amount: number): MessageFun => {
     return (id?: number) => <Box marginLeft={6} key={"migration_state_" + id} flexDirection="column" borderStyle="round" >
-        {renderMigrationItems(lastCloudMigration, localMigrations, id, direction)}
+        {renderMigrationItems(allCloudMigrations, localMigrations, id, direction, amount)}
     </Box>
 }
 
-const renderMigrationItems = (lastCloudMigration: string, localMigrations: string[], id: number | undefined, direction: string) => {
-    let toApplyIndex: any = null
-    if (direction === 'rollback') {
-        localMigrations.reverse()
+const renderMigrationItems = (allCloudMigrations: string[], localMigrations: string[], id: number | undefined, direction: string, amount: number) => {
+    let result: any[] = []
+    if (allCloudMigrations.length == 0) {
+        result.push(renderMigrationItem(`migration_item_${id}_${-1}`, " ".repeat(24), "cloud state"))
     }
-    let result = localMigrations.map((l, index) => {
-        if (l === lastCloudMigration) {
-            toApplyIndex = index + 1
-            return renderMigrationItem(`migration_item_${id}_${index}`, l, "cloud state")
+    if (direction == "rollback") {
+        if (allCloudMigrations.length - amount < 0 && allCloudMigrations.length !== 0) {
+            result.push(renderMigrationItem(`migration_item_${id}_${-1}`, " ".repeat(24), "rollback target"))
         }
-        else if (toApplyIndex === index) {
-            return renderMigrationItem(`migration_item_${id}_${index}`, l, direction + " target")
-        }
-        else {
-            return renderMigrationItem(`migration_item_${id}_${index}`, l, null)
-        }
-    })
-    if (lastCloudMigration === null) {
-        result = [renderMigrationItem(`migration_item_${id}_${-1}`, " ".repeat(24), "cloud state")].concat(result)
+        localMigrations.forEach((l, index) => {
+            if (index === allCloudMigrations.length - amount - 1) {
+                result.push(renderMigrationItem(`migration_item_${id}_${-1}`, l, "rollback target"))
+            }
+            else if (index === allCloudMigrations.length - 1) {
+                result.push(renderMigrationItem(`migration_item_${id}_${index}`, l, "cloud state"))
+            }
+            else {
+                result.push(renderMigrationItem(`migration_item_${id}_${index}`, l, ""))
+            }
+        })
     }
-    if (direction === 'rollback') {
-        result.reverse()
+    else if (direction == "apply") {
+        localMigrations.forEach((l, index) => {
+            if (index === allCloudMigrations.length + amount - 1) {
+                result.push(renderMigrationItem(`migration_item_${id}_${-1}`, l, "apply target"))
+            }
+            else if (index === allCloudMigrations.length - 1) {
+                result.push(renderMigrationItem(`migration_item_${id}_${index}`, l, "cloud state"))
+            }
+            else {
+                result.push(renderMigrationItem(`migration_item_${id}_${index}`, l, ""))
+            }
+        })
     }
+    else {
+        localMigrations.forEach((l, index) => {
+            if (index === allCloudMigrations.length - 1) {
+                result.push(renderMigrationItem(`migration_item_${id}_${index}`, l, "cloud state"))
+            }
+            else {
+                result.push(renderMigrationItem(`migration_item_${id}_${index}`, l, ""))
+            }
+        })
+        if (allCloudMigrations.length == localMigrations.length) {
+            result.push(renderMigrationItem(`migration_item_${id}_${-1}`, " ".repeat(24), "apply target"))
+        }
+    }
+
     return result
 
 }

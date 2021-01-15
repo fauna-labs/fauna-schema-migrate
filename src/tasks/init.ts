@@ -5,7 +5,7 @@ import { clientGenerator } from "../util/fauna-client"
 import { createMigrationCollection } from "../fql/fql-snippets";
 import { interactiveShell } from "../interactive-shell/interactive-shell";
 
-const init = async (options: any, interactive: boolean) => {
+const init = async () => {
     try {
         // Create configuration file
         interactiveShell.startSubtask(`Writing configuration file}`)

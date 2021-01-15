@@ -5,7 +5,7 @@ import { createStore } from 'react-hookstore';
 import Shell from './components/shell';
 import { notifyBoxedCode, notifyBoxedInfo, notifyTaskCompleted, notifyTaskProcessing, notifyUnexpectedError, notifyWarning, renderHeader } from './messages/messages';
 import { NumberedMessage, MessageFun } from './messages/numbered-message';
-import { runTask } from '../tasks/tasks';
+import { runTask } from '../tasks';
 
 export enum ShellState {
     Menu,

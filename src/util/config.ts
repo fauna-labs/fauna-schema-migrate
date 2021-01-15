@@ -91,6 +91,10 @@ export class Config {
         )
     }
 
+    async getChildDbsDirName() {
+        return await this.getConfigVar((await this.readConfig()), ['directories', 'children'])
+    }
+
     async getConfigVar(config: any, configPath: string[]): Promise<string> {
         try {
             let value: any = config[configPath[0]]

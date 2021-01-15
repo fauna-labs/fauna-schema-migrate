@@ -2,24 +2,22 @@ import * as fauna from 'faunadb'
 
 import { clientGenerator } from "../util/fauna-client"
 import { getAllLastMigrationSnippets } from "../state/from-migration-files"
-import { retrieveAllCloudMigrations } from "../fql/fql-snippets"
 import { ResourceTypes } from '../types/resource-types'
-import { LoadedResources, MigrationRefAndTimestamp, PlannedMigrations, StatementType, TaggedExpression, TargetCurrentAndSkippedMigrations } from '../types/expressions'
+import { LoadedResources, MigrationRefAndTimestamp, PlannedMigrations, StatementType, TaggedExpression, RollbackTargetCurrentAndSkippedMigrations } from '../types/expressions'
 import { retrieveDiffBetweenResourcesAndMigrations } from './plan'
-import { transformCreateToDelete, transformCreateToUpdate, transformUpdateToCreate, transformUpdateToDelete, transformUpdateToUpdate } from '../fql/transform'
-import { prettyPrintExpr } from '../fql/print'
 import { generateMigrationQuery } from './generate-query'
-import { interactiveShell } from '../interactive-shell/interactive-shell'
 import { retrieveAllMigrations } from '../util/files'
 
 const q = fauna.query
 const { Let, Lambda, Delete } = fauna.query
 
-export const retrieveRollbackMigrations = async (client: fauna.Client, amount: number) => {
-    const cloudMigrations = (await retrieveAllCloudMigrations(client)).sort()
+export const retrieveRollbackMigrations = async (
+    cloudMigrations: MigrationRefAndTimestamp[],
+    amount: number) => {
+
     const allMigrations = await retrieveAllMigrations()
     const res = await getCurrentAndTargetMigration(cloudMigrations, amount)
-    return { allMigrations: allMigrations, toRollback: res }
+    return { allLocalMigrations: allMigrations, toRollback: res }
 }
 
 export const generateRollbackQuery = async (
@@ -39,8 +37,7 @@ export const generateRollbackQuery = async (
 }
 
 
-const getCurrentAndTargetMigration = async (cloudMigrations: MigrationRefAndTimestamp[], amount: number): Promise<TargetCurrentAndSkippedMigrations> => {
-    const client = await clientGenerator.getClient()
+const getCurrentAndTargetMigration = async (cloudMigrations: MigrationRefAndTimestamp[], amount: number): Promise<RollbackTargetCurrentAndSkippedMigrations> => {
     // Retrieve all migration timestamps that have been processed from cloud
     // get the migration timestmap we are currently at.
     const currentMigration = cloudMigrations.length > 0 ? cloudMigrations[cloudMigrations.length - 1] : null
@@ -91,63 +88,4 @@ const getTargetMigrations = async (targetMigration: MigrationRefAndTimestamp | n
         }
         return categories
     }
-}
-
-
-export const transformDiffToExpressions = (diff: PlannedMigrations): TaggedExpression[] => {
-    const expressions: TaggedExpression[] = []
-    for (let resourceType in ResourceTypes) {
-        const diffForType = diff[resourceType]
-        diffForType.added.map((prevCurr) => {
-            if (prevCurr.target?.statement === StatementType.Update) {
-                expressions.push(transformUpdateToCreate(prevCurr.target))
-            }
-            else if (prevCurr.target?.statement === StatementType.Create) {
-                expressions.push(prevCurr.target)
-            }
-            else {
-                console.log(prevCurr.target)
-                throw Error(`Unexpected type in rollback ${prevCurr.target?.statement}`)
-            }
-        })
-
-        diffForType.changed.map((prevCurr) => {
-            // CHANGED
-            // changed in rollback means that the migrations we are rolling back did an update.
-            // The previous statement can be both a Create as an Update and since the resource
-            // already exists it needs to be trasnformed to an Update.
-            if (prevCurr.target?.statement === StatementType.Update) {
-                // if it's an update, keep it
-                expressions.push(transformUpdateToUpdate(prevCurr.target))
-            }
-            else if (prevCurr.target?.statement === StatementType.Create) {
-                // if it's a create. trasnform to an update.
-                expressions.push(transformCreateToUpdate(prevCurr.target))
-            }
-            else {
-                throw Error(`Unexpected type in rollback ${prevCurr.target?.statement}`)
-            }
-
-        })
-
-        diffForType.deleted.map((prevCurr) => {
-            // ADDED
-            // deleted in rollback means that the migrations we are rolling back added a resource.
-            // The previous statement should therefore be a CREATE or UDPATE statement and
-            // the current will not exist. We need to replace it with a DELETE
-            if (prevCurr.previous?.statement === StatementType.Update) {
-                // if it's an update, keep it
-                expressions.push(transformCreateToDelete(prevCurr.previous))
-            }
-            else if (prevCurr.previous?.statement === StatementType.Create) {
-                // if it's a create. trasnform to an update.
-                expressions.push(transformUpdateToDelete(prevCurr.previous))
-            }
-            else {
-                console.log(prevCurr.target)
-                throw Error(`Unexpected type in rollback ${prevCurr.target?.statement}`)
-            }
-        })
-    }
-    return expressions
 }

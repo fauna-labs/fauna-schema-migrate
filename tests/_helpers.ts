@@ -11,10 +11,11 @@ import { FaunaClientGenerator } from '../src/util/fauna-client'
 import { deleteMigrationDir, generateMigrationDir } from '../src/util/files'
 import * as fauna from 'faunadb'
 import sinon from 'sinon';
-import { runTaskByName } from '../src/tasks/tasks'
+import { runTaskByName } from '../src/tasks'
 
 const { If, Exists, CreateKey, Database, CreateDatabase, Select, Delete, CreateCollection } = fauna.query
 
+// apply in multiple steps
 export const fullApply = async (dir: string, resourceFolders: string[] = ['resources']) => {
     for (let folder of resourceFolders) {
         sinon.stub(Config.prototype, 'getResourcesDir')
@@ -22,19 +23,34 @@ export const fullApply = async (dir: string, resourceFolders: string[] = ['resou
         const planned = await planMigrations()
         const migrations = await generateMigrations(planned)
         await writeMigrations(migrations)
-        await apply(1)
+        const res = await apply(1)
+        const fun: any = Config.prototype.getResourcesDir
+        fun.restore()
+        return res
+    }
+}
+
+// create migrations and apply in one step
+export const multiFullApply = async (dir: string, resourceFolders: string[] = ['resources'], amount: number = 1) => {
+    for (let folder of resourceFolders) {
+        sinon.stub(Config.prototype, 'getResourcesDir')
+            .returns(Promise.resolve(path.join(dir, folder)))
+        const planned = await planMigrations()
+        const migrations = await generateMigrations(planned)
+        await writeMigrations(migrations)
         const fun: any = Config.prototype.getResourcesDir
         fun.restore()
     }
+    return await apply(amount)
 }
 
 
 export const apply = async (amount: number) => {
-    return await runTaskByName('apply', { amount: amount })
+    return await runTaskByName('apply', amount)
 }
 
 export const rollback = async (amount: number) => {
-    return await runTaskByName('rollback', { amount: amount })
+    return await runTaskByName('rollback', amount)
 }
 
 export const setupFullTest = async (dir: string) => {

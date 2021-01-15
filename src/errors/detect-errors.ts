@@ -5,6 +5,13 @@ export const isSchemaCachingFaunaError = (e: any) => {
     }
 }
 
+export const isMissingMigrationCollectionFaunaError = (e: any) => {
+    const res = safeVerifyError(e, ['requestResult', 'responseContent', 'errors', 0])
+    if (res && res.code === 'invalid ref' && res.description.includes("migrations")) {
+        return res.description
+    }
+}
+
 const safeVerifyError = (error: any, keys: any[]): any | false => {
     if (keys.length > 0) {
         if (error && error[keys[0]]) {

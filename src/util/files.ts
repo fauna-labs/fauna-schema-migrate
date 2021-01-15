@@ -8,6 +8,7 @@ import { config } from './config'
 import { TaggedExpression } from '../types/expressions'
 import { evalFQLCode } from '../fql/eval'
 import { MigrationPathAndFiles } from '../types/migrations'
+import defaults from './defaults'
 
 const globPromise = util.promisify(glob)
 
@@ -24,29 +25,25 @@ export const loadFqlSnippet = async (p: string) => {
 }
 
 export const loadJsResource = async (p: string) => {
-    try {
-        // a JS resource will be compiled to the temporary
-        // folder first since it might import other
-        // pieces of code, a regular dynamic import() would not work.
-        await esbuild.build({
-            entryPoints: [p],
-            outdir: await config.getTempDir(),
-            bundle: true,
-            platform: "node",
-            format: "cjs",
-            target: ["node10.4"]
-        });
+    // a JS resource will be compiled to the temporary
+    // folder first since it might import other
+    // pieces of code, a regular dynamic import() would not work.
+    await esbuild.build({
+        entryPoints: [p],
+        outdir: await config.getTempDir(),
+        bundle: true,
+        platform: "node",
+        format: "cjs",
+        target: ["node10.4"]
+    });
 
-        const fql = await require(path.join(
-            process.cwd(),
-            await config.getTempDir(),
-            path.parse(p).base)
-        )
-        return fql.default
-    } catch (err) {
-        console.log(err);
-        return;
-    }
+    const fql = await require(path.join(
+        process.cwd(),
+        await config.getTempDir(),
+        path.parse(p).base)
+    )
+    return fql.default
+
 }
 
 export const loadFqlResource = async (p: string) => {
@@ -73,6 +70,51 @@ export const retrieveAllResourcePaths = async () => {
     const jsResults = await retrieveAllPathsInPattern(resourcesDir, "**/*.js")
     const fqlResults = await retrieveAllPathsInPattern(resourcesDir, "**/*.fql")
     return jsResults.concat(fqlResults)
+}
+
+export const retrieveAllResourceChildDb = async () => {
+    const childDbsDir = await config.getChildDbsDirName()
+    const paths = await retrieveAllResourceChildDbPaths()
+    return paths
+        .map((p) => {
+            const splpath = p.split(path.sep)
+            let previous = false
+            const acc: string[] = []
+            splpath.forEach((e, index) => {
+                if (e === childDbsDir) {
+                    previous = true
+                }
+                else if (previous) {
+                    acc.push(e)
+                    previous = false
+                }
+            })
+            return acc
+        })
+}
+
+export const retrieveAllResourceChildDbPaths = async () => {
+    const childDbsDir = await config.getChildDbsDirName()
+    const resourcesDir = await config.getResourcesDir()
+    return retrieveAllResourceChildDbsIter(resourcesDir, childDbsDir)
+}
+
+const retrieveAllResourceChildDbsIter = (resourcesDir: string, childDbsDir: string): string[] => {
+    const dirs = getDirectories(resourcesDir).filter((d) => {
+        return d === childDbsDir
+    })
+    const childrenDir = dirs && dirs.length > 0 ? dirs[0] : null
+    if (!childrenDir) {
+        return []
+    }
+    else {
+        const childDirs = getDirectories(path.join(resourcesDir, childrenDir))
+        const newResources = childDirs.map((d) => path.join(resourcesDir, childrenDir, d))
+        return newResources.concat(
+            newResources
+                .flatMap((r) => retrieveAllResourceChildDbsIter(r, childDbsDir))
+        )
+    }
 }
 
 export const retrieveAllMigrationPaths = async (): Promise<MigrationPathAndFiles[]> => {

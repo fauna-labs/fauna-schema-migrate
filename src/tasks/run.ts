@@ -4,8 +4,7 @@ const run = async () => {
     try {
         await interactiveShell.start()
     } catch (error) {
-        console.log(error)
-        console.error(chalk.red(`${chalk.bold("Error")}: ${error.message}`));
+        interactiveShell.reportError(error)
     }
 };
 

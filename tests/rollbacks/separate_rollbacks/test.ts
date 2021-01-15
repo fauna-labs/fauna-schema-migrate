@@ -5,8 +5,7 @@ import { fullApply, setupFullTest, destroyFullTest, rollback } from '../../_help
 import { getAllCloudResources } from '../../../src/state/from-cloud'
 import { LoadedResources } from '../../../src/types/expressions';
 import { ResourceTypes } from '../../../src/types/resource-types';
-import deepEqual from 'deep-equal';
-import { transformUpdateToDelete } from '../../../src/fql/transform';
+
 
 const testPath = path.relative(process.cwd(), __dirname)
 
