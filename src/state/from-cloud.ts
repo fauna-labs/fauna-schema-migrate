@@ -5,6 +5,9 @@ import * as fauna from 'faunadb'
 import { toJsonDeep } from '../fql/json'
 import { LoadedResources, TaggedExpression } from '../types/expressions'
 import { ResourceTypes } from '../types/resource-types'
+import { MigrationRefAndTimestamp } from '../types/expressions'
+import { config } from '../util/config'
+
 const q = fauna.query
 const {
     Paginate,
@@ -16,7 +19,15 @@ const {
     Indexes,
     Databases,
     Functions,
-    AccessProviders
+    AccessProviders,
+    Exists,
+    If,
+    CreateCollection,
+    Collection,
+    Reverse,
+    Documents,
+    Let,
+    Select
 } = q
 
 type Fun = (n: any) => any
@@ -24,11 +35,70 @@ type FQLFun = (n: any) => fauna.Expr
 
 const batchSize = 100
 
+const createQuery = (name: string) =>
+    CreateCollection({ name: name })
+
+const wrapInCrate = (fetchQuery: any, name: string) => {
+    return If(
+        Exists(Collection(name)),
+        fetchQuery(Collection(name)),
+        Let({
+            col: createQuery(name),
+            ref: Select(['ref'], Var('col'))
+        },
+            fetchQuery(Var('ref'))
+        )
+    )
+}
+
+export const createMigrationCollection = async (client: fauna.Client) => {
+    const name = await config.getMigrationCollection()
+    return await client.query(
+        If(
+            Exists(Collection(name)),
+            false,
+            CreateCollection({ name: await config.getMigrationCollection() })
+        ))
+}
+
+export const retrieveLastCloudMigration = async (client: fauna.Client) => {
+    const name = await config.getMigrationCollection()
+    const fetchQuery = (collectionRef: any) => Let(
+        {
+            setref: Reverse(Documents(collectionRef))
+        },
+        If(Exists(Var('setref')), Get(Var('setref')), null)
+    )
+    const res: any = await client.query(
+        wrapInCrate(fetchQuery, name)
+    )
+    return res ? res.data.migration : res
+}
+
+export const retrieveAllCloudMigrations = async (client: fauna.Client): Promise<MigrationRefAndTimestamp[]> => {
+    const name = await config.getMigrationCollection()
+    const fetchQuery = (collectionRef: any) => Let(
+        {
+            setref: Documents(collectionRef)
+        },
+        q.Map(
+            Paginate(Var('setref'), { size: 10000 }),
+            Lambda(x => Get(x)))
+    )
+    const res: any = await client.query(
+        wrapInCrate(fetchQuery, name)
+    )
+    // we only need the timestamps and refs
+    return res ? res.data.map((e: any) => {
+        return {
+            timestamp: e.data.migration,
+            ref: e.ref
+        }
+    }) : res
+}
+
 export const getAllCloudResources = async (client: fauna.Client): Promise<LoadedResources> => {
-    // TODO, I should split up types from Cloud from other resources since
-    // they are quite different.
     const cloudResources = await Promise.all([
-        // TODO, add other types!
         await getAllResourcesOfType(client, ResourceTypes.Collection, Collections, remoteTsAndRef),
         await getAllResourcesOfType(client, ResourceTypes.Index, Indexes, remoteTsAndRef),
         await getAllResourcesOfType(client, ResourceTypes.Role, Roles, remoteTsAndRef),

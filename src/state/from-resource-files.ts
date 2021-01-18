@@ -1,5 +1,4 @@
 
-import * as fauna from 'faunadb'
 
 import { toJsonDeep } from '../fql/json'
 import { loadFqlSnippet, retrieveAllResourceChildDb, retrieveAllResourcePaths, } from '../util/files'
@@ -8,14 +7,11 @@ import { TaggedExpression, LoadedResources, StatementType } from '../types/expre
 import { ResourceTypes } from '../types/resource-types'
 import { toIndexableName } from '../util/unique-naming'
 import { DuplicateResourceError } from '../errors/DuplicateResourceError'
+var equalDeep = require('deep-equal');
 
-const q = fauna.query
-const { CreateDatabase } = fauna.query
 
 export const getAllResourceSnippets = async (atChildDbPath: string[] = []): Promise<LoadedResources> => {
-    console.log("TODO, fetch child db resources")
-    const paths = await retrieveAllResourcePaths()
-
+    const paths = await retrieveAllResourcePaths(atChildDbPath)
     let snippets: TaggedExpression[] = []
     for (let i = 0; i < paths.length; i++) {
         const p = paths[i]
@@ -28,29 +24,10 @@ export const getAllResourceSnippets = async (atChildDbPath: string[] = []): Prom
             name: '',
             jsonData: {},
             // a resource file should always be a create!
-            statement: StatementType.Create
+            statement: StatementType.Create,
+            db: atChildDbPath
         })
     }
-
-    // Databases are folders, not snippets, transform them to snippets.
-    const dbpaths = await retrieveAllResourceChildDb()
-    const directChildPaths = filterWithPrefix(dbpaths, atChildDbPath).flat()
-    directChildPaths.forEach((childDbName) => {
-        const createDbFql: any = CreateDatabase({
-            name: childDbName
-        })
-        const json = toJsonDeep(createDbFql)
-
-        snippets.push({
-            fqlExpr: createDbFql,
-            json: json,
-            fql: createDbFql.toFQL(),
-            name: '',
-            jsonData: {},
-            // a resource file should always be a create!
-            statement: StatementType.Create
-        })
-    })
 
     const categories: any = {}
     for (let item in ResourceTypes) {
@@ -76,21 +53,4 @@ export const getAllResourceSnippets = async (atChildDbPath: string[] = []): Prom
     })
 
     return categories
-}
-
-// Filters arrays out that have the prefix and only have
-// one element left after removing the prefix.
-const filterWithPrefix = (arr: string[][], prefix: string[]) => {
-    return arr.filter((a) =>
-        a.length == prefix.length + 1 && arraysEqual(a.slice(0, prefix.length), prefix))
-}
-
-const arraysEqual = (a: string[], b: string[]) => {
-    if (a === b) return true;
-    if (a == null || b == null) return false;
-    if (a.length !== b.length) return false;
-    for (var i = 0; i < a.length; ++i) {
-        if (a[i] !== b[i]) return false;
-    }
-    return true;
 }

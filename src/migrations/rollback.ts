@@ -3,19 +3,20 @@ import * as fauna from 'faunadb'
 import { clientGenerator } from "../util/fauna-client"
 import { getAllLastMigrationSnippets } from "../state/from-migration-files"
 import { ResourceTypes } from '../types/resource-types'
-import { LoadedResources, MigrationRefAndTimestamp, PlannedMigrations, StatementType, TaggedExpression, RollbackTargetCurrentAndSkippedMigrations } from '../types/expressions'
-import { retrieveDiffBetweenResourcesAndMigrations } from './plan'
+import { LoadedResources, MigrationRefAndTimestamp, PlannedDiffPerResource, StatementType, TaggedExpression, RollbackTargetCurrentAndSkippedMigrations } from '../types/expressions'
 import { generateMigrationQuery } from './generate-query'
 import { retrieveAllMigrations } from '../util/files'
+import { retrieveDiff } from './diff'
 
 const q = fauna.query
 const { Let, Lambda, Delete } = fauna.query
 
 export const retrieveRollbackMigrations = async (
     cloudMigrations: MigrationRefAndTimestamp[],
-    amount: number) => {
+    amount: number,
+    atChildDbPath: string[]) => {
 
-    const allMigrations = await retrieveAllMigrations()
+    const allMigrations = await retrieveAllMigrations(atChildDbPath)
     const res = await getCurrentAndTargetMigration(cloudMigrations, amount)
     return { allLocalMigrations: allMigrations, toRollback: res }
 }
@@ -51,11 +52,14 @@ const getCurrentAndTargetMigration = async (cloudMigrations: MigrationRefAndTime
     return { current: currentMigration, target: targetMigration, skipped: skippedMigrations }
 }
 
-export const retrieveDiff = async (currentMigration: MigrationRefAndTimestamp, targetMigration: null | MigrationRefAndTimestamp) => {
-    const { migrations: currentMigrations, lastMigration: currentLastMigration }
-        = await getAllLastMigrationSnippets(currentMigration.timestamp)
+export const retrieveDiffCurrentTarget = async (
+    currentMigration: MigrationRefAndTimestamp,
+    targetMigration: null | MigrationRefAndTimestamp, atChildPath: string[]) => {
 
-    const previousMigrations = await getTargetMigrations(targetMigration)
+    const { migrations: currentMigrations, lastMigration: currentLastMigration }
+        = await getAllLastMigrationSnippets(atChildPath, currentMigration.timestamp)
+
+    const previousMigrations = await getTargetMigrations(targetMigration, atChildPath)
 
     // We need to calculate the diff. But we already have such a function
     // which we used to plan migrations.
@@ -64,14 +68,14 @@ export const retrieveDiff = async (currentMigration: MigrationRefAndTimestamp, t
     // or in this case backward since it's a rollback.
     // In essence, previousMigrations is equivalent to the 'resources' now
     // while currentMigrations are the 'migrations'.
-    const diff = retrieveDiffBetweenResourcesAndMigrations(currentMigrations, previousMigrations)
+    const diff = retrieveDiff(currentMigrations, previousMigrations)
     return diff
 }
 
-const getTargetMigrations = async (targetMigration: MigrationRefAndTimestamp | null): Promise<LoadedResources> => {
+const getTargetMigrations = async (targetMigration: MigrationRefAndTimestamp | null, atChildPath: string[]): Promise<LoadedResources> => {
     if (targetMigration) {
         const { migrations: previousMigrations, lastMigration: previousLastMigration }
-            = await getAllLastMigrationSnippets(targetMigration.timestamp)
+            = await getAllLastMigrationSnippets(atChildPath, targetMigration.timestamp)
         // just to be clear these vars should be the same.
         if (previousLastMigration !== targetMigration.timestamp) {
             throw Error(`did not receive the same migration,

@@ -101,6 +101,46 @@ export const transformUpdateToDelete = (expr: TaggedExpression) => {
     )
 }
 
+export const transformDbPathToCreate = (childDbPath: string[]): TaggedExpression => {
+    const name = childDbPath.length > 0 ? childDbPath[childDbPath.length - 1] : ''
+    const db = childDbPath.slice(0, -1)
+    const createDbFql: any = CreateDatabase({
+        name: name
+    })
+    return transformDbNameToFqlGeneric(name, db, StatementType.Create, createDbFql)
+}
+
+export const transformDbPathToUpdate = (childDbPath: string[]): TaggedExpression => {
+    // no support for database metadata atm
+    const name = childDbPath.length > 0 ? childDbPath[childDbPath.length - 1] : ''
+    const db = childDbPath.slice(1)
+    const updateDbFql: any = Update(Database(name), { name: name })
+    return transformDbNameToFqlGeneric(name, db, StatementType.Update, updateDbFql)
+}
+
+export const transformDbPathToDelete = (childDbPath: string[]): TaggedExpression => {
+    // no support for database metadata atm
+    const name = childDbPath.length > 0 ? childDbPath[childDbPath.length - 1] : ''
+    const db = childDbPath.slice(1)
+    const deleteDbFql: any = Delete(Database(name))
+    return transformDbNameToFqlGeneric(name, db, StatementType.Delete, deleteDbFql)
+}
+
+export const transformDbNameToFqlGeneric = (name: string, db: string[], s: StatementType, fqlExpr: any): TaggedExpression => {
+    const json = toJsonDeep(fqlExpr)
+
+    return {
+        fqlExpr: fqlExpr,
+        json: json,
+        fql: fqlExpr.toFQL(),
+        name: name,
+        jsonData: {},
+        type: ResourceTypes.Database,
+        statement: s,
+        db: db
+    }
+}
+
 export const camelToSnakeCase = (str: string) => {
     let snakeCase = str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
     if (snakeCase.charAt(0) === '_') {
@@ -123,7 +163,8 @@ export const toTaggedExpr = (taggedExpr: TaggedExpression | undefined, fqlExpr: 
             fql: (<any>fqlExpr).toFQL(),
             statement: statement,
             json: toJsonDeep(fqlExpr),
-            jsonData: getJsonData(json, type, statement)
+            jsonData: getJsonData(json, type, statement),
+            db: taggedExpr.db
         }
         return newExpr
     }

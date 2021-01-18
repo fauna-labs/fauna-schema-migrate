@@ -9,7 +9,7 @@
     "build-temp-with-libs": "npm install && npm run install-peers && npm run build && rm -rf node_modules/faunadb && yalc publish && cd ../../Repos/fwitter-node-migrate && npm install && yalc update  && rm -rf .yalc/faunadb-migrate/node_modules && cd .yalc/faunadb-migrate && npm install && cd ../../ && cd ../../Packages/fauna-migrate",
     "build-temp": "npm run build && yalc publish && cd ../../Repos/fwitter-node-migrate && yalc update && npm install  && rm -rf .yalc/faunadb-migrate/node_modules && cd .yalc/faunadb-migrate && npm install && cd ../../ && cd ../../Packages/fauna-migrate",
     "watch": "tsc -w",
-    "test": "ava -T 20s --fail-fast",
+    "test": "ava -T 200s --fail-fast",
     "install-peers": "install-peers -f"
   },
   "bin": {

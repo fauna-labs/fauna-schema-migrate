@@ -8,6 +8,7 @@ export enum StatementType {
 
 export interface TaggedExpression {
     name: string,
+    db: string[],
     type?: ResourceTypes,
     fqlExpr?: any,
     json?: any,
@@ -39,7 +40,13 @@ export interface PlannedDiff {
     deleted: PreviousAndCurrent[]
 }
 
-export interface PlannedMigrations {
+export interface PlannedDatabaseDiff {
+    added: TaggedExpression[],
+    unchanged: TaggedExpression[],
+    deleted: TaggedExpression[],
+}
+
+export interface PlannedDiffPerResource {
     [type: string]: PlannedDiff,
 
 }
@@ -51,6 +58,7 @@ export interface LoadedResources {
 export interface LoadedResourcesAndLastMigration {
     migrations: LoadedResources,
     lastMigration: string
+    nextMigration?: string
 }
 
 export interface ReferencedResources {

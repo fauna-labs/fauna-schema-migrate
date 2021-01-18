@@ -68,15 +68,17 @@ class InteractiveShell {
 
     startSubtask(input: string) {
         if (process.env.NODE_ENV === 'test') {
-            console.log('=== Starting subtask', input)
+            console.log('--- Starting subtask', input)
         }
         this.task.setState(notifyTaskProcessing(input))
     }
 
     printBoxedCode(message: string) {
         if (process.env.NODE_ENV === 'test') {
-            console.log(`==============================================`)
-            console.log(message)
+            console.log(message
+                .split('\n')
+                .map((e) => "         " + e)
+                .join('\n'))
         }
         else {
             this.addMessage(notifyBoxedCode(message))
@@ -85,8 +87,10 @@ class InteractiveShell {
 
     printBoxedInfo(message: string) {
         if (process.env.NODE_ENV === 'test') {
-            console.log(`==============================================`)
-            console.log(message)
+            console.log(message
+                .split('\n')
+                .map((e) => "         " + e)
+                .join('\n'))
         }
         else {
             this.addMessage(notifyBoxedInfo(message))

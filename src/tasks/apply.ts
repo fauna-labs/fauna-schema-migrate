@@ -2,41 +2,48 @@ import { isMissingMigrationCollectionFaunaError, isSchemaCachingFaunaError } fro
 import { prettyPrintExpr } from "../fql/print";
 import { interactiveShell } from "../interactive-shell/interactive-shell";
 import { renderMigrationState } from "../interactive-shell/messages/messages";
-import { retrieveMigrationInfo, getCurrentAndTargetMigration, generateApplyQuery, retrieveDiff } from "../migrations/advance";
-import { transformDiffToExpressions } from "../migrations/plan";
+import { retrieveMigrationInfo, getCurrentAndTargetMigration, generateApplyQuery, retrieveDiffCurrentTarget, retrieveDatabaseMigrationInfo } from "../migrations/advance";
+import { retrieveDatabasesDiff, transformDiffToExpressions } from "../migrations/diff";
+import { ApplyTargetCurrentAndSkippedMigrations } from "../types/expressions";
 import { clientGenerator } from "../util/fauna-client";
 
-const apply = async (amount: number | string = 1) => {
-    const client = await clientGenerator.getClient()
+const apply = async (amount: number | string = 1, atChildDbPath: string[] = []) => {
+    const client = await clientGenerator.getClient(atChildDbPath)
     try {
         let query: any = null
+
         try {
-            // Get info on current state.
-            interactiveShell.startSubtask(`Retrieving current cloud migration state`)
-            const migInfo = await retrieveMigrationInfo(client)
-            const allCloudMigrationTimestamps = migInfo.allCloudMigrations.map((e) => e.timestamp)
-            interactiveShell.completeSubtask(`Retrieved current migration state`)
+            const migInfo = await retrieveMigrationInfo(client, atChildDbPath)
+
             // Parse parameter
             const maxAmount = migInfo.allLocalMigrations.length - migInfo.allCloudMigrations.length
             if (amount === "all") { amount = maxAmount }
             else if (typeof amount === "string") { amount = parseInt(amount) }
             amount = Math.min(amount, maxAmount)
 
-            // render current state, then start executing.
-            interactiveShell.addMessage(renderMigrationState(allCloudMigrationTimestamps, migInfo.allLocalMigrations, "apply", amount))
-            if (migInfo.allCloudMigrations.length < migInfo.allLocalMigrations.length) {
-                const currTargetSkipped = await getCurrentAndTargetMigration(migInfo.allLocalMigrations, migInfo.allCloudMigrations, amount)
 
-                interactiveShell.startSubtask(`Generate migration code`)
-                const diff = await retrieveDiff(currTargetSkipped.current, currTargetSkipped.target)
+            // Get info on current state.
+            interactiveShell.startSubtask(`Retrieving current cloud migration state`)
+            const allCloudMigrationTimestamps = migInfo.allCloudMigrations.map((e) => e.timestamp)
+            interactiveShell.completeSubtask(`Retrieved current migration state`)
+
+            if (migInfo.allCloudMigrations.length < migInfo.allLocalMigrations.length) {
+
+                const currTargetSkipped = await getCurrentAndTargetMigration(migInfo.allLocalMigrations, migInfo.allCloudMigrations, amount)
+                const databaseDiff = await retrieveDatabaseMigrationInfo(currTargetSkipped.current, currTargetSkipped.target)
+                let dbName = atChildDbPath.length > 0 ? `[ DB: ROOT > ${atChildDbPath.join(' > ')} ]` : '[ DB: ROOT ]'
+                interactiveShell.addMessage(renderMigrationState(allCloudMigrationTimestamps, migInfo.allLocalMigrations, "apply", amount))
+
+                interactiveShell.startSubtask(`${dbName} Generate migration code`)
+                const diff = await retrieveDiffCurrentTarget(atChildDbPath, currTargetSkipped.current, currTargetSkipped.target)
+
                 const expressions = transformDiffToExpressions(diff)
                 query = await generateApplyQuery(expressions, currTargetSkipped.skipped, currTargetSkipped.target)
-                interactiveShell.completeSubtask(`Generated migration code`)
+                interactiveShell.completeSubtask(`${dbName} Generated migration code`)
                 interactiveShell.printBoxedCode(prettyPrintExpr(query))
 
-                interactiveShell.startSubtask(`Applying migration`)
+                interactiveShell.startSubtask(`${dbName} Applying migration`)
                 await client.query(query)
-                interactiveShell.completeSubtask(`Applied migration`)
             }
             else {
                 interactiveShell.completeSubtask(`Done, no migrations to apply`)
@@ -49,9 +56,10 @@ const apply = async (amount: number | string = 1) => {
             }
             const schemaDescription = isSchemaCachingFaunaError(error)
             if (schemaDescription) {
-                interactiveShell.startSubtask(`${schemaDescription}\nWaiting for 60 seconds for cache to clear`)
+                let dbName = atChildDbPath.length > 0 ? `[ DB: ROOT > ${atChildDbPath.join(' > ')} ]` : '[ DB: ROOT ]'
+                interactiveShell.startSubtask(`${dbName} ${schemaDescription}\nWaiting for 60 seconds for cache to clear`)
                 await new Promise(resolve => setTimeout(resolve, 60000));
-                interactiveShell.startSubtask(`Applying migration`)
+                interactiveShell.startSubtask(`${dbName} Applying migration`)
                 await client.query(query)
                 return interactiveShell.completeSubtask(`Applied migration`)
             } else {

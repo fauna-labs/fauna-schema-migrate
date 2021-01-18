@@ -114,10 +114,10 @@ const addPath = async (faunaClients: { children: FaunaClients, client: fauna.Cli
         const key: any = await getChildDbKey(faunaClients.client, childDbName)
         if (key) {
             const childDbClient = createClientWithOptions(key.secret)
-            faunaClients.children[childDbName] = { client: childDbClient, children: {} }
+            faunaClients.children[childDbName] = { name: childDbName, client: childDbClient, children: {} }
         }
         else {
-            faunaClients.children[childDbName] = { client: false, children: {} }
+            faunaClients.children[childDbName] = { name: childDbName, client: false, children: {} }
         }
     }
 }
@@ -127,18 +127,20 @@ const getDatabaseClient = async (database: string[], children: FaunaClients) => 
     let client: fauna.Client | false = children.root.client
     children = children.root.children
     while (database.length > 0) {
-        const db = <string>database.pop()
-        if (children[db]) {
+        const db = <string>database.slice(0, 1)[0]
+        database = database.slice(1, database.length)
+        if (children[db] && children[db].client) {
+            client = children[db].client
             children = children[db].children
         }
         else {
             // If it does not exist, try to see if db exists in the meantime.
             // if it does, create the key and add it
-            const key: any = getChildDbKey(client, db)
+            const key: any = await getChildDbKey(client, db)
             if (key) {
                 const childDbClient = createClientWithOptions(key.secret)
                 children[db] = { client: childDbClient, children: {} }
-                return childDbClient
+                client = childDbClient
             }
             else {
                 client = false

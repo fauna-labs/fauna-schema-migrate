@@ -24,7 +24,7 @@ export const tasks: Task[] = [
     },
     {
         name: "init",
-        description: "Initializing folders, config and migration collection",
+        description: "Initializing folders and config",
         action: init
     },
     {
@@ -41,15 +41,15 @@ export const tasks: Task[] = [
         name: "rollback",
         description: "Rollback applied migrations in the database",
         action: rollback,
-        options: '[amount]',
-        defaultOptions: [1]
+        options: '[amount] <childDb...>',
+        defaultOptions: [1, []]
     },
     {
         name: "apply",
         description: "Apply unapplied migrations against the database",
         action: apply,
-        options: '[amount]',
-        defaultOptions: [1]
+        options: '[amount] <childDb...>',
+        defaultOptions: [1, []]
     }
 ]
 
@@ -73,6 +73,7 @@ export const runTask = async (task: Task, interactive: boolean = false, ...param
     if (task.name !== 'run') {
         interactiveShell.addMessage(completedTask(task))
     }
+
     const result = await task.action(...params)
     if (task.name !== 'run') {
         interactiveShell.addMessage(endTaskLine())

@@ -9,7 +9,7 @@ import { MessageFun } from './numbered-message';
 import { Task } from '../../tasks';
 import Spinner from 'ink-spinner';
 import SyntaxHighlight from 'ink-syntax-highlight';
-import { PlannedMigrations, PreviousAndCurrent, TaggedExpression } from '../../types/expressions';
+import { PlannedDiffPerResource, PreviousAndCurrent, TaggedExpression } from '../../types/expressions';
 import { ResourceTypes } from '../../types/resource-types';
 import migrate from '../../tasks/migrate';
 
@@ -103,7 +103,7 @@ export const renderHeader = (): MessageFun => {
     </Box>
 }
 
-export const renderPlan = (plan: PlannedMigrations) => {
+export const renderPlan = (plan: PlannedDiffPerResource) => {
     return (id?: number) => {
         let index = 0
         const toDisplay = []

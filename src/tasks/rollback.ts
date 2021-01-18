@@ -1,16 +1,15 @@
 import { isMissingMigrationCollectionFaunaError, isSchemaCachingFaunaError } from "../errors/detect-errors";
-import { createMigrationCollection, retrieveAllCloudMigrations } from "../fql/fql-snippets";
 import { prettyPrintExpr } from "../fql/print";
-import { transformUpdateToCreate } from "../fql/transform";
 import { interactiveShell } from "../interactive-shell/interactive-shell";
 import { renderMigrationState } from "../interactive-shell/messages/messages";
-import { transformDiffToExpressions } from "../migrations/plan";
-import { retrieveRollbackMigrations, retrieveDiff, generateRollbackQuery } from "../migrations/rollback";
+import { transformDiffToExpressions } from "../migrations/diff";
+import { retrieveRollbackMigrations, retrieveDiffCurrentTarget, generateRollbackQuery } from "../migrations/rollback";
+import { createMigrationCollection, retrieveAllCloudMigrations } from "../state/from-cloud";
 import { clientGenerator } from "../util/fauna-client";
 
-const rollback = async (amount: number | "all" = 1) => {
+const rollback = async (amount: number | string = 1, atChildDbPath: string[] = []) => {
     try {
-        let client = await clientGenerator.getClient()
+        let client = await clientGenerator.getClient(atChildDbPath)
         let query: any = null
         try {
             interactiveShell.startSubtask(`Retrieving current cloud migration state`)
@@ -20,7 +19,7 @@ const rollback = async (amount: number | "all" = 1) => {
             if (amount === "all") { amount = cloudMigrations.length }
             else if (typeof amount === "string") { amount = parseInt(amount) }
 
-            const rMigs = await retrieveRollbackMigrations(cloudMigrations, amount)
+            const rMigs = await retrieveRollbackMigrations(cloudMigrations, amount, atChildDbPath)
             interactiveShell.addMessage(renderMigrationState(allCloudMigrations, rMigs.allLocalMigrations, "rollback", amount))
             // Verify whether there are migrations
             if (allCloudMigrations.length === 0) {
@@ -36,13 +35,12 @@ const rollback = async (amount: number | "all" = 1) => {
                 client = await clientGenerator.getClient([], true)
                 await createMigrationCollection(client)
                 interactiveShell.completeSubtask(`Applied rollback`)
-
             }
             // Else, normal flow, retrieve state, calculate diff, apply
             else {
                 interactiveShell.completeSubtask(`Retrieved current migration state`)
                 interactiveShell.startSubtask(`Calculating diff`)
-                const diff = await retrieveDiff(rMigs.toRollback.current, rMigs.toRollback.target)
+                const diff = await retrieveDiffCurrentTarget(rMigs.toRollback.current, rMigs.toRollback.target, atChildDbPath)
                 const expressions = transformDiffToExpressions(diff)
                 interactiveShell.completeSubtask(`Calculated diff`)
 

@@ -1,16 +1,16 @@
 
-import { getAllLastMigrationSnippets, getSnippetsFromNextMigration } from "../state/from-migration-files"
+import { getAllLastDatabases, getAllLastMigrationSnippets } from "../state/from-migration-files"
 import { LoadedResources, MigrationRefAndTimestamp, StatementType, TaggedExpression, RollbackTargetCurrentAndSkippedMigrations as RollbackTargetCurrentAndSkippedMigrations, ApplyTargetCurrentAndSkippedMigrations } from "../types/expressions"
 import { ResourceTypes } from "../types/resource-types"
 
 import * as fauna from 'faunadb'
 
 import { config } from '../util/config';
-import { retrieveAllCloudMigrations, retrieveLastCloudMigration } from "../fql/fql-snippets"
 import { generateMigrationQuery } from "./generate-query"
 import { transformUpdateToUpdate } from "../fql/transform";
 import { retrieveAllMigrations } from "../util/files";
-import { retrieveDiffBetweenResourcesAndMigrations } from "./plan";
+import { retrieveDatabasesDiff, retrieveDiff } from "./diff";
+import { retrieveAllCloudMigrations } from "../state/from-cloud";
 
 const q = fauna.query
 const { Let, Create, Collection, Lambda } = q
@@ -35,15 +35,24 @@ export interface DependenciesArrayEl {
     dependencyIndexNames: string[]
 }
 
-export const retrieveMigrationInfo = async (client: fauna.Client) => {
+
+export const retrieveDatabaseMigrationInfo = async (currentMigration: null | MigrationRefAndTimestamp, targetMigration: string) => {
+    const allCurrentMigrationChildDbs = await getAllLastDatabases(currentMigration?.timestamp, false)
+    const allTargetMigrationChildDbs = await getAllLastDatabases(targetMigration, false)
+    // They should be sorted according to the length of the child db path.
+    const dbDiff = await retrieveDatabasesDiff(allCurrentMigrationChildDbs, allTargetMigrationChildDbs)
+    dbDiff.sort((a, b) => a.db.length >= b.db.length ? 1 : -1)
+    return dbDiff
+}
+
+export const retrieveMigrationInfo = async (client: fauna.Client, atChildDbPath: string[] = []) => {
     const allCloudMigrations = (await retrieveAllCloudMigrations(client))
-    const allLocalMigrations = await retrieveAllMigrations()
+    const allLocalMigrations = await retrieveAllMigrations(atChildDbPath)
     return {
         allCloudMigrations: allCloudMigrations,
         allLocalMigrations: allLocalMigrations
     }
 }
-
 
 export const getCurrentAndTargetMigration = async (
     localMigrations: string[],
@@ -64,20 +73,18 @@ export const getCurrentAndTargetMigration = async (
     return { current: currentMigration, target: targetMigration, skipped: skippedMigrations }
 }
 
-export const retrieveDiff = async (currentMigration: null | MigrationRefAndTimestamp, targetMigration: string) => {
-    const appliedMigrations = await getAppliedMigrations(currentMigration)
-
+export const retrieveDiffCurrentTarget = async (atChildDbPath: string[], currentMigration: null | MigrationRefAndTimestamp, targetMigration: string) => {
+    const appliedMigrations = await getAppliedMigrations(atChildDbPath, currentMigration)
     const { migrations: toApplyMigrations }
-        = await getAllLastMigrationSnippets(targetMigration)
-
-    const diff = retrieveDiffBetweenResourcesAndMigrations(appliedMigrations, toApplyMigrations)
+        = await getAllLastMigrationSnippets(atChildDbPath, targetMigration)
+    const diff = retrieveDiff(appliedMigrations, toApplyMigrations)
     return diff
 }
 
-const getAppliedMigrations = async (currentMigration: MigrationRefAndTimestamp | null) => {
+const getAppliedMigrations = async (atChildDbPath: string[], currentMigration: MigrationRefAndTimestamp | null) => {
     if (currentMigration) {
         const { migrations: currentMigrations }
-            = await getAllLastMigrationSnippets(currentMigration.timestamp)
+            = await getAllLastMigrationSnippets(atChildDbPath, currentMigration.timestamp)
         return currentMigrations
     }
     else {
