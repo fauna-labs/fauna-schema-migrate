@@ -180,6 +180,8 @@ const toPattern = (mig: TaggedExpression, type: ResourceTypes): PatternAndIndexN
             return { pattern: { index: mig.name }, indexName: toIndexableName(mig) }
         case ResourceTypes.AccessProvider:
             return { pattern: { access_provider: mig.name }, indexName: toIndexableName(mig) }
+        case ResourceTypes.Database:
+            return { pattern: { database: mig.name }, indexName: toIndexableName(mig) }
         default:
             throw new Error(`unknown type in toPattern ${type}`)
     }

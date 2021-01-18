@@ -7,7 +7,7 @@ import { planMigrations } from "../src/migrations/plan"
 import { generateMigrations, writeMigrations } from "../src/migrations/generate-migration"
 import { Config } from '../src/util/config'
 import { createMigrationCollection } from "../src/fql/fql-snippets";
-import { FaunaClientGenerator } from '../src/util/fauna-client'
+import { clientGenerator, FaunaClientGenerator } from '../src/util/fauna-client'
 import { deleteMigrationDir, generateMigrationDir } from '../src/util/files'
 import * as fauna from 'faunadb'
 import sinon from 'sinon';
@@ -64,6 +64,7 @@ export const setupFullTest = async (dir: string) => {
     await deleteMigrationDir()
     const clientPromise = getClient(process.env.FAUNA_ADMIN_KEY)
     const client = await clientPromise
+
     const key: any = await client.query(CreateKey({
         database: Select(['ref'], CreateDatabase({ name: toDbName(dir) })),
         role: 'admin'
@@ -75,8 +76,13 @@ export const setupFullTest = async (dir: string) => {
 
     // we will redirect all fauna calls to this specific test database
     // by creating a different client for each test.
-    sinon.stub(FaunaClientGenerator.prototype, 'getClient')
-        .returns(childDbClientPromise)
+    const original = clientGenerator.getClient
+    sinon.stub(clientGenerator, 'getClient')
+        .callsFake((database?: string[], reinit?: boolean, k?: string) => {
+            console.log("calling with", database, reinit, key.secret)
+            return original(database, reinit, key.secret)
+        })
+
 
     await generateMigrationDir()
     return childDbClient

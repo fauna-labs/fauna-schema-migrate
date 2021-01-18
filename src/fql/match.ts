@@ -1,5 +1,6 @@
 var cloneDeep = require('lodash.clonedeep')
 
+import { WrongCreateTypeError } from "../errors/WrongCreateTypeError"
 import { TaggedExpression, StatementType } from "../types/expressions"
 import { ResourceTypes, TypeResult } from "../types/resource-types"
 import { camelToSnakeCase, getJsonData } from "./transform"
@@ -24,14 +25,16 @@ const getMatchingResult = (s: TaggedExpression) => {
         createMatcher(ResourceTypes.Index),
         createMatcher(ResourceTypes.Function),
         createMatcher(ResourceTypes.Role),
-        createMatcher(ResourceTypes.AccessProvider)
+        createMatcher(ResourceTypes.AccessProvider),
+        createMatcher(ResourceTypes.Database)
     ]
     for (let m of matchers) {
         let res = m(s)
         if (res)
             return res
     }
-    throw new Error(`Unknown snippet type ${s.toString().substring(0, 50)} ... TODO, PRETTY MESSAGE OF WHAT TYPES ARE ALLOWED`)
+
+    throw new WrongCreateTypeError(s)
 }
 
 

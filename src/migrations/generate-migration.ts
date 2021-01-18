@@ -19,6 +19,7 @@ export const generateMigrations = async (planned: PlannedMigrations) => {
     migrExprs.push(transformStatements(planned[ResourceTypes.Collection]))
     migrExprs.push(transformStatements(planned[ResourceTypes.Index]))
     migrExprs.push(transformStatements(planned[ResourceTypes.AccessProvider]))
+    migrExprs.push(transformStatements(planned[ResourceTypes.Database]))
 
     const migrExprsFlat = migrExprs.flat()
     migrExprsFlat.forEach((mig) => {

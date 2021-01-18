@@ -1,13 +1,19 @@
 
+import * as fauna from 'faunadb'
+
 import { toJsonDeep } from '../fql/json'
-import { loadFqlSnippet, retrieveAllResourcePaths, } from '../util/files'
+import { loadFqlSnippet, retrieveAllResourceChildDb, retrieveAllResourcePaths, } from '../util/files'
 import { addNamesAndTypes } from '../fql/match'
 import { TaggedExpression, LoadedResources, StatementType } from '../types/expressions'
 import { ResourceTypes } from '../types/resource-types'
 import { toIndexableName } from '../util/unique-naming'
 import { DuplicateResourceError } from '../errors/DuplicateResourceError'
 
-export const getAllResourceSnippets = async (): Promise<LoadedResources> => {
+const q = fauna.query
+const { CreateDatabase } = fauna.query
+
+export const getAllResourceSnippets = async (atChildDbPath: string[] = []): Promise<LoadedResources> => {
+    console.log("TODO, fetch child db resources")
     const paths = await retrieveAllResourcePaths()
 
     let snippets: TaggedExpression[] = []
@@ -26,7 +32,25 @@ export const getAllResourceSnippets = async (): Promise<LoadedResources> => {
         })
     }
 
+    // Databases are folders, not snippets, transform them to snippets.
+    const dbpaths = await retrieveAllResourceChildDb()
+    const directChildPaths = filterWithPrefix(dbpaths, atChildDbPath).flat()
+    directChildPaths.forEach((childDbName) => {
+        const createDbFql: any = CreateDatabase({
+            name: childDbName
+        })
+        const json = toJsonDeep(createDbFql)
 
+        snippets.push({
+            fqlExpr: createDbFql,
+            json: json,
+            fql: createDbFql.toFQL(),
+            name: '',
+            jsonData: {},
+            // a resource file should always be a create!
+            statement: StatementType.Create
+        })
+    })
 
     const categories: any = {}
     for (let item in ResourceTypes) {
@@ -52,4 +76,21 @@ export const getAllResourceSnippets = async (): Promise<LoadedResources> => {
     })
 
     return categories
+}
+
+// Filters arrays out that have the prefix and only have
+// one element left after removing the prefix.
+const filterWithPrefix = (arr: string[][], prefix: string[]) => {
+    return arr.filter((a) =>
+        a.length == prefix.length + 1 && arraysEqual(a.slice(0, prefix.length), prefix))
+}
+
+const arraysEqual = (a: string[], b: string[]) => {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    if (a.length !== b.length) return false;
+    for (var i = 0; i < a.length; ++i) {
+        if (a[i] !== b[i]) return false;
+    }
+    return true;
 }

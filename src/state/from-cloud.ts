@@ -29,11 +29,13 @@ export const getAllCloudResources = async (client: fauna.Client): Promise<Loaded
     // they are quite different.
     const cloudResources = await Promise.all([
         // TODO, add other types!
-        await getAllResourcesOfType(client, ResourceTypes.Collection, GetCollectionsFQL, remoteTsAndRef),
-        await getAllResourcesOfType(client, ResourceTypes.Index, GetIndexesFQL, remoteTsAndRef),
-        await getAllResourcesOfType(client, ResourceTypes.Role, GetRolesFQL, remoteTsAndRef),
-        await getAllResourcesOfType(client, ResourceTypes.Function, GetFunctionsFQL, remoteTsAndRef),
-        await getAllResourcesOfType(client, ResourceTypes.AccessProvider, GetAccessProviders, remoteTsAndRef)
+        await getAllResourcesOfType(client, ResourceTypes.Collection, Collections, remoteTsAndRef),
+        await getAllResourcesOfType(client, ResourceTypes.Index, Indexes, remoteTsAndRef),
+        await getAllResourcesOfType(client, ResourceTypes.Role, Roles, remoteTsAndRef),
+        await getAllResourcesOfType(client, ResourceTypes.Function, Functions, remoteTsAndRef),
+        await getAllResourcesOfType(client, ResourceTypes.AccessProvider, AccessProviders, remoteTsAndRef),
+        await getAllResourcesOfType(client, ResourceTypes.Database, Databases, remoteTsAndRef)
+
     ])
     const categories: any = {}
     for (let item in ResourceTypes) {
@@ -57,27 +59,12 @@ const remoteTsAndRef = (json: any) => {
     return clone
 }
 
-const GetCollectionsFQL = (cursor: any) =>
-    q.Map(Paginate(Collections(), { size: batchSize, after: cursor }), Lambda('x', Get(Var('x'))))
+const getAllResourcesOfType = async (client: fauna.Client, type: ResourceTypes, fqlFun: any, transformFun: Fun): Promise<any> => {
+    const fqlQuery = (cursor: any) => q.Map(
+        Paginate(fqlFun(), { size: batchSize, after: cursor }),
+        Lambda('x', Get(Var('x'))))
 
-const GetIndexesFQL = (cursor: any) =>
-    q.Map(Paginate(Indexes(), { size: batchSize, after: cursor }), Lambda('x', Get(Var('x'))))
-
-const GetDatabasesFQL = (cursor: any) =>
-    q.Map(Paginate(Databases(), { size: batchSize, after: cursor }), Lambda('x', Get(Var('x'))))
-
-const GetRolesFQL = (cursor: any) =>
-    q.Map(Paginate(Roles(), { size: batchSize, after: cursor }), Lambda('x', Get(Var('x'))))
-
-const GetFunctionsFQL = (cursor: any) =>
-    q.Map(Paginate(Functions(), { size: batchSize, after: cursor }), Lambda('x', Get(Var('x'))))
-
-const GetAccessProviders = (cursor: any) =>
-    q.Map(Paginate(AccessProviders(), { size: batchSize, after: cursor }), Lambda('x', Get(Var('x'))))
-
-
-const getAllResourcesOfType = async (client: fauna.Client, type: ResourceTypes, fqlFun: FQLFun, transformFun: Fun): Promise<any> => {
-    const resources = await getAllResourcesWithFun(client, fqlFun)
+    const resources = await getAllResourcesWithFun(client, fqlQuery)
     return resources.map((el: any) => {
         const json = toJsonDeep(el)
         return { json: json, name: el.name, jsonData: transformFun(json), type: type }

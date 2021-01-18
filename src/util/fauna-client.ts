@@ -9,9 +9,13 @@ const { CreateKey, Database, Select, CreateDatabase, If, Exists, Delete } = faun
 export class FaunaClientGenerator {
     private faunaClients: FaunaClients | null = null
 
-    async getClient(database?: string[], reinit?: boolean): Promise<fauna.Client> {
+    constructor() {
+        this.getClient = this.getClient.bind(this)
+    }
 
-        let secret: string | undefined = process.env.FAUNA_ADMIN_KEY
+    async getClient(database?: string[], reinit?: boolean, key?: string): Promise<fauna.Client> {
+        let secret: string | undefined = key || process.env.FAUNA_ADMIN_KEY
+        let client: fauna.Client | boolean = false
         if (!secret) {
             interactiveShell.requestUserInput(askAdminKey())
             secret = await interactiveShell.getUserInput()
@@ -20,16 +24,16 @@ export class FaunaClientGenerator {
             this.faunaClients = await getAllFaunaClients(secret)
         }
         if (!database) {
-            return this.faunaClients.root.client
+            client = this.faunaClients.root.client
         }
         else {
-            const res = await getDatabaseClient(database, this.faunaClients)
-            if (!res) {
-                throw new Error(`Requested database that was not initialised ${database}`)
-            }
-            else {
-                return res
-            }
+            client = await getDatabaseClient(database, this.faunaClients)
+        }
+        if (!client) {
+            throw new Error(`Requested database that was not initialised ${database}`)
+        }
+        else {
+            return client
         }
     }
 
@@ -56,9 +60,7 @@ export class FaunaClientGenerator {
 // We'll get all Fauna clients in advance instead of
 // creating them each time and going from client to client for every get of a client.
 const getAllFaunaClients = async (secret: string) => {
-    console.log("TODO, FIND A SOLUTION FOR NOT CREATING THE DATABASE, CHILD DBs, shouldnt be precreated.")
     const resourcePaths: string[][] = await retrieveAllResourceChildDb()
-    console.log(resourcePaths)
     resourcePaths.sort(function (a, b) {
         return a.length - b.length;
     })
@@ -82,26 +84,27 @@ const getAllFaunaClients = async (secret: string) => {
     for (let p of resourcePaths) {
         await addPath(faunaClients.root, p)
     }
-    console.log(faunaClients)
     return faunaClients
 }
 
-const getChildDbKey = async (client: fauna.Client, name: string): Promise<any> => {
-    return await client.query(
-        CreateKey({
-            database: If(
+const getChildDbKey = async (client: fauna.Client | false, name: string): Promise<any> => {
+    if (client) {
+        return await client.query(
+            If(
                 Exists(Database(name)),
-                Database(name),
-                Select(['ref'], CreateDatabase({ name: name }))
-            ),
-            role: 'admin'
-        })
-    )
+                CreateKey({ database: Database(name), role: 'admin' }),
+                false
+            )
+        )
+    }
+    else {
+        return false
+    }
+
 }
 
 
-const addPath = async (faunaClients: { children: FaunaClients, client: fauna.Client }, p: string[]) => {
-    console.log(faunaClients, p)
+const addPath = async (faunaClients: { children: FaunaClients, client: fauna.Client | false }, p: string[]) => {
     if (p.length > 1) {
         const childDbName = p[0]
         await addPath(faunaClients.children[childDbName], p.slice(1))
@@ -109,22 +112,38 @@ const addPath = async (faunaClients: { children: FaunaClients, client: fauna.Cli
     else {
         const childDbName = p[0]
         const key: any = await getChildDbKey(faunaClients.client, childDbName)
-        const childDbClient = createClientWithOptions(key.secret)
-        faunaClients.children[childDbName] = { client: childDbClient, children: {} }
+        if (key) {
+            const childDbClient = createClientWithOptions(key.secret)
+            faunaClients.children[childDbName] = { client: childDbClient, children: {} }
+        }
+        else {
+            faunaClients.children[childDbName] = { client: false, children: {} }
+        }
     }
 }
 
-const getDatabaseClient = async (database: string[], faunaClients: FaunaClients) => {
-    let client: fauna.Client = faunaClients.root.client
-    faunaClients = faunaClients.root.children
+const getDatabaseClient = async (database: string[], children: FaunaClients) => {
+    // TODO, reset clients for databases that are deleted.
+    let client: fauna.Client | false = children.root.client
+    children = children.root.children
     while (database.length > 0) {
-        console.log('FaunaClients', faunaClients, database)
         const db = <string>database.pop()
-        if (faunaClients[db]) {
-            faunaClients = faunaClients[db].children
+        if (children[db]) {
+            children = children[db].children
         }
         else {
-            return false
+            // If it does not exist, try to see if db exists in the meantime.
+            // if it does, create the key and add it
+            const key: any = getChildDbKey(client, db)
+            if (key) {
+                const childDbClient = createClientWithOptions(key.secret)
+                children[db] = { client: childDbClient, children: {} }
+                return childDbClient
+            }
+            else {
+                client = false
+            }
+
         }
     }
     return client

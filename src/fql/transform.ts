@@ -3,7 +3,7 @@ import cloneDeep from 'lodash.clonedeep'
 
 const { Update, Delete,
     CreateFunction, CreateCollection, CreateAccessProvider, CreateIndex, CreateRole,
-    Role, Function, Collection, Index, AccessProvider } = fauna.query
+    Role, Function, Collection, Index, AccessProvider, Database, CreateDatabase } = fauna.query
 
 import { StatementType, TaggedExpression } from "../types/expressions"
 import { ResourceTypes } from '../types/resource-types'
@@ -41,6 +41,9 @@ export const explicitelySetAllParameters = (expr: TaggedExpression) => {
             return toTaggedExpr(expr, expr.fqlExpr, StatementType.Update)
         case ResourceTypes.AccessProvider:
             setExplicitUpdateParameters({ data: null, issuer: null, jwks_uri: null, roles: null }, expr)
+            return toTaggedExpr(expr, expr.fqlExpr, StatementType.Update)
+        case ResourceTypes.Database:
+            setExplicitUpdateParameters({ data: null, priority: null }, expr)
             return toTaggedExpr(expr, expr.fqlExpr, StatementType.Update)
         default:
             throw new Error(`Unknown type ${expr.type}`)
@@ -142,6 +145,8 @@ const resourceTypeToFqlReferenceFunction = (expr: TaggedExpression) => {
             return Role
         case ResourceTypes.AccessProvider:
             return AccessProvider
+        case ResourceTypes.Database:
+            return Database
         default:
             throw new Error(`Unknown type ${expr.type}`)
     }
@@ -159,6 +164,8 @@ const resourceTypeToFqlCreateFunction = (expr: TaggedExpression) => {
             return CreateRole
         case ResourceTypes.AccessProvider:
             return CreateAccessProvider
+        case ResourceTypes.Database:
+            return CreateDatabase
         default:
             throw new Error(`Unknown type ${expr.type}`)
     }

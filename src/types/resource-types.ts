@@ -6,7 +6,8 @@ export enum ResourceTypes {
     Function = 'Function',
     Collection = 'Collection',
     Index = 'Index',
-    AccessProvider = 'AccessProvider'
+    AccessProvider = 'AccessProvider',
+    Database = 'Database'
 }
 
 export interface TypeResult {

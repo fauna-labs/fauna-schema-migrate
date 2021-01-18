@@ -1,11 +1,11 @@
-import fs, { lstatSync, readdirSync } from 'fs'
+import fs, { existsSync, lstatSync, readdirSync } from 'fs'
 import path from 'path'
 import * as esbuild from 'esbuild'
 import shell from 'shelljs'
 import glob from 'glob'
 import util from 'util'
 import { config } from './config'
-import { TaggedExpression } from '../types/expressions'
+import { StatementType, TaggedExpression } from '../types/expressions'
 import { evalFQLCode } from '../fql/eval'
 import { MigrationPathAndFiles } from '../types/migrations'
 import defaults from './defaults'
@@ -100,21 +100,27 @@ export const retrieveAllResourceChildDbPaths = async () => {
 }
 
 const retrieveAllResourceChildDbsIter = (resourcesDir: string, childDbsDir: string): string[] => {
-    const dirs = getDirectories(resourcesDir).filter((d) => {
-        return d === childDbsDir
-    })
-    const childrenDir = dirs && dirs.length > 0 ? dirs[0] : null
-    if (!childrenDir) {
-        return []
+    if (existsSync(resourcesDir)) {
+        const dirs = getDirectories(resourcesDir).filter((d) => {
+            return d === childDbsDir
+        })
+        const childrenDir = dirs && dirs.length > 0 ? dirs[0] : null
+        if (!childrenDir) {
+            return []
+        }
+        else {
+            const childDirs = getDirectories(path.join(resourcesDir, childrenDir))
+            const newResources = childDirs.map((d) => path.join(resourcesDir, childrenDir, d))
+            return newResources.concat(
+                newResources
+                    .flatMap((r) => retrieveAllResourceChildDbsIter(r, childDbsDir))
+            )
+        }
     }
     else {
-        const childDirs = getDirectories(path.join(resourcesDir, childrenDir))
-        const newResources = childDirs.map((d) => path.join(resourcesDir, childrenDir, d))
-        return newResources.concat(
-            newResources
-                .flatMap((r) => retrieveAllResourceChildDbsIter(r, childDbsDir))
-        )
+        return []
     }
+
 }
 
 export const retrieveAllMigrationPaths = async (): Promise<MigrationPathAndFiles[]> => {
@@ -248,7 +254,9 @@ export const writeNewMigration = async (migrations: TaggedExpression[]) => {
     if (migrations.length) {
         const newMigrationDir = await writeNewMigrationDir()
         migrations.forEach((mig) => {
-            fs.writeFileSync(path.join(newMigrationDir, `${mig.type}-${mig.name}.fql`), mig.fqlFormatted)
+            const statement = StatementType[<StatementType>mig.statement]
+            fs.writeFileSync(path.join(newMigrationDir,
+                `${statement.toString().toLowerCase()}-${mig.type?.toString().toLowerCase()}-${mig.name}.fql`), mig.fqlFormatted)
         })
     }
 

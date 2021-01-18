@@ -27,15 +27,11 @@ export const planMigrations = async (): Promise<PlannedMigrations> => {
     // todo, add a flag to ignore this check.
     findIllegalReferences(resources)
     const { migrations, lastMigration } = await getAllLastMigrationSnippets()
-    // const cloudResources = await getAllCloudResources()
+    // Resources determine how your current data looks.
+    // Migraitons are generated from resources.
+    // A diff between migrations means comparing the Resources that exist with
+    // the last seen migration of a certain resource.
 
-    // resources determine how your migrations look.
-    // migrations are the source of truth of how your cloud
-    // should look. The latest migration of a certain migration
-    // contains the full state, it's either created from scratch,
-    // updated (with the full new parameters) or deleted.
-    // Cloud resources are retrieved in order to know references of the resources to update.
-    // This means that if you do manual changes in cloud, those will be overwritten!
     return retrieveDiffBetweenResourcesAndMigrations(migrations, resources)
 }
 
