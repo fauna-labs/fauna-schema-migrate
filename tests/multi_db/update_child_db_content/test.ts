@@ -40,7 +40,7 @@ test('update child database contents', async (t: ExecutionContext) => {
     t.is(child1aRes.Collection.length, 2)
     t.is(child1aRes.Function.length, 1)
     const coll: any = child1aRes.Collection.find(x => x.name === 'child1a_collection')
-    t.is(coll.json.data.random, 42)
+    t.is(coll.jsonData.data.random, 42)
 
 })
 

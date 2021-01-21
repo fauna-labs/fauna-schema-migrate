@@ -2,7 +2,7 @@
 import path from 'path'
 import test, { ExecutionContext } from 'ava';
 import { fullApply, setupFullTest, destroyFullTest } from '../../_helpers'
-import { CircularMigrationError } from '../../../src/errors/CircularMigrationError';
+import { getAllCloudResources } from '../../../src/state/from-cloud';
 
 const testPath = path.relative(process.cwd(), __dirname)
 
@@ -12,10 +12,21 @@ test.before(async (t: ExecutionContext) => {
 })
 
 test('conflicting (circular) dependencies test', async (t: ExecutionContext) => {
-    await t.throwsAsync(async () => {
-        // indexes can't be updated.
-        await fullApply(testPath)
-    }, { instanceOf: CircularMigrationError })
+    await fullApply(testPath)
+    // adapted to allow circular dependencies.
+    let result = await getAllCloudResources(faunaClient)
+    t.is(result.Collection.length, 3)
+    t.truthy(result.Collection.find(x => x.name === 'migrations'))
+    t.truthy(result.Collection.find(x => x.name === 'collection1'))
+    t.truthy(result.Collection.find(x => x.name === 'collection2'))
+    const coll1: any = result.Collection.find(x => x.name === 'collection1')
+    const coll2: any = result.Collection.find(x => x.name === 'collection2')
+
+    // check whether objects are complete.
+    t.is(coll1.jsonData.data.metadata, "some metadata for this collection, even if it's strange we'll link it to some other collection")
+    t.is(coll2.jsonData.data.metadata, "some metadata for this collection, even if it's strange we'll link it to some other collection")
+    t.is(coll1.jsonData.data.role['value'].id, 'collection2')
+    t.is(coll2.jsonData.data.role['value'].id, 'collection1')
 
 })
 

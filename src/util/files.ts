@@ -38,11 +38,12 @@ export const loadJsResource = async (p: string) => {
         target: ["node10.4"]
     });
 
-    const fql = await require(path.join(
+    const filename = path.join(
         process.cwd(),
         await config.getTempDir(),
         path.parse(p).base)
-    )
+    delete require.cache[filename];
+    const fql = await require(filename)
     return fql.default
 
 }
@@ -249,6 +250,12 @@ export const generateMigrationDir = async () => {
 export const deleteMigrationDir = async () => {
     shell.rm('-rf', await config.getMigrationsDir())
 }
+
+export const deleteTempDir = async () => {
+    shell.rm('-rf', await config.getTempDir())
+}
+
+
 
 export const arrayToApplicationPath = (filePath: string[]) => {
     const fileFullPath = path.join(process.cwd(), ...filePath)

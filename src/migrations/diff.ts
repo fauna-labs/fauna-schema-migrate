@@ -4,7 +4,8 @@ var cloneDeep = require('lodash.clonedeep')
 import { TaggedExpression, PlannedDiff, LoadedResources, StatementType, PlannedDiffPerResource, PlannedDatabaseDiff } from "../types/expressions";
 import { UpdateIndexError } from "../errors/UpdateIndexError";
 import { ResourceTypes } from "../types/resource-types";
-import { transformCreateToDelete, transformCreateToUpdate, transformDbPathToCreate, transformDbPathToDelete, transformDbPathToUpdate, transformUpdateToCreate, transformUpdateToDelete, transformUpdateToUpdate } from '../fql/transform'
+import { explicitelySetAllParameters, transformCreateToDelete, transformCreateToUpdate, transformDbPathToCreate, transformDbPathToDelete, transformDbPathToUpdate, transformUpdateToCreate, transformUpdateToDelete, transformUpdateToUpdate } from '../fql/transform'
+import deepEqual from "deep-equal";
 
 interface NamedValue {
     name: string;
@@ -32,16 +33,16 @@ export const retrieveDatabasesDiff = async (currentDbs: string[][], targetDbs: s
 }
 
 
-export const retrieveDiff = (migrationsFQL: LoadedResources, resourcesFQL: LoadedResources) => {
+export const retrieveDiff = (currentExpressions: LoadedResources, targetExpressions: LoadedResources) => {
     // the migrationsFQL param contains the last state of each resource.
     // the resourcesFQL param contains the state of the resources folder for each resource.
     // calculating what has changed is therefore easy.
     const migrationDiff: PlannedDiffPerResource = {}
 
-    Object.keys(migrationsFQL).forEach((type: string) => {
-        const migration: any = cloneDeep(migrationsFQL[type])
-        const resource: any = cloneDeep(resourcesFQL[type])
-        migrationDiff[type] = createPairsForType(migration, resource)
+    Object.keys(currentExpressions).forEach((type: string) => {
+        const fromPerType: any = cloneDeep(currentExpressions[type])
+        const targetPerType: any = cloneDeep(targetExpressions[type])
+        migrationDiff[type] = createPairsForType(fromPerType, targetPerType)
     })
 
     // Index updates are not supported (and can't be), throw error.
@@ -50,46 +51,75 @@ export const retrieveDiff = (migrationsFQL: LoadedResources, resourcesFQL: Loade
 }
 
 /* We'll match them by name */
-const createPairsForType = (previouss: TaggedExpression[], currents: TaggedExpression[]) => {
+const createPairsForType = (currentExpressions: TaggedExpression[], targetExpressions: TaggedExpression[]) => {
+
     const pairs: PlannedDiff = {
         added: [],
         changed: [],
         unchanged: [],
         deleted: []
     }
-    while (currents.length > 0) {
+    while (targetExpressions.length > 0) {
         // Careful, this logic is used both for comparing pure Create statements (resources)
         // where two consecutive Create statements result in a change.
         // as well as comparing migrations (which contain Create/Update/Delete)
-        const current = <TaggedExpression>currents.pop()
-        const previousIndex = findIndex(current, previouss)
-        if (current?.statement === StatementType.Delete) {
+        const target = <TaggedExpression>targetExpressions.pop()
+        const previousIndex = findIndex(target, currentExpressions)
+        if (target?.statement === StatementType.Delete) {
             // ignore deletes
         }
         else if (previousIndex !== -1) {
-            const res = previouss.splice(previousIndex, 1)
+            const res = currentExpressions.splice(previousIndex, 1)
             const previous = res[0]
-            if (equalDeep(previous.jsonData, current.jsonData)) {
-                pairs.unchanged.push({ target: current, previous: previous })
+            if (equalDeepWithExplicitParameters(previous, target)) {
+
+                pairs.unchanged.push({ target: target, previous: previous })
             }
             else {
-                pairs.changed.push({ target: current, previous: previous })
+
+                pairs.changed.push({ target: target, previous: previous })
             }
         }
         else {
-            pairs.added.push({ target: current })
+            pairs.added.push({ target: target })
         }
     }
 
-    while (previouss.length > 0) {
-        const previous = previouss.pop()
+    while (currentExpressions.length > 0) {
+        const previous = currentExpressions.pop()
         pairs.deleted.push({ previous: previous })
     }
 
     return pairs
 }
 
+// Since we've set explicit paramaters, the diff might be off.
+// if explicit parameters are set, those are set upon an Update.
+// Therefore, if comparing to a Create, remove the explicit paramaters.
+const equalDeepWithExplicitParameters = (e1: TaggedExpression, e2: TaggedExpression) => {
+    let j1 = e1.jsonData
+    let j2 = e2.jsonData
+    if (e1.statement === StatementType.Create) {
+        j2 = cloneDeep(j2)
+        Object.keys(j2).forEach((k) => {
+            if (j2[k] === null) {
+                delete j2[k]
+            }
+        })
+    }
+    if (e2.statement === StatementType.Create) {
+        j1 = cloneDeep(j1)
+        Object.keys(j1).forEach((k) => {
+            if (j1[k] === null) {
+                delete j1[k]
+            }
+        })
+    }
+    return deepEqual(j1, j2)
+}
+
 export const transformDiffToExpressions = (diff: PlannedDiffPerResource): TaggedExpression[] => {
+
     const expressions: TaggedExpression[] = []
     for (let resourceType in ResourceTypes) {
         const diffForType = diff[resourceType]

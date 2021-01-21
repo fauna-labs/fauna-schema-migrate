@@ -1,14 +1,12 @@
 
 
-import { toJsonDeep } from '../fql/json'
-import { loadFqlSnippet, retrieveAllResourceChildDb, retrieveAllResourcePaths, } from '../util/files'
-import { addNamesAndTypes } from '../fql/match'
+import { loadFqlSnippet, retrieveAllResourcePaths, } from '../util/files'
+import { addNamesAndTypes, verifyCreateStatementsOnly } from '../fql/match'
 import { TaggedExpression, LoadedResources, StatementType } from '../types/expressions'
 import { ResourceTypes } from '../types/resource-types'
 import { toIndexableName } from '../util/unique-naming'
 import { DuplicateResourceError } from '../errors/DuplicateResourceError'
-var equalDeep = require('deep-equal');
-
+import { EmptyResourceFileError } from '../errors/EmptyResourceFileError'
 
 export const getAllResourceSnippets = async (atChildDbPath: string[] = []): Promise<LoadedResources> => {
     const paths = await retrieveAllResourcePaths(atChildDbPath)
@@ -16,10 +14,11 @@ export const getAllResourceSnippets = async (atChildDbPath: string[] = []): Prom
     for (let i = 0; i < paths.length; i++) {
         const p = paths[i]
         const snippet = await loadFqlSnippet(p)
-        const json = toJsonDeep(snippet)
+        if (!snippet) {
+            throw new EmptyResourceFileError(p)
+        }
         snippets.push({
             fqlExpr: snippet,
-            json: json,
             fql: snippet.toFQL(),
             name: '',
             jsonData: {},
@@ -29,11 +28,9 @@ export const getAllResourceSnippets = async (atChildDbPath: string[] = []): Prom
         })
     }
 
-    const categories: any = {}
-    for (let item in ResourceTypes) {
-        categories[item] = []
-    }
+    verifyCreateStatementsOnly(snippets)
     addNamesAndTypes(snippets)
+
 
     const byNameAndType: any = {}
     snippets.forEach((snippet) => {
@@ -48,6 +45,10 @@ export const getAllResourceSnippets = async (atChildDbPath: string[] = []): Prom
         byNameAndType[key] = snippet
     })
 
+    const categories: any = {}
+    for (let item in ResourceTypes) {
+        categories[item] = []
+    }
     snippets.forEach((s) => {
         categories[<string>s.type].push(s)
     })

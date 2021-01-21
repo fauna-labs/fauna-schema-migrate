@@ -2,30 +2,25 @@ import { prettyPrintExpr } from "../fql/print";
 import { TaggedExpression } from "../types/expressions";
 import { ResourceTypes } from "../types/resource-types";
 
-export class WrongMigrationTypeError extends Error {
+export class WrongResourceTypeError extends Error {
     constructor(expr: TaggedExpression) {
         const message = `
-        Only CREATE statements that start with the functions:
+        Only statements that start with the functions:
           ${listCreateResourceTypes().join('\n          ')}
-        are allowed in the MIGRATIONS folder.
-        
+        are allowed in the RESOURCES folder.
         Received Statement
         --------------
         ${prettyPrintExpr(expr.fqlExpr)}
         --------------
         `
-
         super(message);
 
-        Object.setPrototypeOf(this, WrongMigrationTypeError.prototype);
+        Object.setPrototypeOf(this, WrongResourceTypeError.prototype);
     }
 }
 
 const listCreateResourceTypes = () => {
-
     const res: string[] = []
-    res.push("Update")
-    res.push("Delete")
     for (let r in ResourceTypes) {
         res.push("Create" + r)
     }

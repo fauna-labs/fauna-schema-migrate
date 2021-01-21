@@ -7,6 +7,7 @@ import state from "./tasks/state";
 import { interactiveShell } from "./interactive-shell/interactive-shell";
 import { endTaskLine, startCommand as completedTask } from "./interactive-shell/messages/messages";
 import rollback from "./tasks/rollback";
+import { deleteTempDir } from "./util/files";
 
 export interface Task {
     name: string
@@ -41,14 +42,14 @@ export const tasks: Task[] = [
         name: "rollback",
         description: "Rollback applied migrations in the database",
         action: rollback,
-        options: '[amount] <childDb...>',
+        options: '[amount] [childDb...]',
         defaultOptions: [1, []]
     },
     {
         name: "apply",
         description: "Apply unapplied migrations against the database",
         action: apply,
-        options: '[amount] <childDb...>',
+        options: '[amount] [childDb...]',
         defaultOptions: [1, []]
     }
 ]
@@ -77,11 +78,11 @@ export const runTask = async (task: Task, interactive: boolean = false, ...param
     const result = await task.action(...params)
     if (task.name !== 'run') {
         interactiveShell.addMessage(endTaskLine())
+        await deleteTempDir()
     }
     if (!interactive) {
         interactiveShell.close()
     }
-
     return result
 }
 

@@ -6,42 +6,38 @@ import { existsSync } from 'fs'
 export class Config {
 
     config: any
+    defaultConfigString: string = ""
 
-    Config() {
-    }
-
-    configDefault() {
-        return `module.exports = {
-        // configure your directories as you prefer
-        directories: {
-            // identify the root folder wher everything will be stored
-            root: ${JSON.stringify(defaults.directories.root)},
-            // the name of the folder where your resources (functions, roles, etc)
-            // will be written.
-            resources: ${JSON.stringify(defaults.directories.resources)},
-            // this is a folder managed by the library where migrations will be written
-            // which are derived from your code in resources.
-            migrations: ${JSON.stringify(defaults.directories.migrations)},
-            // name of the folder where child databases are stored
-            children: ${JSON.stringify(defaults.directories.children)},
-            // a directory where temporary compilations will be saved
-            temp: ${JSON.stringify(defaults.directories.temp)}
-        },
-        // The collection where the migration details will be stored.
-        // Do not change this value when migrations have already been applied to
-        // the database you are operating on. Except if you manually copied
-        // the data to the new collection.
-        collection: ${JSON.stringify(defaults.collection)}
+    constructor() {
+        this.defaultConfigString = `{
+            "directories": {
+                "root": "${defaults.directories.root}",
+                "resources": "${defaults.directories.resources}",
+                "migrations": "${defaults.directories.migrations}",
+                "children": "${defaults.directories.children}",
+                "temp": "${defaults.directories.temp}"
+            },
+            "collection": "${defaults.collection}"
     }`
     }
 
+    configDefault() {
+        return `module.exports = ${this.defaultConfigString} `
+    }
+
     async readConfig() {
+        // caching at this point. Remove the cache to have live updates and read the config each time.
         if (this.config) {
             return (await this.config).default
         }
         else {
-            this.config = await import(path.join(process.cwd(), defaults.configFile));
-            return (await this.config).default
+            if (existsSync(path.join(process.cwd(), defaults.configFile))) {
+                this.config = await import(path.join(process.cwd(), defaults.configFile));
+                return (await this.config).default
+            }
+            else {
+                return JSON.parse(this.defaultConfigString)
+            }
         }
     }
 

@@ -44,6 +44,7 @@ const apply = async (amount: number | string = 1, atChildDbPath: string[] = []) 
 
                 interactiveShell.startSubtask(`${dbName} Applying migration`)
                 await client.query(query)
+                interactiveShell.completeSubtask(`Done applying migrations`)
             }
             else {
                 interactiveShell.completeSubtask(`Done, no migrations to apply`)

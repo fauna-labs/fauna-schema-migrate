@@ -5,6 +5,7 @@ export class EvalFqlError extends Error {
         // Todo JSlint the fql string to get decent errors.
         const message = `
 Failed to evaluate FQL expression with SyntaxError:
+${err}
 --------------
 ${fql}
 --------------

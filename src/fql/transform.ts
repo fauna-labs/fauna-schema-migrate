@@ -3,11 +3,26 @@ import cloneDeep from 'lodash.clonedeep'
 
 const { Update, Delete,
     CreateFunction, CreateCollection, CreateAccessProvider, CreateIndex, CreateRole,
-    Role, Function, Collection, Index, AccessProvider, Database, CreateDatabase } = fauna.query
+    Role, Function, Collection, Index, AccessProvider, Database, CreateDatabase,
+    Var, Query, Lambda } = fauna.query
 
 import { StatementType, TaggedExpression } from "../types/expressions"
 import { ResourceTypes } from '../types/resource-types'
-import { toJsonDeep } from './json'
+
+export const createStub = (expr: TaggedExpression) => {
+    // Just create an empty stub from a create expression.
+    if (!expr.type) {
+        // could also improve my types instead.
+        throw new Error(`Expression type undefined ${expr}`)
+    }
+    else {
+        const original = expr.fqlExpr.raw["create_" + camelToSnakeCase(expr.type)].raw.object
+        const fqlFunction = resourceTypeToFqlCreateFunction(expr)
+        const obj = { name: original.name }
+        addRequiredProps(expr, obj)
+        return toTaggedExpr(expr, fqlFunction(obj), StatementType.Create)
+    }
+}
 
 export const transformUpdateToCreate = (expr: TaggedExpression) => {
     if (!expr.type) {
@@ -47,6 +62,29 @@ export const explicitelySetAllParameters = (expr: TaggedExpression) => {
             return toTaggedExpr(expr, expr.fqlExpr, StatementType.Update)
         default:
             throw new Error(`Unknown type ${expr.type}`)
+    }
+}
+
+const addRequiredProps = (expr: TaggedExpression, obj: any) => {
+    switch (expr.type) {
+        case ResourceTypes.Function:
+            obj.body = Query(
+                Lambda('x', Var('x'))
+            )
+            return
+        case ResourceTypes.AccessProvider:
+            // let's take an auth0 issueras dummy
+            obj.issuer = 'https://faunadb-auth0.auth0.com/'
+            obj.jwks_uri = 'https://faunadb-auth0.auth0.com.well-known/jwks.json'
+            return
+        case ResourceTypes.Role:
+            obj.privileges = []
+            return
+        default:
+            // Some (e.g. collection, role) don't have required props.
+            // We don't stub indexes since they can't live without a source.
+            // instead indexes are always moved to the end.
+            return
     }
 }
 
@@ -127,11 +165,8 @@ export const transformDbPathToDelete = (childDbPath: string[]): TaggedExpression
 }
 
 export const transformDbNameToFqlGeneric = (name: string, db: string[], s: StatementType, fqlExpr: any): TaggedExpression => {
-    const json = toJsonDeep(fqlExpr)
-
     return {
         fqlExpr: fqlExpr,
-        json: json,
         fql: fqlExpr.toFQL(),
         name: name,
         jsonData: {},
@@ -150,20 +185,20 @@ export const camelToSnakeCase = (str: string) => {
 }
 
 export const toTaggedExpr = (taggedExpr: TaggedExpression | undefined, fqlExpr: fauna.Expr, statement: StatementType) => {
+
     if (taggedExpr === undefined) {
         throw new Error('toTaggedExpr: received undefined expr')
     }
+
     else {
         const type: any = taggedExpr.type
-        const json = toJsonDeep(fqlExpr)
         const newExpr = {
             name: taggedExpr.name,
             type: type,
             fqlExpr: fqlExpr,
             fql: (<any>fqlExpr).toFQL(),
             statement: statement,
-            json: toJsonDeep(fqlExpr),
-            jsonData: getJsonData(json, type, statement),
+            jsonData: getJsonData(fqlExpr, type, statement),
             db: taggedExpr.db
         }
         return newExpr
@@ -212,15 +247,17 @@ const resourceTypeToFqlCreateFunction = (expr: TaggedExpression) => {
     }
 }
 
-export const getJsonData = (json: any, resourceType: ResourceTypes, statement: StatementType) => {
+export const getJsonData = (fExpr: fauna.Expr, resourceType: ResourceTypes, statement: StatementType) => {
+    const expr: any = fExpr
     if (statement === StatementType.Create) {
         const key = 'create_' + camelToSnakeCase(resourceType)
-        const jsonData = cloneDeep(json[key].object)
+        const jsonData = cloneDeep(expr.raw[key].raw.object)
         delete jsonData.name
         return jsonData
     }
     else if (statement === StatementType.Update) {
-        const jsonData = json.params.object
+        const jsonData = expr.raw.params.raw.object
+        delete jsonData.name
         return jsonData
     }
     else {

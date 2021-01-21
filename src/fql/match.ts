@@ -1,6 +1,7 @@
 var cloneDeep = require('lodash.clonedeep')
 
-import { WrongCreateTypeError } from "../errors/WrongCreateTypeError"
+import { WrongMigrationTypeError } from "../errors/WrongCreateTypeError"
+import { WrongResourceTypeError } from "../errors/WrongResourceTypeError"
 import { TaggedExpression, StatementType } from "../types/expressions"
 import { ResourceTypes, TypeResult } from "../types/resource-types"
 import { camelToSnakeCase, getJsonData } from "./transform"
@@ -12,6 +13,15 @@ export const addNamesAndTypes = (snippets: TaggedExpression[]) => {
         s.name = res.name
         s.jsonData = res.jsonData
         s.statement = res.statement
+    })
+}
+
+export const verifyCreateStatementsOnly = (snippets: TaggedExpression[]) => {
+    snippets.forEach((s) => {
+        let res = getMatchingResult(s)
+        if (res.statement !== StatementType.Create) {
+            throw new WrongResourceTypeError(s)
+        }
     })
 }
 
@@ -34,7 +44,7 @@ const getMatchingResult = (s: TaggedExpression) => {
             return res
     }
 
-    throw new WrongCreateTypeError(s)
+    throw new WrongMigrationTypeError(s)
 }
 
 
@@ -52,8 +62,8 @@ const isCreateFqlExpressionOfType = (snippet: TaggedExpression, resType: Resourc
     if (Object.keys(snippet.fqlExpr.raw).includes(stringResType)) {
         // remove the name so it compared more easily to an Update statement.
         return {
-            jsonData: getJsonData(snippet.json, resType, StatementType.Create),
-            name: snippet.json[stringResType].object.name,
+            jsonData: getJsonData(snippet.fqlExpr, resType, StatementType.Create),
+            name: snippet.fqlExpr.raw[stringResType].raw.object.name,
             type: resType,
             statement: StatementType.Create
         }
@@ -65,11 +75,11 @@ const isCreateFqlExpressionOfType = (snippet: TaggedExpression, resType: Resourc
 
 const isUpdateFqlExpressionOfType = (snippet: TaggedExpression, resType: ResourceTypes): TypeResult | false => {
     const stringResType = camelToSnakeCase(resType)
-
     if (snippet.fqlExpr.raw.update && Object.keys(snippet.fqlExpr.raw.update.raw).includes(stringResType)) {
+
         return {
-            jsonData: getJsonData(snippet.json, resType, StatementType.Update),
-            name: snippet.json.update[stringResType],
+            jsonData: getJsonData(snippet.fqlExpr, resType, StatementType.Update),
+            name: snippet.fqlExpr.raw.update.raw[stringResType],
             type: resType,
             statement: StatementType.Update
         }
@@ -85,7 +95,7 @@ const isDeleteFqlExpressionOfType = (snippet: TaggedExpression, resType: Resourc
     if (snippet.fqlExpr.raw.delete && Object.keys(snippet.fqlExpr.raw.delete.raw).includes(stringResType)) {
         return {
             jsonData: {},
-            name: snippet.json.delete[stringResType],
+            name: snippet.fqlExpr.raw.delete.raw[stringResType],
             type: resType,
             statement: StatementType.Delete
         }

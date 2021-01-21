@@ -19,12 +19,12 @@ test('generate create_collection and update_collection migration', async (t: Exe
     t.truthy(result.Collection.find(x => x.name === 'migrations'))
     t.truthy(result.Collection.find(x => x.name === 'test1'))
     const test1Collection: any = result.Collection.find(x => x.name === 'test1')
-    t.falsy(test1Collection.json.data)
+    t.falsy(test1Collection.jsonData.data)
     // Apply the new resources.
     const res = await fullApply(testPath, ['resources2'])
     const result2 = await getAllCloudResources(faunaClient)
     const test1Collection2: any = result2.Collection.find(x => x.name === 'test1')
-    t.is(test1Collection2.json.data.foo, "barmetadata")
+    t.is(test1Collection2.jsonData.data.foo, "barmetadata")
 
 })
 

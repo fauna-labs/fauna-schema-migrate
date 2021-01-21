@@ -2,7 +2,6 @@
 var cloneDeep = require('lodash.clonedeep')
 
 import * as fauna from 'faunadb'
-import { toJsonDeep } from '../fql/json'
 import { LoadedResources, TaggedExpression } from '../types/expressions'
 import { ResourceTypes } from '../types/resource-types'
 import { MigrationRefAndTimestamp } from '../types/expressions'
@@ -38,7 +37,7 @@ const batchSize = 100
 const createQuery = (name: string) =>
     CreateCollection({ name: name })
 
-const wrapInCrate = (fetchQuery: any, name: string) => {
+const wrapInCreate = (fetchQuery: any, name: string) => {
     return If(
         Exists(Collection(name)),
         fetchQuery(Collection(name)),
@@ -61,20 +60,6 @@ export const createMigrationCollection = async (client: fauna.Client) => {
         ))
 }
 
-export const retrieveLastCloudMigration = async (client: fauna.Client) => {
-    const name = await config.getMigrationCollection()
-    const fetchQuery = (collectionRef: any) => Let(
-        {
-            setref: Reverse(Documents(collectionRef))
-        },
-        If(Exists(Var('setref')), Get(Var('setref')), null)
-    )
-    const res: any = await client.query(
-        wrapInCrate(fetchQuery, name)
-    )
-    return res ? res.data.migration : res
-}
-
 export const retrieveAllCloudMigrations = async (client: fauna.Client): Promise<MigrationRefAndTimestamp[]> => {
     const name = await config.getMigrationCollection()
     const fetchQuery = (collectionRef: any) => Let(
@@ -86,15 +71,18 @@ export const retrieveAllCloudMigrations = async (client: fauna.Client): Promise<
             Lambda(x => Get(x)))
     )
     const res: any = await client.query(
-        wrapInCrate(fetchQuery, name)
+        wrapInCreate(fetchQuery, name)
     )
     // we only need the timestamps and refs
-    return res ? res.data.map((e: any) => {
-        return {
-            timestamp: e.data.migration,
-            ref: e.ref
-        }
-    }) : res
+    if (res) {
+        return res.data.map((e: any) => {
+            return {
+                timestamp: e.data.migration,
+                ref: e.ref
+            }
+        }).sort((a: any, b: any) => a.timestamp > b.timestamp ? 1 : -1)
+    }
+    return res
 }
 
 export const getAllCloudResources = async (client: fauna.Client): Promise<LoadedResources> => {
@@ -105,7 +93,6 @@ export const getAllCloudResources = async (client: fauna.Client): Promise<Loaded
         await getAllResourcesOfType(client, ResourceTypes.Function, Functions, remoteTsAndRef),
         await getAllResourcesOfType(client, ResourceTypes.AccessProvider, AccessProviders, remoteTsAndRef),
         await getAllResourcesOfType(client, ResourceTypes.Database, Databases, remoteTsAndRef)
-
     ])
     const categories: any = {}
     for (let item in ResourceTypes) {
@@ -122,8 +109,8 @@ export const getAllCloudResources = async (client: fauna.Client): Promise<Loaded
 // Transform the roles, you don't need ts or ref.
 // We need it to be close to what we receive locally and therefore
 // remove generated fields.
-const remoteTsAndRef = (json: any) => {
-    const clone = cloneDeep(json)
+const remoteTsAndRef = (expr: any) => {
+    const clone = cloneDeep(expr)
     delete clone.ts
     delete clone.ref
     return clone
@@ -136,8 +123,7 @@ const getAllResourcesOfType = async (client: fauna.Client, type: ResourceTypes, 
 
     const resources = await getAllResourcesWithFun(client, fqlQuery)
     return resources.map((el: any) => {
-        const json = toJsonDeep(el)
-        return { json: json, name: el.name, jsonData: transformFun(json), type: type }
+        return { name: el.name, jsonData: transformFun(el), type: type }
     })
 }
 

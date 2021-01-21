@@ -1,0 +1,9 @@
+Update(Role("read_users"), {
+  name: "read_users",
+  privileges: [{
+    resource: Collection("users"),
+    actions: {
+      read: true,
+    }
+  }]
+})

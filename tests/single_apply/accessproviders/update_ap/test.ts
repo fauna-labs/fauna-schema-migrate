@@ -22,34 +22,6 @@ test('generate crete ap and update ap migration', async (t: ExecutionContext) =>
     t.is(result.Role.length, 1)
     t.truthy(result.AccessProvider.find(x => x.name === 'Auth0-myapp'))
     t.truthy(result.Role.find(x => x.name === 'powerless'))
-    // Verify whether the body is correct.
-
-    let accessProviderBody = {
-        "name": "Auth0-myapp",
-        "issuer": "https://myapp.auth0.com/",
-        "jwks_uri": "https://myapp.auth0.com/.well-known/jwks.json",
-        "roles": [
-            {
-                "@ref": {
-                    "id": "powerless",
-                    "collection": {
-                        "@ref": {
-                            "id": "roles"
-                        }
-                    }
-                }
-            }
-        ]
-    }
-    delete result.AccessProvider[0].json['audience']
-    delete result.AccessProvider[0].json['ref']
-    delete result.AccessProvider[0].json['ts']
-
-    t.is(
-        JSON.stringify(result.AccessProvider[0].json, null, 2),
-        JSON.stringify(accessProviderBody, null, 2)
-    )
-
 })
 
 test.after.always(async (t: ExecutionContext) => {

@@ -8,6 +8,8 @@ import { PatternAndIndexName } from "../types/patterns"
 import { ResourceTypes } from "../types/resource-types"
 import { toIndexableName } from "../util/unique-naming"
 import { evalFQLCode } from "../fql/eval"
+import { createStub, transformCreateToUpdate } from "../fql/transform"
+import { emit } from "commander"
 
 export interface NameToDependencyNames {
     [type: string]: string[]
@@ -68,13 +70,10 @@ const orderAccordingToDependencies = (dependenciesArray: DependenciesArrayEl[], 
     const orderedExpressions = []
     let popLength = 0
 
-    while (dependenciesArray.length > 0) {
-        // if popLength becomes to big we have been around the complete array which means 
+    while (dependenciesArray.length > 0 && popLength < dependenciesArray.length) {
+        // if popLength becomes to big we have been around the complete array which means
         // that we are running in circles (there are circular dependencies that can't)
         // be resolved
-        if (popLength >= dependenciesArray.length) {
-            throw new CircularMigrationError(dependenciesArray.map((e) => indexedMigrations[e.indexedName]))
-        }
         const dep = <DependenciesArrayEl>dependenciesArray.shift()
         popLength++
         const allDepsPresent = dep?.dependencyIndexNames.every((el) => {
@@ -90,7 +89,33 @@ const orderAccordingToDependencies = (dependenciesArray: DependenciesArrayEl[], 
             dependenciesArray.push(dep)
         }
     }
+    // If there are still items in the dependency array it means we have circular dependencies.
+    replaceWithStubs(dependenciesArray, indexedMigrations, orderedExpressions)
     return orderedExpressions
+}
+
+const replaceWithStubs = (dependenciesArray: DependenciesArrayEl[], indexedMigrations: NameToExpressions, orderedExpressions: TaggedExpression[]) => {
+    const stubbed: TaggedExpression[] = []
+    const others: TaggedExpression[] = []
+    while (dependenciesArray.length > 0) {
+
+        const dep = <DependenciesArrayEl>dependenciesArray.shift()
+        const expr = indexedMigrations[dep.indexedName]
+        if (expr.statement === StatementType.Create) {
+            orderedExpressions.push(createStub(expr))
+            stubbed.push(transformCreateToUpdate(expr))
+        }
+        else {
+            others.push(expr)
+        }
+    }
+    // then handle the others
+    others.forEach((expr) => {
+        orderedExpressions.push(expr)
+    })
+    stubbed.forEach((expr) => {
+        orderedExpressions.push(expr)
+    })
 }
 
 const generateLetBindingObject = (
@@ -124,7 +149,19 @@ const generateLetBindingObject = (
                     `Select(['ref'],Var("${nameToVar[depIndexableName]}"))`)
             }
         })
-        nameToVar[indexableName] = `var${varIndex}`
+
+        if (nameToVar[indexableName] && e.statement === StatementType.Update) {
+            e.fql = replaceAll(
+                <string>e.fql,
+                `${e.type}("${e.name}")`,
+                `Select(['ref'],Var("${nameToVar[indexableName]}"))`)
+        }
+        // only the first occurance is a create.
+        // due to circular dependency stubbing, there might be
+        // both a create and an update.
+        if (!nameToVar[indexableName]) {
+            nameToVar[indexableName] = `var${varIndex}`
+        }
         // Bind the variable to the code.
         obj[`var${varIndex}`] = evalFQLCode(<string>e.fql)
     })
@@ -159,7 +196,7 @@ const indexReferencedDependencies = (flattened: TaggedExpression[], jsonPatterns
     const index: NameToDependencyNames = {}
     flattened.forEach((expr) => {
         const indexableName = toIndexableName(expr)
-        let found = findPatterns(expr.jsonData, jsonPatterns)
+        let found = findPatterns(expr.fqlExpr, jsonPatterns)
         // exclude self in case that would happen (although it shouldn't)
         found = found.filter((e) => e !== indexableName)
         index[indexableName] = found
@@ -171,17 +208,17 @@ const toPattern = (mig: TaggedExpression, type: ResourceTypes): PatternAndIndexN
     // Seems to be always the same. We could simplify the code
     switch (type) {
         case ResourceTypes.Function:
-            return { pattern: { function: mig.name }, indexName: toIndexableName(mig) }
+            return { pattern: { raw: { function: mig.name } }, indexName: toIndexableName(mig) }
         case ResourceTypes.Role:
-            return { pattern: { role: mig.name }, indexName: toIndexableName(mig) }
+            return { pattern: { raw: { role: mig.name } }, indexName: toIndexableName(mig) }
         case ResourceTypes.Collection:
-            return { pattern: { collection: mig.name }, indexName: toIndexableName(mig) }
+            return { pattern: { raw: { collection: mig.name } }, indexName: toIndexableName(mig) }
         case ResourceTypes.Index:
-            return { pattern: { index: mig.name }, indexName: toIndexableName(mig) }
+            return { pattern: { raw: { index: mig.name } }, indexName: toIndexableName(mig) }
         case ResourceTypes.AccessProvider:
-            return { pattern: { access_provider: mig.name }, indexName: toIndexableName(mig) }
+            return { pattern: { raw: { access_provider: mig.name } }, indexName: toIndexableName(mig) }
         case ResourceTypes.Database:
-            return { pattern: { database: mig.name }, indexName: toIndexableName(mig) }
+            return { pattern: { raw: { database: mig.name } }, indexName: toIndexableName(mig) }
         default:
             throw new Error(`unknown type in toPattern ${type}`)
     }

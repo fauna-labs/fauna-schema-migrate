@@ -17,6 +17,7 @@ export const writeMigrations = async (
 
 export const generateMigrations = async (planned: PlannedDiffPerResource) => {
     const migrExprs: TaggedExpression[][] = []
+
     // First add all the ones we can generate generically.
     migrExprs.push(transformStatements(planned[ResourceTypes.Role]))
     migrExprs.push(transformStatements(planned[ResourceTypes.Function]))

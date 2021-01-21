@@ -54,9 +54,9 @@ const compareResults = (t: ExecutionContext, before: LoadedResources, rollback: 
             // test whether an equivalent resource with the same name exists
             const rollbackRes = rollbackRess.find(x => x.name === beforeRes.name)
             t.truthy(rollbackRes)
-            // console.log('rollbackRes:', rollbackRes, 'beforeRes', beforeRes)
+            // console.('rollbackRes:', rollbackRes, 'beforeRes', beforeRes)
             // Which contains the same data.
-            t.deepEqual(rollbackRes?.jsonData, beforeRes?.jsonData)
+            t.deepEqual(rollbackRes?.fqlExpr, beforeRes?.fqlExpr)
         }
     }
 }

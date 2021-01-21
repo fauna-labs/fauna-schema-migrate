@@ -59,7 +59,7 @@ export const retrieveDiffCurrentTarget = async (
     const { migrations: currentMigrations, lastMigration: currentLastMigration }
         = await getAllLastMigrationSnippets(atChildPath, currentMigration.timestamp)
 
-    const previousMigrations = await getTargetMigrations(targetMigration, atChildPath)
+    const targetMigrations = await getTargetMigrations(targetMigration, atChildPath)
 
     // We need to calculate the diff. But we already have such a function
     // which we used to plan migrations.
@@ -68,7 +68,7 @@ export const retrieveDiffCurrentTarget = async (
     // or in this case backward since it's a rollback.
     // In essence, previousMigrations is equivalent to the 'resources' now
     // while currentMigrations are the 'migrations'.
-    const diff = retrieveDiff(currentMigrations, previousMigrations)
+    const diff = retrieveDiff(currentMigrations, targetMigrations)
     return diff
 }
 

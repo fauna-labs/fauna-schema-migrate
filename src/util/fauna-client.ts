@@ -73,7 +73,7 @@ const getAllFaunaClients = async (secret: string) => {
     // the client.
     let rootClient = createClientWithOptions(secret)
     if (process.env.FAUNA_CHILD_DB) {
-        const key = await getChildDbKey(rootClient, process.env.FAUNA_CHILD_DB)
+        const key = await getChildDbKey(rootClient, process.env.FAUNA_CHILD_DB, true)
         rootClient = createClientWithOptions(key.secret)
     }
 
@@ -87,20 +87,22 @@ const getAllFaunaClients = async (secret: string) => {
     return faunaClients
 }
 
-const getChildDbKey = async (client: fauna.Client | false, name: string): Promise<any> => {
+const getChildDbKey = async (client: fauna.Client | false, name: string, create: boolean = false): Promise<any> => {
     if (client) {
         return await client.query(
             If(
                 Exists(Database(name)),
                 CreateKey({ database: Database(name), role: 'admin' }),
-                false
+                create ? CreateKey({
+                    database: Select(['ref'], CreateDatabase({ name: name })),
+                    role: 'admin'
+                }) : false
             )
         )
     }
     else {
         return false
     }
-
 }
 
 

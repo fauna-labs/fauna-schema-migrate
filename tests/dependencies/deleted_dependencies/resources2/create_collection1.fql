@@ -1,4 +1,4 @@
 CreateCollection({
     name: 'collection1',
-    data: { fun1: Function('lala') }
+    data: { fun1: Function('multiply') }
 })

@@ -35,7 +35,7 @@ export const planMigrations = async (atChildDbPath: string[] = [], extraDbExpr: 
     extraDbExpr.forEach((e) => {
         resources[<ResourceTypes>e.type].push(e)
     })
-    // todo, add a flag to ignore this check.
+    // IGNORE for now, illegal references is not something that can easily be verified.
     findIllegalReferences(resources)
     const { migrations } = await getAllLastMigrationSnippets(atChildDbPath)
     // Resources determine how your current data looks.
@@ -73,17 +73,18 @@ const findAllReferences = (resourcesFQL: LoadedResources): ReferencedResources =
         const snakeCaseItem = camelToSnakeCase(referenceType)
         // create a strucure of the form { index: { index: ... }}
         const structure: any = {}
-        structure[snakeCaseItem] = '*' // value doesn't matter.
+        structure["raw"] = {}
+        structure["raw"][snakeCaseItem] = '*' // value doesn't matter.
 
         // search in all resources
         for (let resourceType in ResourceTypes) {
             resourcesFQL[resourceType].forEach((res) => {
-                const structures = findStructure(structure, res.json)
+                const structures = findStructure(structure, res.fqlExpr)
                 const namesAndTypes: ReferencedResource[] = structures.map((e: any) => {
                     return {
                         type: <ResourceTypes>referenceType,
                         name: <string>e[snakeCaseItem],
-                        indexableName: toIndexableNameFromTypeAndName(referenceType, e[snakeCaseItem]),
+                        indexableName: toIndexableNameFromTypeAndName(referenceType, e.raw[snakeCaseItem]),
                         resource: res
                     }
                 })

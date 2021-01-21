@@ -1,0 +1,11 @@
+CreateFunction({
+  name: "test",
+  body: Query(Lambda([], Let([{
+    testing: { data: "test"}
+  }, {
+    testing2: { data: "test"}
+  }], {
+    test1: Select(["data"], Var("testing")),
+    test2: Select(["data"], Var("testing2"))
+  })))
+})

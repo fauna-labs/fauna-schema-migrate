@@ -5,12 +5,12 @@ import { writeNewMigrationDir } from "../util/files";
 // want to write migrations by hand (in which case 'generate' is not available)
 // and there is no resources folder.
 const newMigration = async () => {
-    try {
-        await writeNewMigrationDir()
-    } catch (error) {
-        console.log(error)
-        console.error(chalk.red(`${chalk.bold("Error")}: ${error.message}`));
-    }
+    // try {
+    //     await writeNewMigrationDir()
+    // } catch (error) {
+    //     console.log(error)
+    //     console.error(chalk.red(`${chalk.bold("Error")}: ${error.message}`));
+    // }
 };
 
 export default newMigration;

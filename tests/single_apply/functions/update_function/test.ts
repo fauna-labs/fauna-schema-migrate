@@ -19,53 +19,34 @@ test('generate create_function and update_function migration', async (t: Executi
     t.truthy(result.Function.find(x => x.name === 'multiply'))
     // Verify whether the body is correct.
     let functionBody = {
-        "@query": {
-            "lambda": [
-                "var1",
-                "var2"
-            ],
-            "expr": {
-
-                "multiply": [
-                    {
-                        "var": "var1"
-                    },
-                    {
-                        "var": "var2"
-                    }
-                ]
+        "multiply": [
+            {
+                "var": "var1"
+            },
+            {
+                "var": "var2"
             }
-        }
+        ]
     }
-    delete result.Function[0].json.body["@query"]['api_version']
+
     t.is(
-        JSON.stringify(result.Function[0].json.body, null, 2),
+        JSON.stringify(result.Function[0].jsonData.body["value"].expr, null, 2),
         JSON.stringify(functionBody, null, 2)
     )
     await fullApply(testPath, ['resources2'])
     result = await getAllCloudResources(faunaClient)
     functionBody = {
-        "@query": {
-            "lambda": [
-                "var1",
-                "var2"
-            ],
-            "expr": {
-                // varaibles are turned around.
-                "multiply": [
-                    {
-                        "var": "var2"
-                    },
-                    {
-                        "var": "var1"
-                    },
-                ]
-            }
-        }
+        "multiply": [
+            {
+                "var": "var2"
+            },
+            {
+                "var": "var1"
+            },
+        ]
     }
-    delete result.Function[0].json.body["@query"]['api_version']
     t.is(
-        JSON.stringify(result.Function[0].json.body, null, 2),
+        JSON.stringify(result.Function[0].jsonData.body["value"].expr, null, 2),
         JSON.stringify(functionBody, null, 2)
     )
 

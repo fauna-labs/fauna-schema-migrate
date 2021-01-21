@@ -1,7 +1,7 @@
 {
-  "name": "faunadb-migrate",
+  "name": "fauna-schema-migrate",
   "version": "0.9.1",
-  "description": "FaunaDB migrate tool.",
+  "description": "Fauna migrate tool.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -38,6 +38,7 @@
     "cpy-cli": "^3.1.1",
     "deep-equal": "^2.0.5",
     "esbuild": "^0.8.17",
+    "faunadb": "file:.yalc/faunadb",
     "fs-extra": "^8.1.0",
     "ink-big-text": "^1.2.0",
     "ink-divider": "^3.0.0",

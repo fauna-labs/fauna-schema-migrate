@@ -1,5 +1,4 @@
 
-import { toJsonDeep } from '../fql/json'
 import { filePathToDatabase, loadFqlSnippet, retrieveLastMigrationVersionAndPathsForMigrationBefore } from '../util/files'
 import { addNamesAndTypes } from '../fql/match'
 import { LoadedResourcesAndLastMigration, StatementType, TaggedExpression } from '../types/expressions'
@@ -39,10 +38,8 @@ export const getAllLastMigrationSnippets = async (atChildDbPath: string[] = [], 
         const pathAndfile = pathsAndFiles[i]
         pathAndfile.expressions = await Promise.all(pathAndfile.files.map(async (f) => {
             const snippet = await loadFqlSnippet(f)
-            const json = toJsonDeep(snippet)
             return {
                 fqlExpr: snippet,
-                json: json,
                 fql: snippet.toFQL(),
                 name: '',
                 jsonData: {},
@@ -88,7 +85,6 @@ export const getAllLastMigrationSnippets = async (atChildDbPath: string[] = [], 
             }
         })
     })
-
 
     // order them in categories
     const categories: any = {}

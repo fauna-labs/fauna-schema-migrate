@@ -15,6 +15,7 @@ const rollback = async (amount: number | string = 1, atChildDbPath: string[] = [
             interactiveShell.startSubtask(`Retrieving current cloud migration state`)
             const cloudMigrations = (await retrieveAllCloudMigrations(client))
             const allCloudMigrations = cloudMigrations.map((e) => e.timestamp)
+
             // Parse parameter
             if (amount === "all") { amount = cloudMigrations.length }
             else if (typeof amount === "string") { amount = parseInt(amount) }

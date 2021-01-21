@@ -36,12 +36,15 @@ const sameStructure = (obj1: any, obj2: any): any => {
 
 const sameStructureIter = (obj1: any, obj2: any): any => {
     for (var key in obj1) {
-        if (!obj2.hasOwnProperty(key)) {
-            throw Error("notequal")
+        if (key !== "isFaunaExpr") {
+            if (!obj2.hasOwnProperty(key)) {
+                throw Error("notequal")
+            }
+            if (obj1[key] !== null && typeof (obj1[key]) == "object") {
+                sameStructureIter(obj1[key], obj2[key]);
+            }
         }
-        if (obj1[key] !== null && typeof (obj1[key]) == "object") {
-            sameStructureIter(obj1[key], obj2[key]);
-        }
+        return true
     }
 }
 
@@ -85,8 +88,11 @@ export const findStructure = (structure: any, o: any): string[] => {
 }
 
 export const findStructureIter = (previousKey: string, structure: any, o: any): string[] => {
-    const found = sameStructure(structure, o);
-    let result = found && previousKey !== 'object' ? [o] : []
+    let result: any[] = []
+
+    if (sameStructure(structure, o) && sameStructure(o, structure)) {
+        result.push(o)
+    }
 
     for (var i in o) {
         if (o[i] !== null && typeof (o[i]) == "object") {
@@ -96,23 +102,6 @@ export const findStructureIter = (previousKey: string, structure: any, o: any): 
     return result.flat()
 }
 
-export const toJsonDeep = (obj: any) => {
-    try {
-        let o = cloneDeep(obj)
-        traverse(o, toJsonFun)
-        if (o.raw) {
-            return o.raw
-        }
-        else {
-            return o
-        }
-    }
-    catch (err) {
-        console.log(err)
-        console.log(obj)
-        console.log(`failed to parse the JSON of above obj`)
-    }
-}
 
 export const findPatterns = (o: any, patterns: PatternAndIndexName[]) => {
     try {
