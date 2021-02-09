@@ -5,8 +5,11 @@ import { retrieveMigrationInfo, getCurrentAndTargetMigration, generateApplyQuery
 import { retrieveDatabasesDiff, transformDiffToExpressions } from "../migrations/diff";
 import { ApplyTargetCurrentAndSkippedMigrations } from "../types/expressions";
 import { clientGenerator } from "../util/fauna-client";
+import { ExpectedNumberOfMigrations } from "../errors/ExpectedNumber";
 
 const apply = async (amount: number | string = 1, atChildDbPath: string[] = []) => {
+    validateNumber(amount)
+
     const client = await clientGenerator.getClient(atChildDbPath)
     try {
         let query: any = null
@@ -17,9 +20,10 @@ const apply = async (amount: number | string = 1, atChildDbPath: string[] = []) 
             // Parse parameter
             const maxAmount = migInfo.allLocalMigrations.length - migInfo.allCloudMigrations.length
             if (amount === "all") { amount = maxAmount }
-            else if (typeof amount === "string") { amount = parseInt(amount) }
+            else if (typeof amount === "string") {
+                amount = parseInt(amount)
+            }
             amount = Math.min(amount, maxAmount)
-
 
             // Get info on current state.
             interactiveShell.startSubtask(`Retrieving current cloud migration state`)
@@ -69,6 +73,12 @@ const apply = async (amount: number | string = 1, atChildDbPath: string[] = []) 
     }
     catch (error) {
         interactiveShell.reportError(error)
+    }
+}
+
+const validateNumber = (str: any) => {
+    if (str !== "all" && isNaN(str) || isNaN(parseFloat(str))) {
+        throw new ExpectedNumberOfMigrations(str)
     }
 }
 

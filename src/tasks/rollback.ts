@@ -6,8 +6,11 @@ import { transformDiffToExpressions } from "../migrations/diff";
 import { retrieveRollbackMigrations, retrieveDiffCurrentTarget, generateRollbackQuery } from "../migrations/rollback";
 import { createMigrationCollection, retrieveAllCloudMigrations } from "../state/from-cloud";
 import { clientGenerator } from "../util/fauna-client";
+import { ExpectedNumberOfMigrations } from "../errors/ExpectedNumber";
 
 const rollback = async (amount: number | string = 1, atChildDbPath: string[] = []) => {
+    validateNumber(amount)
+
     try {
         let client = await clientGenerator.getClient(atChildDbPath)
         let query: any = null
@@ -76,5 +79,10 @@ const rollback = async (amount: number | string = 1, atChildDbPath: string[] = [
     }
 }
 
+const validateNumber = (str: any) => {
+    if (str !== "all" && isNaN(str) || isNaN(parseFloat(str))) {
+        throw new ExpectedNumberOfMigrations(str)
+    }
+}
 
 export default rollback;
