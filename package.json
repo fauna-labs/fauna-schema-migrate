@@ -1,7 +1,7 @@
 {
   "name": "fauna-schema-migrate",
-  "version": "0.9.1",
-  "description": "Fauna migrate tool.",
+  "version": "0.1.0-beta1",
+  "description": "Fauna schema migration tool that helps to manage resources such as collections, indexes, roles, functions, access providers as code.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -71,5 +71,11 @@
     "require": [
       "ts-node/register"
     ]
-  }
+  },
+  "keywords": [
+    "fauna",
+    "schema",
+    "migrations",
+    "iac"
+  ]
 }
