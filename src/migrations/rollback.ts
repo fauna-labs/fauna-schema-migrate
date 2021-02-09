@@ -42,7 +42,7 @@ const getCurrentAndTargetMigration = async (cloudMigrations: MigrationRefAndTime
     // Retrieve all migration timestamps that have been processed from cloud
     // get the migration timestmap we are currently at.
     const currentMigration = cloudMigrations.length > 0 ? cloudMigrations[cloudMigrations.length - 1] : null
-    if (amount > cloudMigrations.length || !currentMigration) {
+    if (!currentMigration) {
         throw new Error('Asked for rollback but the target database has no migrations')
     }
     // get the migration timestamp we we want to roll back to.

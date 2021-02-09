@@ -115,9 +115,9 @@ export const findPatterns = (o: any, patterns: PatternAndIndexName[]) => {
             .filter(onlyUnique)
     }
     catch (err) {
-        console.log(err)
-        console.log(o)
-        console.log(`failed to find in the JSON of above obj`)
+        console.error(err)
+        console.error(o)
+        console.error(`failed to find in the JSON of above obj`)
         return []
     }
 }

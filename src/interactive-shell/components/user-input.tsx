@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Static, Text, useInput } from 'ink';
-import { interactiveShell } from '../interactive-shell';
-import { faunaPurple1 } from '../colors';
+import { Box, Text, useInput } from 'ink';
 import { useStore } from 'react-hookstore';
 
 interface Props {

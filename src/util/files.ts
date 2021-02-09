@@ -54,7 +54,6 @@ export const loadFqlResource = async (p: string) => {
     return fql
 }
 
-
 export const loadApplicationFile = async (file: string): Promise<string> => {
     return fs.readFileSync(
         path.join(process.cwd(), file), "utf8"

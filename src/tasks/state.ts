@@ -1,6 +1,6 @@
 import { isMissingMigrationCollectionFaunaError, isSchemaCachingFaunaError } from "../errors/detect-errors";
 import { prettyPrintExpr } from "../fql/print";
-import { interactiveShell } from "../interactive-shell/interactive-shell";
+import { interactiveShell } from "../";
 import { renderMigrationState } from "../interactive-shell/messages/messages";
 import { retrieveMigrationInfo } from "../migrations/advance";
 import { clientGenerator } from "../util/fauna-client";
@@ -12,8 +12,8 @@ const apply = async () => {
         const migInfo = await retrieveMigrationInfo(client)
         const allCloudMigrationTimestamps = migInfo.allCloudMigrations.map((e) => e.timestamp)
         interactiveShell.completeSubtask(`Retrieved current migration state`)
-        interactiveShell.addMessage(renderMigrationState(
-            allCloudMigrationTimestamps, migInfo.allLocalMigrations, "state", 0))
+        interactiveShell.renderMigrations(
+            allCloudMigrationTimestamps, migInfo.allLocalMigrations, "state", 0)
 
     } catch (error) {
         const missingMigrDescription = isMissingMigrationCollectionFaunaError(error)

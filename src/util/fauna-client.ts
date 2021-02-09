@@ -1,6 +1,6 @@
 
 import * as fauna from 'faunadb'
-import { interactiveShell } from '../interactive-shell/interactive-shell'
+import { interactiveShell } from '../'
 import { askAdminKey } from '../interactive-shell/messages/messages'
 import { FaunaClients } from '../types/clients'
 import { retrieveAllResourceChildDb } from './files'
@@ -17,7 +17,7 @@ export class FaunaClientGenerator {
         let secret: string | undefined = key || process.env.FAUNA_ADMIN_KEY
         let client: fauna.Client | boolean = false
         if (!secret) {
-            interactiveShell.requestUserInput(askAdminKey())
+            interactiveShell.requestAdminKey()
             secret = await interactiveShell.getUserInput()
         }
         if (!this.faunaClients || reinit) {
@@ -43,7 +43,7 @@ export class FaunaClientGenerator {
         }
         let secret: string | undefined = process.env.FAUNA_ADMIN_KEY
         if (!secret) {
-            interactiveShell.requestUserInput(askAdminKey())
+            interactiveShell.requestAdminKey()
             secret = await interactiveShell.getUserInput()
         }
         const client = createClientWithOptions(secret)
@@ -66,7 +66,7 @@ const getAllFaunaClients = async (secret: string) => {
     })
 
     if (!secret) {
-        interactiveShell.requestUserInput(askAdminKey())
+        interactiveShell.requestAdminKey()
         secret = await interactiveShell.getUserInput()
     }
     // TODO, dont forget to destroy keys for chidl databases again after destroying

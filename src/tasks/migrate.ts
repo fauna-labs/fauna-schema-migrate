@@ -2,7 +2,7 @@ var equalDeep = require('deep-equal');
 
 import { planDatabaseMigrations, planMigrations } from "../migrations/plan"
 import { writeMigrations, generateMigrations } from "../migrations/generate-migration"
-import { interactiveShell } from "../interactive-shell/interactive-shell";
+import { interactiveShell } from "../";
 import { notifyWarning, renderPlan } from "../interactive-shell/messages/messages";
 import { TaggedExpression } from "../types/expressions";
 
@@ -39,10 +39,10 @@ const migrateOneDb = async (atChildDbPath: string[], multipleDbs: boolean, time:
         let migrations = await generateMigrations(planned)
         interactiveShell.completeSubtask(`${dbName} Generated Migrations`)
         if (migrations.length === 0) {
-            interactiveShell.addMessage(notifyWarning("There is no difference, nothing to write"))
+            interactiveShell.reportWarning("There is no difference, nothing to write")
         }
         else {
-            interactiveShell.addMessage(renderPlan(planned))
+            interactiveShell.renderPlan(planned)
             interactiveShell.startSubtask(`${dbName} Write migrations`)
             await writeMigrations(atChildDbPath, migrations, time)
 

@@ -1,6 +1,6 @@
 import { isMissingMigrationCollectionFaunaError, isSchemaCachingFaunaError } from "../errors/detect-errors";
 import { prettyPrintExpr } from "../fql/print";
-import { interactiveShell } from "../interactive-shell/interactive-shell";
+import { interactiveShell } from "../";
 import { renderMigrationState } from "../interactive-shell/messages/messages";
 import { transformDiffToExpressions } from "../migrations/diff";
 import { retrieveRollbackMigrations, retrieveDiffCurrentTarget, generateRollbackQuery } from "../migrations/rollback";
@@ -21,7 +21,7 @@ const rollback = async (amount: number | string = 1, atChildDbPath: string[] = [
             else if (typeof amount === "string") { amount = parseInt(amount) }
 
             const rMigs = await retrieveRollbackMigrations(cloudMigrations, amount, atChildDbPath)
-            interactiveShell.addMessage(renderMigrationState(allCloudMigrations, rMigs.allLocalMigrations, "rollback", amount))
+            interactiveShell.renderMigrations(allCloudMigrations, rMigs.allLocalMigrations, "rollback", amount)
             // Verify whether there are migrations
             if (allCloudMigrations.length === 0) {
                 interactiveShell.completeSubtask(`Done, no migrations to rollback`)

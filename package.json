@@ -6,8 +6,6 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc && cpy 'templates/*.js' '../dist/' --cwd=src --parents",
-    "build-temp-with-libs": "npm install && npm run install-peers && npm run build && rm -rf node_modules/faunadb && yalc publish && cd ../../Repos/fwitter-node-migrate && npm install && yalc update  && rm -rf .yalc/faunadb-migrate/node_modules && cd .yalc/faunadb-migrate && npm install && cd ../../ && cd ../../Packages/fauna-migrate",
-    "build-temp": "npm run build && yalc publish && cd ../../Repos/fwitter-node-migrate && yalc update && npm install  && rm -rf .yalc/faunadb-migrate/node_modules && cd .yalc/faunadb-migrate && npm install && cd ../../ && cd ../../Packages/fauna-migrate",
     "watch": "tsc -w",
     "test": "ava -T 200s --fail-fast",
     "install-peers": "install-peers -f"
@@ -35,10 +33,8 @@
     "arr-rotate": "^1.0.0",
     "chalk": "^2.4.2",
     "commander": "^2.20.0",
-    "cpy-cli": "^3.1.1",
     "deep-equal": "^2.0.5",
     "esbuild": "^0.8.17",
-    "faunadb": "file:.yalc/faunadb",
     "fs-extra": "^8.1.0",
     "ink-big-text": "^1.2.0",
     "ink-divider": "^3.0.0",
@@ -52,11 +48,10 @@
     "prettier": "^2.2.1",
     "react": "^17.0.1",
     "react-hookstore": "^1.5.1",
-    "shelljs": "^0.8.4",
-    "ts-node-dev": "^1.0.0-pre.40"
+    "shelljs": "^0.8.4"
   },
   "peerDependencies": {
-    "faunadb": "file:.yalc/faunadb"
+    "faunadb": "^4.0.3"
   },
   "devDependencies": {
     "@types/sinon": "^9.0.9",
@@ -65,7 +60,9 @@
     "install-peers-cli": "^2.2.0",
     "sinon": "^9.2.2",
     "ts-node": "^8.10.2",
-    "typescript": "^4.1.3"
+    "typescript": "^4.1.3",
+    "ts-node-dev": "^1.1.1",
+    "cpy-cli": "^3.1.1"
   },
   "ava": {
     "extensions": [

@@ -83,7 +83,7 @@ const findAllReferences = (resourcesFQL: LoadedResources): ReferencedResources =
                 const namesAndTypes: ReferencedResource[] = structures.map((e: any) => {
                     return {
                         type: <ResourceTypes>referenceType,
-                        name: <string>e[snakeCaseItem],
+                        name: <string>e.raw[snakeCaseItem],
                         indexableName: toIndexableNameFromTypeAndName(referenceType, e.raw[snakeCaseItem]),
                         resource: res
                     }

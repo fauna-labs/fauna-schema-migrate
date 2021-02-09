@@ -3,9 +3,9 @@ import { retrieveAllResourcePaths } from "../util/files"
 
 // Not used atm.
 
-// This is a hypothetical state that I might implement later on.
+// This is a hypothetical functionality that I might implement later on.
 
-// There are three 'states' of your Fauna resources since due to the way that
+// There are three 'truths' of your Fauna resources since due to the way that
 // composition works, fauna-migrate is something in between terraform and a
 // traditional migration tool.
 
@@ -21,16 +21,10 @@ import { retrieveAllResourcePaths } from "../util/files"
 // in case there are differeces. You are free to ignore these differences
 // and just call 'apply' in case you know what you are doing.
 // validate --fix would then be an option to reset the state of your database
-// back to your migrations.
+// back to your migrations. Reach out if this makes sense/is necessary.
 
-const validate = async () => {
-    // try {
-    //     const resources = await loadResourceFiles()
-    //     applyMigrations(resources)
-    // } catch (error) {
-    //     console.log(error)
-    //     console.error(chalk.red(`${chalk.bold("Error")}: ${error.message}`));
-    // }
+const validateApply = async () => {
+
 };
 
-export default validate;
+export default validateApply;

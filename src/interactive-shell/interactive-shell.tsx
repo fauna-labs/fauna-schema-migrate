@@ -3,9 +3,11 @@ import { render, Instance } from 'ink'
 import { createStore } from 'react-hookstore';
 
 import Shell from './components/shell';
-import { notifyBoxedCode, notifyBoxedInfo, notifyTaskCompleted, notifyTaskProcessing, notifyUnexpectedError, notifyWarning, renderHeader } from './messages/messages';
+import { askAdminKey, notifyBoxedCode, notifyBoxedInfo, notifyTaskCompleted, notifyTaskProcessing, notifyUnexpectedError, notifyWarning, renderHeader, renderMigrationState, renderPlan } from './messages/messages';
 import { NumberedMessage, MessageFun } from './messages/numbered-message';
 import { runTask } from '../tasks';
+import { PlannedDiffPerResource } from '../types/expressions';
+const version = require('./../../package.json').version
 
 export enum ShellState {
     Menu,
@@ -14,7 +16,7 @@ export enum ShellState {
     UserInputReceived
 }
 
-class InteractiveShell {
+export class InteractiveShell {
     // Messages is text that remains on screen and is not
     // redrawn, they remain statically on the screen or in other words,
     // are not interactive
@@ -31,7 +33,15 @@ class InteractiveShell {
         this.close = this.close.bind(this)
         this.handleMenuSelection = this.handleMenuSelection.bind(this)
         this.handleUserInput = this.handleUserInput.bind(this)
-        this.addMessage(renderHeader())
+        if (!process.env.FAUNA_LEGACY) {
+            this.addMessage(renderHeader())
+        }
+        else {
+            const title = "Fauna"
+            const subtitle = "Schema Migrate " + version
+            printWithMargin(`Fauna Schema Migrate - ${version}
+---------------------------------------`, 0)
+        }
     }
 
     start(interactive: boolean = true) {
@@ -67,30 +77,28 @@ class InteractiveShell {
     }
 
     startSubtask(input: string) {
-        if (process.env.NODE_ENV === 'test') {
-            console.log('--- Starting subtask', input)
+        if (process.env.NODE_ENV === 'test' || process.env.FAUNA_LEGACY) {
+            console.info('--- Starting subtask', input)
         }
-        this.task.setState(notifyTaskProcessing(input))
+        else {
+            this.task.setState(notifyTaskProcessing(input))
+        }
     }
 
     printBoxedCode(message: string) {
-        if (process.env.NODE_ENV === 'test') {
-            console.log(message
-                .split('\n')
-                .map((e) => "         " + e)
-                .join('\n'))
-        }
-        else {
-            this.addMessage(notifyBoxedCode(message))
+        if (!process.env.FAUNA_NOPRINT) {
+            if (process.env.NODE_ENV === 'test' || process.env.FAUNA_LEGACY) {
+                printWithMargin(message, 8)
+            }
+            else {
+                this.addMessage(notifyBoxedCode(message))
+            }
         }
     }
 
     printBoxedInfo(message: string) {
-        if (process.env.NODE_ENV === 'test') {
-            console.log(message
-                .split('\n')
-                .map((e) => "         " + e)
-                .join('\n'))
+        if (process.env.NODE_ENV === 'test' || process.env.FAUNA_LEGACY) {
+            printWithMargin(message, 8)
         }
         else {
             this.addMessage(notifyBoxedInfo(message))
@@ -98,8 +106,13 @@ class InteractiveShell {
     }
 
     completeSubtask(input: string) {
-        this.task.setState(null)
-        this.addMessage(notifyTaskCompleted(input))
+        if (process.env.FAUNA_LEGACY) {
+            console.info('--- Finished subtask', input)
+        }
+        else {
+            this.task.setState(null)
+            this.addMessage(notifyTaskCompleted(input))
+        }
     }
 
     setQuestion(q: MessageFun) {
@@ -111,13 +124,20 @@ class InteractiveShell {
         this.messages.setState(messages.concat(m))
     }
 
-    requestUserInput(q: MessageFun) {
-        this.setQuestion(q)
+    requestAdminKey() {
+        if (process.env.FAUNA_LEGACY) {
+            const question = `Please provide a FaunaDB admin key or set the FAUNA_ADMIN_KEY environment and restart the tool.
+To retrieve an admin key for your database, use the Security tab in dashboard https://dashboard.fauna.com/`
+            printWithMargin(question, 4)
+        }
+        else {
+            this.setQuestion(askAdminKey())
+        }
         this.cliState.setState(ShellState.UserInput)
     }
 
     reportError(err: Error) {
-        if (process.env.NODE_ENV === 'test') {
+        if (process.env.NODE_ENV === 'test' || process.env.FAUNA_LEGACY) {
             throw err
         }
         this.task.setState(null)
@@ -125,11 +145,35 @@ class InteractiveShell {
     }
 
     reportWarning(warn: string) {
-        if (process.env.NODE_ENV === 'test') {
+        if (process.env.NODE_ENV === 'test' || process.env.FAUNA_LEGACY) {
             console.warn(warn)
         }
         this.task.setState(null)
         this.addMessage(notifyWarning(warn))
+    }
+
+    renderMigrations(cloudTimestamps: string[], localTimestamps: string[], type: string, amount: number) {
+        if (process.env.NODE_ENV === 'test' || process.env.FAUNA_LEGACY) {
+            printWithMargin(`--------- Current cloud migrations----------`, 0)
+            printWithMargin(cloudTimestamps.join("\n"), 4)
+            printWithMargin(`--------- Current local migrations ----------`, 0)
+            printWithMargin(localTimestamps.join("\n"), 4)
+            printWithMargin(`--------- Task ----------`, 0)
+            printWithMargin(`${type} ${amount} migrations`, 4)
+            console.info('\n')
+        }
+        else {
+            this.addMessage(renderMigrationState(cloudTimestamps, localTimestamps, type, amount))
+        }
+    }
+
+    renderPlan(plan: PlannedDiffPerResource) {
+        if (process.env.NODE_ENV === 'test' || process.env.FAUNA_LEGACY) {
+            console.info(JSON.stringify(plan, null, 2))
+        }
+        else {
+            this.addMessage(renderPlan(plan))
+        }
     }
 
     async getUserInput(): Promise<string> {
@@ -142,4 +186,9 @@ class InteractiveShell {
     }
 }
 
-export const interactiveShell = new InteractiveShell()
+const printWithMargin = (message: string, margin: number) => {
+    console.info(message
+        .split('\n')
+        .map((e) => " ".repeat(margin) + e)
+        .join('\n'))
+}

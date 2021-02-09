@@ -4,7 +4,7 @@ import apply from "./tasks/apply";
 import migrate from "./tasks/migrate";
 import run from "./tasks/run";
 import state from "./tasks/state";
-import { interactiveShell } from "./interactive-shell/interactive-shell";
+import { interactiveShell } from ".";
 import { endTaskLine, startCommand as completedTask } from "./interactive-shell/messages/messages";
 import rollback from "./tasks/rollback";
 import { deleteTempDir } from "./util/files";
@@ -71,15 +71,16 @@ export const runTaskByName = async (name: string, ...params: any[]) => {
 export const runTask = async (task: Task, interactive: boolean = false, ...params: any[]) => {
 
     interactiveShell.start(interactive)
-    if (task.name !== 'run') {
+    if (task.name !== 'run' && !process.env.FAUNA_LEGACY) {
         interactiveShell.addMessage(completedTask(task))
     }
 
     const result = await task.action(...params)
-    if (task.name !== 'run') {
+    if (task.name !== 'run' && !process.env.FAUNA_LEGACY) {
         interactiveShell.addMessage(endTaskLine())
-        await deleteTempDir()
     }
+    await deleteTempDir()
+
     if (!interactive) {
         interactiveShell.close()
     }

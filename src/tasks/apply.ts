@@ -1,7 +1,6 @@
 import { isMissingMigrationCollectionFaunaError, isSchemaCachingFaunaError } from "../errors/detect-errors";
 import { prettyPrintExpr } from "../fql/print";
-import { interactiveShell } from "../interactive-shell/interactive-shell";
-import { renderMigrationState } from "../interactive-shell/messages/messages";
+import { interactiveShell } from "../";
 import { retrieveMigrationInfo, getCurrentAndTargetMigration, generateApplyQuery, retrieveDiffCurrentTarget, retrieveDatabaseMigrationInfo } from "../migrations/advance";
 import { retrieveDatabasesDiff, transformDiffToExpressions } from "../migrations/diff";
 import { ApplyTargetCurrentAndSkippedMigrations } from "../types/expressions";
@@ -32,7 +31,7 @@ const apply = async (amount: number | string = 1, atChildDbPath: string[] = []) 
                 const currTargetSkipped = await getCurrentAndTargetMigration(migInfo.allLocalMigrations, migInfo.allCloudMigrations, amount)
                 const databaseDiff = await retrieveDatabaseMigrationInfo(currTargetSkipped.current, currTargetSkipped.target)
                 let dbName = atChildDbPath.length > 0 ? `[ DB: ROOT > ${atChildDbPath.join(' > ')} ]` : '[ DB: ROOT ]'
-                interactiveShell.addMessage(renderMigrationState(allCloudMigrationTimestamps, migInfo.allLocalMigrations, "apply", amount))
+                interactiveShell.renderMigrations(allCloudMigrationTimestamps, migInfo.allLocalMigrations, "apply", amount)
 
                 interactiveShell.startSubtask(`${dbName} Generate migration code`)
                 const diff = await retrieveDiffCurrentTarget(atChildDbPath, currTargetSkipped.current, currTargetSkipped.target)

@@ -15,10 +15,6 @@ import migrate from '../../tasks/migrate';
 
 const version = require('./../../../package.json').version
 
-
-// Todo, provide textual versions and a commandline option for in case
-// we are running a terminal that doesn't support it.
-
 export const endTaskLine = () => {
     return (id?: number) => {
         return <Box key={"divider_container_" + id} height={2} width={50} flexDirection="column">
@@ -221,8 +217,7 @@ const renderMigrationItem = (id: string, migrationItem: string, type: string | n
 export const askAdminKey = (): MessageFun => {
     return (id?: number) => askQuestion(id as number,
         <Text>Please provide a FaunaDB admin key or set
-            the < Text color={faunaPurple2} > FAUNA_ADMIN_KEY </Text > environment
-            variable to get rid of this question.
+            the < Text color={faunaPurple2} > FAUNA_ADMIN_KEY </Text > environment and restart the tool.
             < Newline ></Newline >
     To retrieve an admin key for your database, use the Security tab in dashboard
             < Link url="https://dashboard.fauna.com/" >
