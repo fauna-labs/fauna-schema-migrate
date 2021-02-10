@@ -7,7 +7,8 @@
 The Fauna Schema Migrate tool is an opinionated tool with two goals:
 
 - Set up Fauna resources as code.
-- provide support for fault-proof schema migrations for bigger teams. 
+- Provide support for fault-proof schema migrations for bigger teams. 
+- Provide guidance on how to manage fauna resources by showing the Let statements that can be generated to transactionally update databases.
 
 ####  What is a 'schema' migration? 
 
