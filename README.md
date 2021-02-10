@@ -328,7 +328,7 @@ If the approach is embraced by our community, we could have an easy uniform form
 
 - Authentication skeletons which set up the functions, roles, indexes, collections necessary for basic or advanced authentication scenarios as a starting point. Leaving the implementation of a frontend/backend implementation up to the user (of course, we will continue delivering accompanying applications)
 - A repository with a User Defined Function to apply rate limiting on other functions with the indexes and collections it requires. 
-- Packing up user contributes functionality in a repository such as: https://forums.fauna.com/t/logging-function/1513/3.
+- Packing up user contributed functionality in a repository such as: https://forums.fauna.com/t/logging-function/1513/3.
 
 ## Notes on data migration
 
@@ -348,5 +348,10 @@ This clearly requires your code to be able to deal with both the old format as t
 
 Maybe there is a need to have small seed data in your database or there might be value in looking into a separate npm library to help with such complex data migrations. Let us know what you need, your feedback is important to us. 
 
+## Inspiration
 
+This library was inspired by excellent database libraries and efforts of community users such as 
 
+- https://github.com/Plazide/fauna-gql-upload
+
+- https://github.com/ptpaterson/faunadb-graphql-schema-loader
