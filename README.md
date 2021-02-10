@@ -189,10 +189,29 @@ Running `fauna-schema-migrate apply 1 nameOfChildDb1` will apply a migration on 
 ### Potential extensions
 
 - **GraphQL schemas,** this could easily be added. The complicated part is that we would have to either make sure we know what resources the GraphQL schema already created in order to avoid conflicts or transform Create statements to CreateOrUpdate statements in case there is a GraphQL schema in the resources folder.  
+
 - **Copy schema from an existing database**: users often start by testing fauna in the dashboard, it would make sense to take an existing database and download the schema as resources to continue building upon. Currently this was out of scope.
+
+- **Expose functions to use it as a library**: for integration testing purposes it might make sense to be able to run part of the functions programmatically instead of having to call it as a commandline tool The [https://github.com/fauna-brecht/fauna-schema-migrate/blob/master/tests/_helpers.ts](https://github.com/fauna-brecht/fauna-schema-migrate/blob/master/tests/_helpers.ts) itself are a good example. You could easily provide a resource folder and use the functions to set up an integration test against Fauna such as in the snippet below. 
+
+  ```
+  sinon.stub(Config.prototype, 'getResourcesDir')
+              .returns(Promise.resolve(path.join(dir, folder)))
+  const planned = await planMigrations()
+  const migrations = await generateMigrations(planned)
+  const time = new Date().toISOString()
+  await writeMigrations([], migrations, time)
+  const res = await apply(1)
+  ```
+
+  which takes a custom resource folder (set by stubbing the config) and applies whatever is in that folder for this test. I assume many people would like to set up tests with Fauna UDFs/Roles where they could benefit from the library if it would expose this functions in a simplified format (generate/apply/rollback/...) and therefore also behave as a library next to being a commandline tool. 
+
 - **Plan step**: it makes perfect sense to save the FQL that will be applied to a plan (similar to terraform). That way we could verify the plan and run the plan both locally, on staging as in production with less risk that there could be a difference. 
+
 - **Migration only mode:** do you only use .fql files and don't care about the separate resources folder to nicely organize resources then you might want to write migrations directly. We could offer a modus to do so to be defined in the configuration. 
+
 - **No migration mode:** or would you prefer operating such a tool without migrations in a similar fashion as terraform, define resources and just update cloud.. whatever has to be done. This could also be a modus that we provide in the configuration.  
+
 - **Validate schema against cloud**: we could in theory validate whether migrations are valid depending on what is present in cloud to avoid detecting problems at the last possible moment when users have changed their database schema manually. E.g. we could detect when a role is updated that refers to a deleted collection. Currently the transaction would abort and throw an error which is probably good enough. It might still be useful to verify whether someone has manually tampered with the cloud  schema and see the difference and/or fix it if there is a difference. 
 
 Please let us know your requirements so we can decide what would be a good next step. 
