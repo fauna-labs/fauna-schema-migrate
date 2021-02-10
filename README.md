@@ -4,7 +4,7 @@
 
 ####  Goals
 
-The Fauna Schema Migrate tool is an opinionated tool with two goals:
+The Fauna Schema Migrate tool is an opinionated tool with three goals:
 
 - Set up Fauna resources as code.
 - Provide support for fault-proof schema migrations for bigger teams. 
