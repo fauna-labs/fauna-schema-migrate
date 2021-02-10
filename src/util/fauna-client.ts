@@ -1,7 +1,6 @@
 
 import * as fauna from 'faunadb'
-import { interactiveShell } from '../'
-import { askAdminKey } from '../interactive-shell/messages/messages'
+import { interactiveShell } from "../interactive-shell/interactive-shell";
 import { FaunaClients } from '../types/clients'
 import { retrieveAllResourceChildDb } from './files'
 const { CreateKey, Database, Select, CreateDatabase, If, Exists, Delete } = fauna.query

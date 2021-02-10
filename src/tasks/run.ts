@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { interactiveShell } from "../";
+import { interactiveShell } from "../interactive-shell/interactive-shell";
 const run = async () => {
     try {
         if (process.env.FAUNA_LEGACY) {

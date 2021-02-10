@@ -2,7 +2,7 @@
 import { config } from '../util/config'
 import * as files from "../util/files";
 import { clientGenerator } from "../util/fauna-client"
-import { interactiveShell } from "../";
+import { interactiveShell } from "../interactive-shell/interactive-shell";
 import { createMigrationCollection } from '../state/from-cloud';
 
 const init = async () => {

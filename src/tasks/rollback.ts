@@ -1,7 +1,6 @@
 import { isMissingMigrationCollectionFaunaError, isSchemaCachingFaunaError } from "../errors/detect-errors";
 import { prettyPrintExpr } from "../fql/print";
-import { interactiveShell } from "../";
-import { renderMigrationState } from "../interactive-shell/messages/messages";
+import { interactiveShell } from "../interactive-shell/interactive-shell";
 import { transformDiffToExpressions } from "../migrations/diff";
 import { retrieveRollbackMigrations, retrieveDiffCurrentTarget, generateRollbackQuery } from "../migrations/rollback";
 import { createMigrationCollection, retrieveAllCloudMigrations } from "../state/from-cloud";

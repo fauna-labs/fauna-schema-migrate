@@ -4,7 +4,7 @@ import apply from "./tasks/apply";
 import migrate from "./tasks/migrate";
 import run from "./tasks/run";
 import state from "./tasks/state";
-import { interactiveShell } from ".";
+import { interactiveShell } from "./interactive-shell/interactive-shell";
 import { endTaskLine, startCommand as completedTask } from "./interactive-shell/messages/messages";
 import rollback from "./tasks/rollback";
 import { deleteTempDir } from "./util/files";

@@ -11,7 +11,6 @@ import { deleteMigrationDir, generateMigrationDir } from '../src/util/files'
 import * as fauna from 'faunadb'
 import sinon from 'sinon';
 import { runTaskByName } from '../src/tasks'
-import { createMigrationCollection } from '../src/state/from-cloud'
 
 const { If, Exists, CreateKey, Database, CreateDatabase, Select, Delete, CreateCollection } = fauna.query
 
@@ -35,7 +34,7 @@ export const fullApply = async (dir: string, resourceFolders: string[] = ['resou
 // create migrations and apply in one step
 export const multiStepFullApply = async (dir: string, resourceFolders: string[] = ['resources'], amount: number = 1) => {
     for (let folder of resourceFolders) {
-        console.log("\n~~~~~~~~~~~~~~~ generat migrations ~~~~~~~~~~~~~~~~")
+        console.log("\n~~~~~~~~~~~~~~~ generate migrations ~~~~~~~~~~~~~~~~")
         sinon.stub(Config.prototype, 'getResourcesDir')
             .returns(Promise.resolve(path.join(dir, folder)))
         const planned = await planMigrations()

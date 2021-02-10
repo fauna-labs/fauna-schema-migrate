@@ -2,8 +2,7 @@ var equalDeep = require('deep-equal');
 
 import { planDatabaseMigrations, planMigrations } from "../migrations/plan"
 import { writeMigrations, generateMigrations } from "../migrations/generate-migration"
-import { interactiveShell } from "../";
-import { notifyWarning, renderPlan } from "../interactive-shell/messages/messages";
+import { interactiveShell } from "../interactive-shell/interactive-shell";
 import { TaggedExpression } from "../types/expressions";
 
 const migrate = async () => {

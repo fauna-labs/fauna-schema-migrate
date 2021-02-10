@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
 import program from "commander";
-import { InteractiveShell } from "./interactive-shell/interactive-shell";
-import { notifyBoxedInfo } from "./interactive-shell/messages/messages";
+import { interactiveShell } from "./interactive-shell/interactive-shell";
 import { tasks, runTask } from './tasks'
 
 // Global configuration of the CLI
@@ -26,7 +25,6 @@ if (options.childDb) process.env.FAUNA_CHILD_DB = options.childDb
 if (options.legacy) process.env.FAUNA_LEGACY = options.legacy
 if (options.noPrint) process.env.FAUNA_NOPRINT = options.noPrint
 
-const interactiveShell = new InteractiveShell()
 
 tasks.forEach((task) => {
 
@@ -55,4 +53,4 @@ else {
   program.parse(process.argv);
 }
 
-export { program, interactiveShell }
+export { program }

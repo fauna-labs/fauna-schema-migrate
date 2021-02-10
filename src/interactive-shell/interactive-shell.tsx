@@ -16,7 +16,7 @@ export enum ShellState {
     UserInputReceived
 }
 
-export class InteractiveShell {
+class InteractiveShell {
     // Messages is text that remains on screen and is not
     // redrawn, they remain statically on the screen or in other words,
     // are not interactive
@@ -33,20 +33,18 @@ export class InteractiveShell {
         this.close = this.close.bind(this)
         this.handleMenuSelection = this.handleMenuSelection.bind(this)
         this.handleUserInput = this.handleUserInput.bind(this)
-        if (!process.env.FAUNA_LEGACY) {
+    }
+
+    start(interactive: boolean = true) {
+        if (!this.result && process.env.NODE_ENV !== 'test' && !process.env.FAUNA_LEGACY) {
             this.addMessage(renderHeader())
+            this.result = render(this.renderComponents())
         }
         else {
             const title = "Fauna"
             const subtitle = "Schema Migrate " + version
             printWithMargin(`Fauna Schema Migrate - ${version}
 ---------------------------------------`, 0)
-        }
-    }
-
-    start(interactive: boolean = true) {
-        if (!this.result && process.env.NODE_ENV !== 'test') {
-            this.result = render(this.renderComponents())
         }
         if (!interactive) {
             this.cliState.setState(ShellState.Executing)
@@ -192,3 +190,6 @@ const printWithMargin = (message: string, margin: number) => {
         .map((e) => " ".repeat(margin) + e)
         .join('\n'))
 }
+
+const interactiveShell = new InteractiveShell()
+export { interactiveShell }

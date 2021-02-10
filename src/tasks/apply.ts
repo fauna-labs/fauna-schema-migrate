@@ -1,6 +1,6 @@
 import { isMissingMigrationCollectionFaunaError, isSchemaCachingFaunaError } from "../errors/detect-errors";
 import { prettyPrintExpr } from "../fql/print";
-import { interactiveShell } from "../";
+import { interactiveShell } from "./../interactive-shell/interactive-shell";
 import { retrieveMigrationInfo, getCurrentAndTargetMigration, generateApplyQuery, retrieveDiffCurrentTarget, retrieveDatabaseMigrationInfo } from "../migrations/advance";
 import { retrieveDatabasesDiff, transformDiffToExpressions } from "../migrations/diff";
 import { ApplyTargetCurrentAndSkippedMigrations } from "../types/expressions";
