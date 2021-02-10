@@ -15,9 +15,31 @@ Schema is a confusing name but typically what we search for for this sort of thi
 
 #### Setup
 
+Install the tool in a repository that has the faunadb javascript driver installed. The javascript driver is a peer dependency and will therefore not be pulled in by the tool. It makes more sense to rely on the same fauna driver as the repository to allow users to be in control of that version. T
+
 ```
 npm install fauna-schema-migrate
 ```
+
+Run interactively with npx:
+
+``` 
+npx fauna-schema-migrate run
+```
+
+Or with:
+
+```
+node_modules/.bin/fauna-schema-migrate
+```
+
+The **minimum** driver version should be: 
+
+```
+"faunadb": "^4.0.3"
+```
+
+This driver contains some minor fixes to the FQL formatting which are required for the tool to work properly. 
 
 #### Available commands
 
