@@ -36,16 +36,19 @@ class InteractiveShell {
     }
 
     start(interactive: boolean = true) {
-        if (!this.result && process.env.NODE_ENV !== 'test' && !process.env.FAUNA_LEGACY) {
-            this.addMessage(renderHeader())
-            this.result = render(this.renderComponents())
+        if (!this.result && process.env.NODE_ENV !== 'test') {
+            if (!process.env.FAUNA_LEGACY) {
+                this.addMessage(renderHeader())
+                this.result = render(this.renderComponents())
+            }
+            else {
+                const title = "Fauna"
+                const subtitle = "Schema Migrate " + version
+                printWithMargin(`Fauna Schema Migrate - ${version}
+    ---------------------------------------`, 0)
+            }
         }
-        else {
-            const title = "Fauna"
-            const subtitle = "Schema Migrate " + version
-            printWithMargin(`Fauna Schema Migrate - ${version}
----------------------------------------`, 0)
-        }
+
         if (!interactive) {
             this.cliState.setState(ShellState.Executing)
         }

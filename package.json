@@ -1,6 +1,6 @@
 {
   "name": "fauna-schema-migrate",
-  "version": "0.1.0-beta1",
+  "version": "0.1.0-beta2",
   "description": "Fauna schema migration tool that helps to manage resources such as collections, indexes, roles, functions, access providers as code.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,7 +11,7 @@
     "install-peers": "install-peers -f"
   },
   "bin": {
-    "faunadb-migrate": "./dist/index.js"
+    "fauna-schema-migrate": "./dist/index.js"
   },
   "author": "Brecht De Rooms",
   "license": "ISC",
