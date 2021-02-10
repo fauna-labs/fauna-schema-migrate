@@ -1,6 +1,6 @@
 {
   "name": "fauna-schema-migrate",
-  "version": "0.1.0-beta2",
+  "version": "0.1.1-beta",
   "description": "Fauna schema migration tool that helps to manage resources such as collections, indexes, roles, functions, access providers as code.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,8 +13,12 @@
   "bin": {
     "fauna-schema-migrate": "./dist/index.js"
   },
+  "license": "0BSD",
+  "bugs": {
+    "url": "https://github.com/fauna-brecht/fauna-schema-migrate/issues"
+  },
+  "homepage": "https://github.com/fauna-brecht/fauna-schema-migrate#readme",
   "author": "Brecht De Rooms",
-  "license": "ISC",
   "dependencies": {
     "@babel/parser": "^7.12.7",
     "@types/deep-equal": "^1.0.1",

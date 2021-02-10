@@ -77,7 +77,7 @@ const apply = async (amount: number | string = 1, atChildDbPath: string[] = []) 
 }
 
 const validateNumber = (str: any) => {
-    if (str !== "all" && isNaN(str) || isNaN(parseFloat(str))) {
+    if (str !== "all" && (isNaN(str) || isNaN(parseFloat(str)))) {
         throw new ExpectedNumberOfMigrations(str)
     }
 }
