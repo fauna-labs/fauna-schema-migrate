@@ -146,7 +146,7 @@ const generateLetBindingObject = (
                 e.fql = replaceAll(
                     <string>e.fql,
                     `${depExpr.type}("${depExpr.name}")`,
-                    `Select(['ref'],Var("${nameToVar[depIndexableName]}"))`)
+                    `Var("${nameToVar[depIndexableName]}")`)
             }
         })
 
@@ -154,7 +154,7 @@ const generateLetBindingObject = (
             e.fql = replaceAll(
                 <string>e.fql,
                 `${e.type}("${e.name}")`,
-                `Select(['ref'],Var("${nameToVar[indexableName]}"))`)
+                `Var("${nameToVar[indexableName]}")`)
         }
         // only the first occurance is a create.
         // due to circular dependency stubbing, there might be
@@ -163,7 +163,7 @@ const generateLetBindingObject = (
             nameToVar[indexableName] = `var${varIndex}`
         }
         // Bind the variable to the code.
-        obj[`var${varIndex}`] = evalFQLCode(<string>e.fql)
+        obj[`var${varIndex}`] = evalFQLCode(`Select(['ref'], ${e.fql})`)
     })
     return obj
 
