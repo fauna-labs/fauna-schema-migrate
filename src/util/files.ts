@@ -144,13 +144,13 @@ export const retrieveLastMigrationVersionAndPathsForMigrationBefore = async (atC
     const migrationsDir = await config.getMigrationsDir()
     const fullPath = childDbPathToFullPath(path.join(migrationsDir), atChildDbPath, childDbsDir)
     let migrationSubdirs = getDirectories(fullPath, true, childDbsDir)
-    migrationSubdirs = getAllStrsBeforeEqual(migrationSubdirs, before)
+    migrationSubdirs = getAllStrsBeforeEqual(migrationSubdirs, before? before.replace(/:/g, '_'): before)
     return await Promise.all(migrationSubdirs.map(async (migration) => {
         const jsResults = await retrieveAllPathsInPattern(path.join(fullPath, migration), "**/*.js", ignoreChildDbs)
         const fqlResults = await retrieveAllPathsInPattern(path.join(fullPath, migration), "**/*.fql", ignoreChildDbs)
         return {
             files: jsResults.concat(fqlResults),
-            migration: migration
+            migration: migration.replace(/_/g, ':')
         }
     }))
 }
@@ -283,6 +283,7 @@ export const writeNewMigrationDir = async (atChildDbPath: string[], time: string
 }
 
 const childDbPathToFullPath = (rootDir: string, atChildDbPath: string[], childDbName: string, time: string = ""): string => {
+    const folderTime = time.replace(/:/g, '_');
     if (atChildDbPath.length > 0) {
         const fullPaths = atChildDbPath.flatMap((name) => {
             return [
@@ -290,10 +291,10 @@ const childDbPathToFullPath = (rootDir: string, atChildDbPath: string[], childDb
                 name
             ]
         })
-        return path.join(rootDir, ...fullPaths, time)
+        return path.join(rootDir, ...fullPaths, folderTime)
     }
     else {
-        return path.join(rootDir, time)
+        return path.join(rootDir, folderTime)
     }
 }
 

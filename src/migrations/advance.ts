@@ -104,7 +104,8 @@ export const generateApplyQuery = async (
     expressions = fixUpdates(expressions)
     const letQueryObject = await generateMigrationQuery(expressions)
     const migrCollection = await config.getMigrationCollection()
-    const migrationCreateStatements = skippedMigrations.concat([targetMigration])
+    let migrationCreateStatements = skippedMigrations.concat([targetMigration])
+    migrationCreateStatements = migrationCreateStatements.map(migration => migration.replace(/_/g, ':'))
     const query = Let(
         // add all statements as Let variable bindings
         letQueryObject,
