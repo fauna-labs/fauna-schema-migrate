@@ -1,6 +1,6 @@
 {
   "name": "fauna-schema-migrate",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Fauna schema migration tool that helps to manage resources such as collections, indexes, roles, functions, access providers as code.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -60,13 +60,13 @@
   "devDependencies": {
     "@types/sinon": "^9.0.9",
     "ava": "^3.14.0",
+    "cpy-cli": "^3.1.1",
     "dotenv": "^8.2.0",
     "install-peers-cli": "^2.2.0",
     "sinon": "^9.2.2",
     "ts-node": "^8.10.2",
-    "typescript": "^4.1.3",
     "ts-node-dev": "^1.1.1",
-    "cpy-cli": "^3.1.1"
+    "typescript": "^4.1.3"
   },
   "ava": {
     "extensions": [
