@@ -1,6 +1,5 @@
 import fs, { existsSync, lstatSync, readdirSync } from 'fs'
 import path from 'path'
-import os from 'os'
 import * as esbuild from 'esbuild'
 import shell from 'shelljs'
 import glob from 'glob'
@@ -150,9 +149,7 @@ export const retrieveLastMigrationVersionAndPathsForMigrationBefore = async (atC
     migrationSubdirs = getAllStrsBeforeEqual(migrationSubdirs, before)
     return await Promise.all(migrationSubdirs.map(async (migration) => {
         let migrationFolder = migration
-        if (os.platform() === 'win32') {
-            migrationFolder = migration.replace(/:/g, '_')
-        }
+        migrationFolder = migration.replace(/:/g, '_')
         const jsResults = await retrieveAllPathsInPattern(path.join(fullPath, migrationFolder), "**/*.js", ignoreChildDbs)
         const fqlResults = await retrieveAllPathsInPattern(path.join(fullPath, migrationFolder), "**/*.fql", ignoreChildDbs)
         return {
@@ -193,6 +190,7 @@ const getMigrationDirectories = (source: string, ignoreChildDbs: boolean, childD
         .map((folder) => {
             return folder.replace(/_/g, ':')
         })
+        .sort()
 }
 
 const getDirectories = (source: string, ignoreChildDbs: boolean, childDbsDir: string) => {
@@ -292,9 +290,7 @@ export const writeNewMigrationDir = async (atChildDbPath: string[], time: string
     const migrationsPath = path.join(process.cwd(), await config.getMigrationsDir())
     const childDbsDir = await config.getChildDbsDirName()
     let migrationFolder = time
-    if (os.platform() === 'win32') {
-        migrationFolder = time.replace(/:/g, '_')
-    }
+    migrationFolder = time.replace(/:/g, '_')
     const fullPath = childDbPathToFullPath(migrationsPath, atChildDbPath, childDbsDir, migrationFolder)
     shell.mkdir('-p', fullPath)
     return fullPath
