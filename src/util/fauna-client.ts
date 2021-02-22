@@ -153,7 +153,7 @@ const getDatabaseClient = async (database: string[], children: FaunaClients) => 
 }
 
 const createClientWithOptions = (secret: string) => {
-    const opts: any = { secret: secret }
+    const opts: any = { secret: secret,  keepAlive: false }
     if (process.env.FAUNADB_DOMAIN) opts.domain = process.env.FAUNADB_DOMAIN
     if (process.env.FAUNADB_SCHEME) opts.scheme = process.env.FAUNADB_SCHEME
     return new fauna.Client(opts)
