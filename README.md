@@ -185,6 +185,8 @@ Or run `fauna-schema-migrate run` to test it out interactively. All commands can
 - FAUNA_CHILD_DB: set a child database (see next section) for development purposes
 - FAUNA_LEGACY: remove fancy output for legacy terminals that might not support it or if you just don't like it or want to copy the generated FQL query without the box.
 - FAUNA_NOPRINT: don't print the FQL migration.
+- FAUNADB_DOMAIN: connect to another environment than fauna cloud. the default value is 'db.fauna.com' but could also be your local docker IP or the preview cluster. 
+- FAUNADB_SCHEME: the default schema is 'https', mainly for local development, this could be set to 'http' via this environment variable
 
 ##### Faster local development with a child database
 
