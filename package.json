@@ -1,17 +1,22 @@
 {
-  "name": "@fauna-brecht/staging-fauna-schema-migrate",
-  "version": "0.1.7",
+  "name": "@fauna-databrecht/staging-fauna-schema-migrate",
+  "version": "0.1.8-debug-npx2",
   "description": "Fauna schema migration tool that helps to manage resources such as collections, indexes, roles, functions, access providers as code.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "np": {
+    "yarn": false,
+    "contents": "dist"
+  },
   "scripts": {
     "build": "tsc && cpy 'templates/*.js' '../dist/' --cwd=src --parents",
     "watch": "tsc -w",
     "test": "ava -T 200s --fail-fast",
-    "install-peers": "install-peers -f"
+    "install-peers": "install-peers -f",
+    "prepare": "tsc && cpy 'templates/*.js' '../dist/' --cwd=src --parents"
   },
   "bin": {
-    "fauna-schema-migrate": "./dist/index.js"
+    "staging-fauna-schema-migrate": "./dist/index.js"
   },
   "license": "0BSD",
   "bugs": {
@@ -31,7 +36,7 @@
     "@types/lodash.clonedeep": "^4.5.6",
     "@types/node": "^12.19.8",
     "@types/prettier": "^2.1.5",
-    "@types/react": "^17.0.0",
+    "@types/react": "^16.9.0",
     "@types/shelljs": "^0.8.8",
     "arr-rotate": "^1.0.0",
     "chalk": "^2.4.2",
@@ -49,7 +54,6 @@
     "js-beautify": "^1.13.0",
     "lodash.clonedeep": "^4.5.0",
     "prettier": "^2.2.1",
-    "react": "^17.0.1",
     "react-hookstore": "^1.5.1",
     "shelljs": "^0.8.4"
   },
