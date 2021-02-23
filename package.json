@@ -1,5 +1,5 @@
 {
-  "name": "fauna-schema-migrate",
+  "name": "@fauna-brecht/staging-fauna-schema-migrate",
   "version": "0.1.7",
   "description": "Fauna schema migration tool that helps to manage resources such as collections, indexes, roles, functions, access providers as code.",
   "main": "dist/index.js",
