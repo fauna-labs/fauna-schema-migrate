@@ -19,9 +19,12 @@ jobs:
         with:
           node-version: "12.x"
           registry-url: "https://registry.npmjs.org"
-      # Run yarn install to install project packages
+      # Rename the package for staging
+      - run: npm install --global json
+      - run: json -I -f package.json -e 'this.name=\"@fauna-databrecht/staging-fauna-schema-migrate\"' && json -I -f package.json -e 'this.bin={\"staging-fauna-schema-migrate\":\"./dist/index.js\"}'"
+      # Run npm install to install project packages
       - run: npm install
-      # yarn build to build the project
+      # npm build to build the project
       - run: npm build
       # publish the files to NPM
       - run: npm publish --access public

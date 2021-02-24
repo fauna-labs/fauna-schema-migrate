@@ -1,5 +1,5 @@
 {
-  "name": "@fauna-databrecht/staging-fauna-schema-migrate",
+  "name": "fauna-schema-migrate",
   "version": "0.1.8-debug-npx5",
   "description": "Fauna schema migration tool that helps to manage resources such as collections, indexes, roles, functions, access providers as code.",
   "main": "dist/index.js",
@@ -16,7 +16,7 @@
     "prepare": "tsc && cpy 'templates/*.js' '../dist/' --cwd=src --parents"
   },
   "bin": {
-    "staging-fauna-schema-migrate": "./dist/index.js"
+    "fauna-schema-migrate": "./dist/index.js"
   },
   "license": "0BSD",
   "bugs": {
