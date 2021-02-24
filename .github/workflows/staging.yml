@@ -3,7 +3,7 @@ name: NPM Publish
 
 # This action will trigger on every release get created
 on:
-  on-push-tags:
+  release:
     branches: [staging]
     types: [created]
 
