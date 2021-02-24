@@ -135,14 +135,14 @@ const getMigrationMetadata = (migrationcategories: LoadedResources) => {
 }
 
 const flattenMigrations = (migrationsPerType: LoadedResources) => {
-    const grouped: TaggedExpression[][] = []
+    const grouped: any[] = []
     Object.keys(migrationsPerType).forEach((typeStr: string) => {
         const type = ResourceTypes[typeStr as keyof typeof ResourceTypes]
         const migrations = migrationsPerType[type]
         grouped.push(migrations)
 
     })
-    const flattened = grouped.flat()
+    const flattened = [].concat.apply([], grouped)
     return flattened
 }
 
