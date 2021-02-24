@@ -71,8 +71,8 @@ export const retrieveAllResourcePaths = async (atChildDbPath: string[] = [], ign
     const resourcesDir = await config.getResourcesDir()
     const childDbsDir = await config.getChildDbsDirName()
     const fullPath = childDbPathToFullPath(resourcesDir, atChildDbPath, childDbsDir)
-    const jsResults = await retrieveAllPathsInPattern(fullPath, "**/*.js", ignoreChildDbs)
-    const fqlResults = await retrieveAllPathsInPattern(fullPath, "**/*.fql", ignoreChildDbs)
+    const jsResults = await retrieveAllPathsInPattern(fullPath, `**${path.sep}*.js`, ignoreChildDbs)
+    const fqlResults = await retrieveAllPathsInPattern(fullPath, `**${path.sep}*.fql`, ignoreChildDbs)
     return jsResults.concat(fqlResults)
 }
 
@@ -153,8 +153,8 @@ export const retrieveLastMigrationVersionAndPathsForMigrationBefore = async (atC
     return await Promise.all(migrationSubdirs.map(async (migration) => {
         let migrationFolder = migration
         migrationFolder = migration.replace(/:/g, '_')
-        const jsResults = await retrieveAllPathsInPattern(path.join(fullPath, migrationFolder), "**/*.js", ignoreChildDbs)
-        const fqlResults = await retrieveAllPathsInPattern(path.join(fullPath, migrationFolder), "**/*.fql", ignoreChildDbs)
+        const jsResults = await retrieveAllPathsInPattern(path.join(fullPath, migrationFolder), `**${path.sep}*.js`, ignoreChildDbs)
+        const fqlResults = await retrieveAllPathsInPattern(path.join(fullPath, migrationFolder), `**${path.sep}*.fql`, ignoreChildDbs)
         return {
             files: jsResults.concat(fqlResults),
             migration: migration
@@ -211,7 +211,8 @@ const getDirectories = (source: string, ignoreChildDbs: boolean, childDbsDir: st
                 }
             })
             .map(p => {
-                const res: any = p.match(/([^\/]*)\/*$/)
+                const regex = new RegExp('([^\\' + path.sep + ']*)\\' + path.sep + '*$')
+                const res: any = p.match(regex)
                 const folder: string = res[1]
                 return folder
             })
@@ -231,7 +232,7 @@ const retrieveAllPathsInPattern = async (basedir: string, pattern: string, ignor
             path.join(await basedir, pattern),
             {
                 ignore: [
-                    path.join(basedir, "**", await config.getChildDbsDirName(), "**/*"),
+                    path.join(basedir, "**", await config.getChildDbsDirName(), `**${path.sep}*`),
                     path.join(basedir, "**", await config.getChildDbsDirName())
                 ]
             })
