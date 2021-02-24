@@ -20,7 +20,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       # Rename the package for staging
       - run: npm install --global json
-      - run: json -I -f package.json -e 'this.name=\"@fauna-databrecht/staging-fauna-schema-migrate\"' && json -I -f package.json -e 'this.bin={\"staging-fauna-schema-migrate\":\"./dist/index.js\"}'"
+      - run: json -I -f package.json -e 'this.name="@fauna-databrecht/staging-fauna-schema-migrate"' && json -I -f package.json -e 'this.bin={"staging-fauna-schema-migrate":"./dist/index.js"}'
       # Run npm install to install project packages
       - run: npm install
       # npm build to build the project

@@ -4,3 +4,4 @@ yalc.lock
 .env.*
 !.env.**.example
 */tests/migrations/**
+dist
