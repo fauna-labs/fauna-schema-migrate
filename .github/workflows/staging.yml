@@ -25,6 +25,8 @@ jobs:
       - run: npm install
       # tests
       - run: npm test
+        env:
+          FAUNA_ADMIN_KEY: ${{ secrets.FAUNA_ADMIN_KEY }}
       # npm build to build the project
       - run: npm build
       # publish the files to NPM
