@@ -5,13 +5,15 @@ name: NPM Publish
 on:
   push:
     branches: [staging]
-    tags:
-      - '*'
+
 # Job will run on a ubuntu instance
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Check if version has been updated
+        id: check
+        uses: EndBug/version-check@v1
       # Checkout the code
       - uses: actions/checkout@v2
       # Setup node with version 12.x and NPM registry url
