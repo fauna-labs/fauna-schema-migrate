@@ -115,9 +115,12 @@ const retrieveAllResourceChildDbsIter = (resourcesDir: string, childDbsDirName: 
         else {
             const childDirs = getDirectories(path.join(resourcesDir, childrenDir), false, "")
             const newResources = childDirs.map((d) => path.join(resourcesDir, childrenDir, d))
+
+            const res: any[] = newResources
+                .map((r) => retrieveAllResourceChildDbsIter(r, childDbsDirName))
+
             return newResources.concat(
-                newResources
-                    .flatMap((r) => retrieveAllResourceChildDbsIter(r, childDbsDirName))
+                [].concat.apply([], res)
             )
         }
     }
@@ -284,13 +287,14 @@ export const writeNewMigrationDir = async (atChildDbPath: string[], time: string
 
 const childDbPathToFullPath = (rootDir: string, atChildDbPath: string[], childDbName: string, time: string = ""): string => {
     if (atChildDbPath.length > 0) {
-        const fullPaths = atChildDbPath.flatMap((name) => {
+        const fullPaths: any[] = atChildDbPath.map((name) => {
             return [
                 childDbName,
                 name
             ]
         })
-        return path.join(rootDir, ...fullPaths, time)
+
+        return path.join(rootDir, ...[].concat.apply([], fullPaths), time)
     }
     else {
         return path.join(rootDir, time)
