@@ -69,22 +69,26 @@ export const runTaskByName = async (name: string, ...params: any[]) => {
 }
 
 export const runTask = async (task: Task, interactive: boolean = false, ...params: any[]) => {
+    try {
+        interactiveShell.start(interactive)
+        if (task.name !== 'run' && !process.env.FAUNA_LEGACY) {
+            interactiveShell.addMessage(completedTask(task))
+        }
 
-    interactiveShell.start(interactive)
-    if (task.name !== 'run' && !process.env.FAUNA_LEGACY) {
-        interactiveShell.addMessage(completedTask(task))
-    }
+        const result = await task.action(...params)
+        if (task.name !== 'run' && !process.env.FAUNA_LEGACY) {
+            interactiveShell.addMessage(endTaskLine())
+        }
+        await deleteTempDir()
 
-    const result = await task.action(...params)
-    if (task.name !== 'run' && !process.env.FAUNA_LEGACY) {
-        interactiveShell.addMessage(endTaskLine())
+        if (!interactive) {
+            interactiveShell.close()
+        }
+        return result
     }
-    await deleteTempDir()
-
-    if (!interactive) {
-        interactiveShell.close()
+    catch (error) {
+        interactiveShell.reportError(error, interactive)
     }
-    return result
 }
 
 

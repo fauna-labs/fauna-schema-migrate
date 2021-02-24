@@ -25,14 +25,23 @@ if (options.childDb) process.env.FAUNA_CHILD_DB = options.childDb
 if (options.legacy) process.env.FAUNA_LEGACY = options.legacy
 if (options.noPrint) process.env.FAUNA_NOPRINT = options.noPrint
 
+const actionErrorHandler = (error: Error) => {
+  console.error(error)
+  process.exitCode = 1
+  process.exit()
+}
 
 tasks.forEach((task) => {
-
   program
     .command(`${task.name}${task.options ? ' ' + task.options : ''}`)
     .description(task.description)
-    .action((...params) => {
-      return runTask(task, task.name === 'run', ...params)
+    .action(async (...params) => {
+      try {
+        await runTask(task, task.name === 'run', ...params)
+      }
+      catch (err) {
+        actionErrorHandler(err)
+      }
     })
 })
 
