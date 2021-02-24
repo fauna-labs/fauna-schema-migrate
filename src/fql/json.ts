@@ -61,7 +61,7 @@ const findNamedPattern = (o: any, patAndName: PatternAndIndexName): string[] => 
 }
 
 const findNamedPatternIter = (previousKey: string, o: any, patAndName: PatternAndIndexName): string[] => {
-    let result: string[] = []
+    let result: any[] = []
     for (var i in o) {
         const found = equalDeep(o, patAndName.pattern);
         if (found && previousKey !== 'object') {
@@ -71,7 +71,7 @@ const findNamedPatternIter = (previousKey: string, o: any, patAndName: PatternAn
             result = result.concat(findNamedPatternIter(i, o[i], patAndName))
         }
     }
-    return result.flat()
+    return [].concat.apply([], result)
 }
 
 
@@ -99,19 +99,18 @@ export const findStructureIter = (previousKey: string, structure: any, o: any): 
             result = result.concat(findStructureIter(i, structure, o[i]))
         }
     }
-    return result.flat()
+    return [].concat.apply([], result)
 }
 
 
 export const findPatterns = (o: any, patterns: PatternAndIndexName[]) => {
     try {
-
-        return patterns
+        const res: any[] = patterns
             .map((pattern) => {
                 const res = findNamedPattern(o, pattern)
                 return res
             })
-            .flat()
+        return [].concat.apply([], res)
             .filter(onlyUnique)
     }
     catch (err) {

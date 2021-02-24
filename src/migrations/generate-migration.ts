@@ -16,7 +16,7 @@ export const writeMigrations = async (
 }
 
 export const generateMigrations = async (planned: PlannedDiffPerResource) => {
-    const migrExprs: TaggedExpression[][] = []
+    const migrExprs: any[] = []
 
     // First add all the ones we can generate generically.
     migrExprs.push(transformStatements(planned[ResourceTypes.Role]))
@@ -26,7 +26,7 @@ export const generateMigrations = async (planned: PlannedDiffPerResource) => {
     migrExprs.push(transformStatements(planned[ResourceTypes.AccessProvider]))
     migrExprs.push(transformStatements(planned[ResourceTypes.Database]))
 
-    const migrExprsFlat = migrExprs.flat()
+    const migrExprsFlat = [].concat.apply([], migrExprs)
     return migrExprsFlat
 }
 

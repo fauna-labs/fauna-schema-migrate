@@ -13,7 +13,7 @@ test.before(async (t: ExecutionContext) => {
     faunaClient = await setupFullTest(testPath)
 })
 
-test('create child databases', async (t: ExecutionContext) => {
+test.skip('create child databases', async (t: ExecutionContext) => {
     await multiDatabaseFullApply(testPath, ["resources"], [[], ["child1"]])
 
     // there are two child databases
