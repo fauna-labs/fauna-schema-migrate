@@ -5,7 +5,6 @@ name: NPM Publish
 on:
   push:
     branches: [staging]
-    tags: ['*']
 
 # Job will run on a ubuntu instance
 jobs:
