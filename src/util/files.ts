@@ -11,6 +11,7 @@ import { MigrationPathAndFiles } from '../types/migrations'
 import defaults from './defaults'
 import { prettyPrintExpr } from '../fql/print'
 
+
 const globPromise = util.promisify(glob)
 
 export const loadFqlSnippet = async (p: string) => {
@@ -70,8 +71,8 @@ export const retrieveAllResourcePaths = async (atChildDbPath: string[] = [], ign
     const resourcesDir = await config.getResourcesDir()
     const childDbsDir = await config.getChildDbsDirName()
     const fullPath = childDbPathToFullPath(resourcesDir, atChildDbPath, childDbsDir)
-    const jsResults = await retrieveAllPathsInPattern(fullPath, "**/*.js", ignoreChildDbs)
-    const fqlResults = await retrieveAllPathsInPattern(fullPath, "**/*.fql", ignoreChildDbs)
+    const jsResults = await retrieveAllPathsInPattern(fullPath, `**${path.sep}*.js`, ignoreChildDbs)
+    const fqlResults = await retrieveAllPathsInPattern(fullPath, `**${path.sep}*.fql`, ignoreChildDbs)
     return jsResults.concat(fqlResults)
 }
 
@@ -133,8 +134,9 @@ export const retrieveAllMigrations = async (atChildDbPath: string[] = []): Promi
 
     const childDbsDir = await config.getChildDbsDirName()
     const migrationsDir = await config.getMigrationsDir()
+
     const fullPath = childDbPathToFullPath(path.join(migrationsDir), atChildDbPath, childDbsDir)
-    const migrationSubdirs = getDirectories(fullPath, true, childDbsDir)
+    const migrationSubdirs = getMigrationDirectories(fullPath, true, childDbsDir)
     return migrationSubdirs
 }
 
@@ -146,11 +148,13 @@ export const retrieveLastMigrationVersionAndPathsForMigrationBefore = async (atC
     const childDbsDir = await config.getChildDbsDirName()
     const migrationsDir = await config.getMigrationsDir()
     const fullPath = childDbPathToFullPath(path.join(migrationsDir), atChildDbPath, childDbsDir)
-    let migrationSubdirs = getDirectories(fullPath, true, childDbsDir)
+    let migrationSubdirs = getMigrationDirectories(fullPath, true, childDbsDir)
     migrationSubdirs = getAllStrsBeforeEqual(migrationSubdirs, before)
     return await Promise.all(migrationSubdirs.map(async (migration) => {
-        const jsResults = await retrieveAllPathsInPattern(path.join(fullPath, migration), "**/*.js", ignoreChildDbs)
-        const fqlResults = await retrieveAllPathsInPattern(path.join(fullPath, migration), "**/*.fql", ignoreChildDbs)
+        let migrationFolder = migration
+        migrationFolder = migration.replace(/:/g, '_')
+        const jsResults = await retrieveAllPathsInPattern(path.join(fullPath, migrationFolder), `**${path.sep}*.js`, ignoreChildDbs)
+        const fqlResults = await retrieveAllPathsInPattern(path.join(fullPath, migrationFolder), `**${path.sep}*.fql`, ignoreChildDbs)
         return {
             files: jsResults.concat(fqlResults),
             migration: migration
@@ -184,6 +188,14 @@ const getAllStrsBeforeEqual = (strs: string[], before: string | null) => {
 
 const isDirectory = (source: string) => lstatSync(source).isDirectory()
 
+const getMigrationDirectories = (source: string, ignoreChildDbs: boolean, childDbsDir: string) => {
+    return getDirectories(source, ignoreChildDbs, childDbsDir)
+        .map((folder) => {
+            return folder.replace(/_/g, ':')
+        })
+        .sort()
+}
+
 const getDirectories = (source: string, ignoreChildDbs: boolean, childDbsDir: string) => {
     if (existsSync(source)) {
         return readdirSync(source)
@@ -199,7 +211,8 @@ const getDirectories = (source: string, ignoreChildDbs: boolean, childDbsDir: st
                 }
             })
             .map(p => {
-                const res: any = p.match(/([^\/]*)\/*$/)
+                const regex = new RegExp('([^\\' + path.sep + ']*)\\' + path.sep + '*$')
+                const res: any = p.match(regex)
                 const folder: string = res[1]
                 return folder
             })
@@ -219,7 +232,7 @@ const retrieveAllPathsInPattern = async (basedir: string, pattern: string, ignor
             path.join(await basedir, pattern),
             {
                 ignore: [
-                    path.join(basedir, "**", await config.getChildDbsDirName(), "**/*"),
+                    path.join(basedir, "**", await config.getChildDbsDirName(), `**${path.sep}*`),
                     path.join(basedir, "**", await config.getChildDbsDirName())
                 ]
             })
@@ -280,7 +293,9 @@ export const writeNewMigration = async (atChildDbPath: string[], migrations: Tag
 export const writeNewMigrationDir = async (atChildDbPath: string[], time: string) => {
     const migrationsPath = path.join(process.cwd(), await config.getMigrationsDir())
     const childDbsDir = await config.getChildDbsDirName()
-    const fullPath = childDbPathToFullPath(migrationsPath, atChildDbPath, childDbsDir, time)
+    let migrationFolder = time
+    migrationFolder = time.replace(/:/g, '_')
+    const fullPath = childDbPathToFullPath(migrationsPath, atChildDbPath, childDbsDir, migrationFolder)
     shell.mkdir('-p', fullPath)
     return fullPath
 }

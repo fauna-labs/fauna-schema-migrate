@@ -137,8 +137,8 @@ To retrieve an admin key for your database, use the Security tab in dashboard ht
         this.cliState.setState(ShellState.UserInput)
     }
 
-    reportError(err: Error) {
-        if (process.env.NODE_ENV === 'test' || process.env.FAUNA_LEGACY) {
+    reportError(err: Error, interactive: boolean = true) {
+        if (process.env.NODE_ENV === 'test' || process.env.FAUNA_LEGACY || !interactive) {
             throw err
         }
         this.task.setState(null)

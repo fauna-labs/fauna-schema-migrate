@@ -20,7 +20,7 @@ const apply = async () => {
             return interactiveShell.reportWarning(`The migrations collection is missing, \n did you run 'init' first?`)
         }
         else {
-            interactiveShell.reportError(error)
+            throw error
         }
     }
 };
