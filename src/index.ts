@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import program from "commander";
+import { ErrorWithFilePath } from "./errors/ErrorWithFilePath";
 import { interactiveShell } from "./interactive-shell/interactive-shell";
 import { tasks, runTask } from './tasks'
 
@@ -26,7 +27,13 @@ if (options.legacy) process.env.FAUNA_LEGACY = options.legacy
 if (options.noPrint) process.env.FAUNA_NOPRINT = options.noPrint
 
 const actionErrorHandler = (error: Error) => {
-  console.error(error)
+  if (error instanceof ErrorWithFilePath) {
+    console.error('\nError in file: ' + error.filePath)
+  }
+  console.error(error.message.split('\n')
+    .map((e) => " ".repeat(2) + e)
+    .join('\n'))
+  console.error('Stacktrace ' + error.stack)
   process.exitCode = 1
   process.exit()
 }
