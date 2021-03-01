@@ -8,10 +8,8 @@ import { config } from './config'
 import { StatementType, TaggedExpression } from '../types/expressions'
 import { evalFQLCode } from '../fql/eval'
 import { MigrationPathAndFiles } from '../types/migrations'
-import defaults from './defaults'
 import { prettyPrintExpr } from '../fql/print'
 import { ErrorWithFilePath } from '../errors/ErrorWithFilePath'
-
 
 const globPromise = util.promisify(glob)
 
