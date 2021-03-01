@@ -1,4 +1,4 @@
-export { getSnippetsFromCode as snippetsFromCode } from './state/from-code'
+export { getSnippetsFromStrings, getSnippetsFromCode } from './state/from-code'
 export { diffSnippets as diffSnippets } from './migrations/diff'
 export { generateMigrations as generateMigrations } from './migrations/generate-migration'
 export { generateMigrationLetObject as generateLetObject } from './migrations/generate-query'

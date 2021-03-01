@@ -1,11 +1,11 @@
 
 import path from 'path'
 import test, { ExecutionContext } from 'ava';
-import { getSnippetsFromCode } from '../../src/state/from-code'
+import { getSnippetsFromStrings } from '../../src/state/from-code'
 import { diffSnippets } from '../../src/migrations/diff'
 
 test('snippets can be diffed from code', async (t: ExecutionContext) => {
-    const snippets1 = getSnippetsFromCode([
+    const snippets1 = getSnippetsFromStrings([
         "CreateCollection({ name: 'accounts' })",
         `CreateFunction({
             name: 'foo',
@@ -15,7 +15,7 @@ test('snippets can be diffed from code', async (t: ExecutionContext) => {
         })`,
         "CreateCollection({ name: 'shops' })"
     ])
-    const snippets2 = getSnippetsFromCode([
+    const snippets2 = getSnippetsFromStrings([
         "CreateCollection({ name: 'books' })",
         "CreateCollection({ name: 'users' })",
         `CreateFunction({

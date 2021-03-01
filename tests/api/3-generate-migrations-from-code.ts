@@ -1,13 +1,13 @@
 
 import path from 'path'
 import test, { ExecutionContext } from 'ava';
-import { getSnippetsFromCode } from '../../src/state/from-code'
+import { getSnippetsFromStrings } from '../../src/state/from-code'
 import { diffSnippets } from '../../src/migrations/diff'
 import { generateMigrations } from '../../src/migrations/generate-migration'
 import { StatementType, TaggedExpression } from '../../src/types/expressions';
 
 test('we can generatemigrations from code', async (t: ExecutionContext) => {
-    const snippets1 = getSnippetsFromCode([
+    const snippets1 = getSnippetsFromStrings([
         "CreateCollection({ name: 'accounts' })",
         `CreateFunction({
             name: 'foo',
@@ -17,7 +17,7 @@ test('we can generatemigrations from code', async (t: ExecutionContext) => {
         })`,
         "CreateCollection({ name: 'shops' })"
     ])
-    const snippets2 = getSnippetsFromCode([
+    const snippets2 = getSnippetsFromStrings([
         "CreateCollection({ name: 'books' })",
         "CreateCollection({ name: 'users' })",
         `CreateFunction({

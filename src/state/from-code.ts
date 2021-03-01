@@ -7,13 +7,25 @@ import { toIndexableName } from '../util/unique-naming'
 import { DuplicateResourceError } from '../errors/DuplicateResourceError'
 import { evalFQLCode } from '../fql/eval'
 
-export const getSnippetsFromCode = (codeSnippets: string[], atChildDbPath: string[] = []): LoadedResources => {
+import * as fauna from 'faunadb'
+const q = fauna.query
+
+export const getSnippetsFromStrings = (codeSnippets: string[], atChildDbPath: string[] = []): LoadedResources => {
+    let snippets: fauna.Expr[] = []
+    for (let i = 0; i < codeSnippets.length; i++) {
+        const expr = evalFQLCode(codeSnippets[i])
+        snippets.push(expr)
+    }
+    return getSnippetsFromCode(snippets, atChildDbPath)
+}
+
+export const getSnippetsFromCode = (codeSnippets: fauna.Expr[], atChildDbPath: string[] = []): LoadedResources => {
     let snippets: TaggedExpression[] = []
     for (let i = 0; i < codeSnippets.length; i++) {
-        const snippet = evalFQLCode(codeSnippets[i])
+        const snippet = codeSnippets[i]
         snippets.push({
             fqlExpr: snippet,
-            fql: snippet.toFQL(),
+            fql: (snippet as any).toFQL(),
             name: '',
             jsonData: {},
             // a resource file should always be a create!

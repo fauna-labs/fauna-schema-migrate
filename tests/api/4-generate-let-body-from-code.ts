@@ -2,14 +2,14 @@
 import path from 'path'
 import * as fauna from 'faunadb'
 import test, { ExecutionContext } from 'ava';
-import { getSnippetsFromCode } from '../../src/state/from-code'
+import { getSnippetsFromStrings } from '../../src/state/from-code'
 import { diffSnippets } from '../../src/migrations/diff'
 import { generateMigrations } from '../../src/migrations/generate-migration'
 import { generateMigrationLetObject } from '../../src/migrations/generate-query'
 import { prettyPrintExpr } from '../../src/fql/print';
 
 test('we can generate a let object from code', async (t: ExecutionContext) => {
-  const snippets1 = getSnippetsFromCode([
+  const snippets1 = getSnippetsFromStrings([
     "CreateCollection({ name: 'accounts' })",
     `CreateFunction({
             name: 'foo',
@@ -19,7 +19,7 @@ test('we can generate a let object from code', async (t: ExecutionContext) => {
         })`,
     "CreateCollection({ name: 'shops' })"
   ])
-  const snippets2 = getSnippetsFromCode([
+  const snippets2 = getSnippetsFromStrings([
     "CreateCollection({ name: 'books' })",
     "CreateCollection({ name: 'users' })",
     `CreateFunction({
