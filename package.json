@@ -16,7 +16,7 @@
     "prepare": "tsc && cpy 'templates/*.js' '../dist/' --cwd=src --parents"
   },
   "bin": {
-    "fauna-schema-migrate": "dist/index.js"
+    "fauna-schema-migrate": "dist/cli.js"
   },
   "license": "0BSD",
   "bugs": {

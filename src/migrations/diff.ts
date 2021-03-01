@@ -33,7 +33,7 @@ export const retrieveDatabasesDiff = async (currentDbs: string[][], targetDbs: s
 }
 
 
-export const retrieveDiff = (currentExpressions: LoadedResources, targetExpressions: LoadedResources) => {
+export const diffSnippets = (currentExpressions: LoadedResources, targetExpressions: LoadedResources) => {
     // the migrationsFQL param contains the last state of each resource.
     // the resourcesFQL param contains the state of the resources folder for each resource.
     // calculating what has changed is therefore easy.

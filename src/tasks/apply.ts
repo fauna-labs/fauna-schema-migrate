@@ -2,10 +2,10 @@ import { isMissingMigrationCollectionFaunaError, isSchemaCachingFaunaError } fro
 import { prettyPrintExpr } from "../fql/print";
 import { interactiveShell } from "./../interactive-shell/interactive-shell";
 import { retrieveMigrationInfo, getCurrentAndTargetMigration, generateApplyQuery, retrieveDiffCurrentTarget, retrieveDatabaseMigrationInfo } from "../migrations/advance";
-import { retrieveDatabasesDiff, transformDiffToExpressions } from "../migrations/diff";
-import { ApplyTargetCurrentAndSkippedMigrations } from "../types/expressions";
+import { transformDiffToExpressions } from "../migrations/diff";
 import { clientGenerator } from "../util/fauna-client";
 import { ExpectedNumberOfMigrations } from "../errors/ExpectedNumber";
+import { config } from "../util/config";
 
 const apply = async (amount: number | string = 1, atChildDbPath: string[] = []) => {
     validateNumber(amount)
@@ -40,7 +40,8 @@ const apply = async (amount: number | string = 1, atChildDbPath: string[] = []) 
             const diff = await retrieveDiffCurrentTarget(atChildDbPath, currTargetSkipped.current, currTargetSkipped.target)
 
             const expressions = transformDiffToExpressions(diff)
-            query = await generateApplyQuery(expressions, currTargetSkipped.skipped, currTargetSkipped.target)
+            const migrCollection = await config.getMigrationCollection()
+            query = await generateApplyQuery(expressions, currTargetSkipped.skipped, currTargetSkipped.target, migrCollection)
             interactiveShell.completeSubtask(`${dbName} Generated migration code`)
             interactiveShell.printBoxedCode(prettyPrintExpr(query))
 

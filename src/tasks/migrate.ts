@@ -17,7 +17,6 @@ const migrate = async () => {
         const childDbExprs = findChildDatabaseExpressions(childPath, databaseDiff)
         await migrateOneDb(childPath, true, time, childDbExprs)
     }
-
 };
 
 const migrateOneDb = async (atChildDbPath: string[], multipleDbs: boolean, time: string, dbExprs: TaggedExpression[]) => {

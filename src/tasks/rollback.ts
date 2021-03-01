@@ -6,6 +6,7 @@ import { retrieveRollbackMigrations, retrieveDiffCurrentTarget, generateRollback
 import { createMigrationCollection, retrieveAllCloudMigrations } from "../state/from-cloud";
 import { clientGenerator } from "../util/fauna-client";
 import { ExpectedNumberOfMigrations } from "../errors/ExpectedNumber";
+import { config } from "../util/config";
 
 const rollback = async (amount: number | string = 1, atChildDbPath: string[] = []) => {
     validateNumber(amount)
@@ -47,7 +48,11 @@ const rollback = async (amount: number | string = 1, atChildDbPath: string[] = [
             interactiveShell.completeSubtask(`Calculated diff`)
 
             interactiveShell.startSubtask(`Generating query`)
-            query = await generateRollbackQuery(expressions, rMigs.toRollback.skipped, rMigs.toRollback.current)
+            const migrCollection = await config.getMigrationCollection()
+            query = await generateRollbackQuery(expressions,
+                rMigs.toRollback.skipped.map((e) => e.timestamp),
+                rMigs.toRollback.current.timestamp,
+                migrCollection)
             interactiveShell.completeSubtask(`Generating query`)
             interactiveShell.printBoxedCode(prettyPrintExpr(query))
 

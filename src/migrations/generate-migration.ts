@@ -15,7 +15,7 @@ export const writeMigrations = async (
     writeNewMigration(atChildDbPath, migrations, time)
 }
 
-export const generateMigrations = async (planned: PlannedDiffPerResource) => {
+export const generateMigrations = (planned: PlannedDiffPerResource): TaggedExpression[] => {
     const migrExprs: any[] = []
 
     // First add all the ones we can generate generically.
