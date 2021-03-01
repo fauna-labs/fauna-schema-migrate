@@ -45,7 +45,7 @@ class InteractiveShell {
                 const title = "Fauna"
                 const subtitle = "Schema Migrate " + version
                 printWithMargin(`Fauna Schema Migrate - ${version}
-    ---------------------------------------`, 0)
+---------------------------------------`, 0)
             }
         }
 

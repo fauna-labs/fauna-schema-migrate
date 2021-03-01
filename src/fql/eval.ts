@@ -226,6 +226,7 @@ function baseEvalFQL(fql: string, q: any) {
     if (err instanceof SyntaxError) {
       throw new EvalFqlError(err, fql)
     }
+    throw err
   }
 }
 

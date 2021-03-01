@@ -10,6 +10,7 @@ import { evalFQLCode } from '../fql/eval'
 import { MigrationPathAndFiles } from '../types/migrations'
 import defaults from './defaults'
 import { prettyPrintExpr } from '../fql/print'
+import { ErrorWithFilePath } from '../errors/ErrorWithFilePath'
 
 
 const globPromise = util.promisify(glob)
@@ -30,29 +31,38 @@ export const loadJsResource = async (p: string) => {
     // a JS resource will be compiled to the temporary
     // folder first since it might import other
     // pieces of code, a regular dynamic import() would not work.
-    await esbuild.build({
-        entryPoints: [p],
-        outdir: await config.getTempDir(),
-        bundle: true,
-        platform: "node",
-        format: "cjs",
-        target: ["node10.4"]
-    });
+    try {
+        await esbuild.build({
+            entryPoints: [p],
+            outdir: await config.getTempDir(),
+            bundle: true,
+            platform: "node",
+            format: "cjs",
+            target: ["node10.4"]
+        });
 
-    const filename = path.join(
-        process.cwd(),
-        await config.getTempDir(),
-        path.parse(p).base)
-    delete require.cache[filename];
-    const fql = await require(filename)
-    return fql.default
-
+        const filename = path.join(
+            process.cwd(),
+            await config.getTempDir(),
+            path.parse(p).base)
+        delete require.cache[filename];
+        const fql = await require(filename)
+        return fql.default
+    }
+    catch (err) {
+        throw new ErrorWithFilePath(err, p)
+    }
 }
 
 export const loadFqlResource = async (p: string) => {
-    const data = await loadApplicationFile(p)
-    const fql = evalFQLCode(data)
-    return fql
+    try {
+        const data = await loadApplicationFile(p)
+        const fql = evalFQLCode(data)
+        return fql
+    }
+    catch (err) {
+        throw new ErrorWithFilePath(err, p)
+    }
 }
 
 export const loadApplicationFile = async (file: string): Promise<string> => {

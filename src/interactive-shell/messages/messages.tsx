@@ -12,6 +12,7 @@ import SyntaxHighlight from 'ink-syntax-highlight';
 import { PlannedDiffPerResource, PreviousAndCurrent, TaggedExpression } from '../../types/expressions';
 import { ResourceTypes } from '../../types/resource-types';
 import migrate from '../../tasks/migrate';
+import { ErrorWithFilePath } from '../../errors/ErrorWithFilePath';
 
 const version = require('./../../../package.json').version
 
@@ -34,6 +35,7 @@ export const startCommand = (task: Task): MessageFun => {
 export const notifyUnexpectedError = (error: Error): MessageFun => {
     return (id?: number) => {
         return <Box marginLeft={3} key={"error_" + id} flexDirection="column">
+            {error instanceof ErrorWithFilePath ? notifyFilePath(error)(id) : null}
             <Box>
                 <Text color={faunaPurple1} bold={true}> ! </Text><Text color="red">{error.toString()}</Text>
             </Box>
@@ -42,6 +44,14 @@ export const notifyUnexpectedError = (error: Error): MessageFun => {
             </Box>
         </Box>
 
+    }
+}
+
+export const notifyFilePath = (error: ErrorWithFilePath): MessageFun => {
+    return (id?: number) => {
+        return <Box>
+            <Text color={faunaPurple1} bold={true}> ! </Text><Text color="red">Error at file: {error.filePath}</Text>
+        </Box>
     }
 }
 
