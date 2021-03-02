@@ -8,7 +8,21 @@ import { DuplicateResourceError } from '../errors/DuplicateResourceError'
 import { evalFQLCode } from '../fql/eval'
 
 import * as fauna from 'faunadb'
+import { loadFqlSnippet } from '../util/files'
+import { EmptyResourceFileError } from '../errors/EmptyResourceFileError'
 const q = fauna.query
+
+export const getSnippetsFromPaths = async (paths: string[], atChildDbPath: string[] = []): Promise<LoadedResources> => {
+    let snippets: fauna.Expr[] = []
+    for (let i = 0; i < paths.length; i++) {
+        const p = paths[i]
+        const snippet = await loadFqlSnippet(p)
+        if (!snippet) {
+            throw new EmptyResourceFileError(p)
+        }
+    }
+    return getSnippetsFromCode(snippets, atChildDbPath)
+}
 
 export const getSnippetsFromStrings = (codeSnippets: string[], atChildDbPath: string[] = []): LoadedResources => {
     let snippets: fauna.Expr[] = []
