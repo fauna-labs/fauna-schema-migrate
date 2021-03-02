@@ -1,14 +1,14 @@
 
 
 import { TaggedExpression, ReferencedResource, PlannedDiffPerResource, LoadedResources, StatementType, ReferencedResources } from "../types/expressions";
-import { getAllResourceSnippets } from "../state/from-resource-files";
-import { getAllLastDatabases, getAllLastMigrationSnippets } from "../state/from-migration-files";
+import { getResourceSnippets } from "../state/from-resource-files";
+import { getAllLastDatabases, getLastMigrationSnippets } from "../state/from-migration-files";
 import { ResourceTypes } from "../types/resource-types";
 import { findStructure } from "../fql/json";
 import { toIndexableName, toIndexableNameFromTypeAndName } from "../util/unique-naming";
 import { UndefinedReferenceError } from "../errors/UndefinedReferenceError";
 import { camelToSnakeCase } from "../fql/transform";
-import { retrieveDatabasesDiff, retrieveDiff } from "./diff";
+import { retrieveDatabasesDiff, diffSnippets } from "./diff";
 import { retrieveAllResourceChildDb } from "../util/files";
 
 interface NamedValue {
@@ -31,19 +31,19 @@ export const planMigrations = async (atChildDbPath: string[] = [], extraDbExpr: 
     //  - Migrations: migrations derives from the resources. E.g. if you
     //                change your resources and run migrate, it'll capture the diff.
     //  - Cloud:      resources currently in your database.
-    const resources = await getAllResourceSnippets(atChildDbPath)
+    const resources = await getResourceSnippets(atChildDbPath)
     extraDbExpr.forEach((e) => {
         resources[<ResourceTypes>e.type].push(e)
     })
     // IGNORE for now, illegal references is not something that can easily be verified.
     findIllegalReferences(resources)
-    const { migrations } = await getAllLastMigrationSnippets(atChildDbPath)
+    const { migrations } = await getLastMigrationSnippets(atChildDbPath)
     // Resources determine how your current data looks.
     // Migraitons are generated from resources.
     // A diff between migrations means comparing the Resources that exist with
     // the last seen migration of a certain resource.
 
-    return retrieveDiff(migrations, resources)
+    return diffSnippets(migrations, resources)
 }
 
 const findIllegalReferences = (resourcesFQL: LoadedResources) => {

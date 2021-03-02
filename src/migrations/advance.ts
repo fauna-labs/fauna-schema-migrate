@@ -1,15 +1,15 @@
 
-import { getAllLastDatabases, getAllLastMigrationSnippets } from "../state/from-migration-files"
+import { getAllLastDatabases, getLastMigrationSnippets } from "../state/from-migration-files"
 import { LoadedResources, MigrationRefAndTimestamp, StatementType, TaggedExpression, RollbackTargetCurrentAndSkippedMigrations as RollbackTargetCurrentAndSkippedMigrations, ApplyTargetCurrentAndSkippedMigrations } from "../types/expressions"
 import { ResourceTypes } from "../types/resource-types"
 
 import * as fauna from 'faunadb'
 
 import { config } from '../util/config';
-import { generateMigrationQuery } from "./generate-query"
+import { generateMigrationLetObject } from "./generate-query"
 import { transformUpdateToUpdate } from "../fql/transform";
 import { retrieveAllMigrations } from "../util/files";
-import { retrieveDatabasesDiff, retrieveDiff } from "./diff";
+import { retrieveDatabasesDiff, diffSnippets } from "./diff";
 import { retrieveAllCloudMigrations } from "../state/from-cloud";
 
 const q = fauna.query
@@ -76,15 +76,15 @@ export const getCurrentAndTargetMigration = async (
 export const retrieveDiffCurrentTarget = async (atChildDbPath: string[], currentMigration: null | MigrationRefAndTimestamp, targetMigration: string) => {
     const appliedMigrations = await getAppliedMigrations(atChildDbPath, currentMigration)
     const { migrations: toApplyMigrations }
-        = await getAllLastMigrationSnippets(atChildDbPath, targetMigration)
-    const diff = retrieveDiff(appliedMigrations, toApplyMigrations)
+        = await getLastMigrationSnippets(atChildDbPath, targetMigration)
+    const diff = diffSnippets(appliedMigrations, toApplyMigrations)
     return diff
 }
 
 const getAppliedMigrations = async (atChildDbPath: string[], currentMigration: MigrationRefAndTimestamp | null) => {
     if (currentMigration) {
         const { migrations: currentMigrations }
-            = await getAllLastMigrationSnippets(atChildDbPath, currentMigration.timestamp)
+            = await getLastMigrationSnippets(atChildDbPath, currentMigration.timestamp)
         return currentMigrations
     }
     else {
@@ -96,14 +96,14 @@ const getAppliedMigrations = async (atChildDbPath: string[], currentMigration: M
     }
 }
 
-export const generateApplyQuery = async (
+export const generateApplyQuery = (
     expressions: TaggedExpression[],
     skippedMigrations: string[],
-    targetMigration: string) => {
+    targetMigration: string,
+    migrationCollection: string) => {
 
     expressions = fixUpdates(expressions)
-    const letQueryObject = await generateMigrationQuery(expressions)
-    const migrCollection = await config.getMigrationCollection()
+    const letQueryObject = generateMigrationLetObject(expressions)
     const migrationCreateStatements = skippedMigrations.concat([targetMigration])
     const query = Let(
         // add all statements as Let variable bindings
@@ -112,7 +112,7 @@ export const generateApplyQuery = async (
         q.Map(
             migrationCreateStatements,
             Lambda(migration => Create(
-                Collection(migrCollection),
+                Collection(migrationCollection),
                 { data: { migration: migration } })))
 
     )

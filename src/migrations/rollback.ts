@@ -1,12 +1,12 @@
 import * as fauna from 'faunadb'
 
 import { clientGenerator } from "../util/fauna-client"
-import { getAllLastMigrationSnippets } from "../state/from-migration-files"
+import { getLastMigrationSnippets } from "../state/from-migration-files"
 import { ResourceTypes } from '../types/resource-types'
 import { LoadedResources, MigrationRefAndTimestamp, PlannedDiffPerResource, StatementType, TaggedExpression, RollbackTargetCurrentAndSkippedMigrations } from '../types/expressions'
-import { generateMigrationQuery } from './generate-query'
+import { generateMigrationLetObject } from './generate-query'
 import { retrieveAllMigrations } from '../util/files'
-import { retrieveDiff } from './diff'
+import { diffSnippets } from './diff'
 
 const q = fauna.query
 const { Let, Lambda, Delete } = fauna.query
@@ -21,19 +21,30 @@ export const retrieveRollbackMigrations = async (
     return { allLocalMigrations: allMigrations, toRollback: res }
 }
 
-export const generateRollbackQuery = async (
+export const generateRollbackQuery = (
     expressions: TaggedExpression[],
-    skippedMigrations: MigrationRefAndTimestamp[],
-    currentMigration: MigrationRefAndTimestamp) => {
+    skippedMigrations: string[],
+    currentMigration: string,
+    migrCollection: string) => {
 
-    const letQueryObject = await generateMigrationQuery(expressions)
+    const letQueryObject = generateMigrationLetObject(expressions)
     const toDeleteReferences = skippedMigrations.concat([currentMigration])
-        .map((e) => e.ref)
     const query = Let(
         // add all statements as Let variable bindings
         letQueryObject,
-        q.Map(toDeleteReferences, Lambda(ref => Delete(ref)))
-    )
+        q.Map(
+            q.Filter(
+                q.Map(
+                    q.Paginate(q.Documents(q.Collection(migrCollection)), { size: 100000 }),
+                    q.Lambda(["mig"], q.Get(q.Var("mig")))
+                ),
+                q.Lambda(
+                    ["mig"],
+                    q.ContainsValue(q.Select(["data", "migration"], q.Var("mig")), toDeleteReferences)
+                )
+            ),
+            q.Lambda(["mig"], q.Delete(q.Select(["ref"], q.Var("mig"))))
+        ))
     return query
 }
 
@@ -57,7 +68,7 @@ export const retrieveDiffCurrentTarget = async (
     targetMigration: null | MigrationRefAndTimestamp, atChildPath: string[]) => {
 
     const { migrations: currentMigrations, lastMigration: currentLastMigration }
-        = await getAllLastMigrationSnippets(atChildPath, currentMigration.timestamp)
+        = await getLastMigrationSnippets(atChildPath, currentMigration.timestamp)
 
     const targetMigrations = await getTargetMigrations(targetMigration, atChildPath)
 
@@ -68,14 +79,14 @@ export const retrieveDiffCurrentTarget = async (
     // or in this case backward since it's a rollback.
     // In essence, previousMigrations is equivalent to the 'resources' now
     // while currentMigrations are the 'migrations'.
-    const diff = retrieveDiff(currentMigrations, targetMigrations)
+    const diff = diffSnippets(currentMigrations, targetMigrations)
     return diff
 }
 
 const getTargetMigrations = async (targetMigration: MigrationRefAndTimestamp | null, atChildPath: string[]): Promise<LoadedResources> => {
     if (targetMigration) {
         const { migrations: previousMigrations, lastMigration: previousLastMigration }
-            = await getAllLastMigrationSnippets(atChildPath, targetMigration.timestamp)
+            = await getLastMigrationSnippets(atChildPath, targetMigration.timestamp)
         // just to be clear these vars should be the same.
         if (previousLastMigration !== targetMigration.timestamp) {
             throw Error(`did not receive the same migration,

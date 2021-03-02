@@ -32,7 +32,7 @@ export interface DependenciesArrayEl {
 }
 
 
-export const generateMigrationQuery = async (migrations: TaggedExpression[]) => {
+export const generateMigrationLetObject = (migrations: TaggedExpression[]) => {
     const indexedMigrations = indexMigrations(migrations)
     const dependencyIndex = findDependencies(migrations)
     // transform index to sorted array, sorted on amount of dependencies.

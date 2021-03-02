@@ -1,6 +1,6 @@
 {
   "name": "fauna-schema-migrate",
-  "version": "0.1.12",
+  "version": "0.2.0-beta5",
   "description": "Fauna schema migration tool that helps to manage resources such as collections, indexes, roles, functions, access providers as code.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,7 @@
     "prepare": "tsc && cpy 'templates/*.js' '../dist/' --cwd=src --parents"
   },
   "bin": {
-    "fauna-schema-migrate": "dist/index.js"
+    "fauna-schema-migrate": "dist/cli.js"
   },
   "license": "0BSD",
   "bugs": {

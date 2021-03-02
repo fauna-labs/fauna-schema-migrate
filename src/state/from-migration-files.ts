@@ -9,7 +9,7 @@ import { DuplicateMigrationError } from '../errors/DuplicateMigrationError'
 import { config } from '../util/config'
 
 export const getAllLastDatabases = async (before: string | null = null, ignoreChildDb: boolean = true) => {
-    const snippets = await getAllLastMigrationSnippets([], before, ignoreChildDb)
+    const snippets = await getLastMigrationSnippets([], before, ignoreChildDb)
     return transformMigrationsToDbPaths(snippets.migrations.Database)
 }
 
@@ -22,7 +22,7 @@ const transformMigrationsToDbPaths = (dbMigrations: TaggedExpression[]) => {
 // This will get All migrations but only retain the last version
 // of the migration for each type and name.
 // this is in stark contrast with getSnippetsFromLastMigration
-export const getAllLastMigrationSnippets = async (atChildDbPath: string[] = [], before: string | null = null, ignoreChildDb: boolean = true): Promise<LoadedResourcesAndLastMigration> => {
+export const getLastMigrationSnippets = async (atChildDbPath: string[] = [], before: string | null = null, ignoreChildDb: boolean = true): Promise<LoadedResourcesAndLastMigration> => {
 
     const childDbName = await config.getChildDbsDirName()
     // Retrieve all migration folders and their files.
