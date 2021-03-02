@@ -20,6 +20,7 @@ export const getSnippetsFromPaths = async (paths: string[], atChildDbPath: strin
         if (!snippet) {
             throw new EmptyResourceFileError(p)
         }
+        snippets.push(snippet)
     }
     return getSnippetsFromCode(snippets, atChildDbPath)
 }
