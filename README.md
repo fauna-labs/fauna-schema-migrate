@@ -187,7 +187,7 @@ Or run `fauna-schema-migrate run` to test it out interactively. All commands can
 - FAUNA_NOPRINT: don't print the FQL migration.
 - FAUNADB_DOMAIN: connect to another environment than fauna cloud. the default value is 'db.fauna.com' but could also be your local docker IP or the preview cluster. 
 - FAUNADB_SCHEME: the default schema is 'https', mainly for local development, this could be set to 'http' via this environment variable
-
+- FAUNADB_PORT: the default port is 443, for local development with a docker image you'll need to override this.
 ##### Faster local development with a child database
 
 One of the parameters, FAUNA_CHILD_DB is useful in development in case you often find yourself completely nuking the database and reapply everything from scratch. In that case, you might bump into the cache which requires you to wait for 60 seconds before recreating the resources. FAUNA_CHILD_DB will create your resources in a child database instead of in the database that the admin key points at. When using FAUNA_CHILD_DB and rolling back before the first transactions (e.g. with `fauna-schema-migrate rollback all`) the rollback will nuke the database instead of applying the rollback which essentially avoids the 60 seconds cache. 
