@@ -10,6 +10,7 @@ import { evalFQLCode } from '../fql/eval'
 import { MigrationPathAndFiles } from '../types/migrations'
 import { prettyPrintExpr } from '../fql/print'
 import { ErrorWithFilePath } from '../errors/ErrorWithFilePath'
+import { v4 as uuidv4 } from 'uuid';
 
 const globPromise = util.promisify(glob)
 
@@ -30,9 +31,10 @@ export const loadJsResource = async (p: string) => {
     // folder first since it might import other
     // pieces of code, a regular dynamic import() would not work.
     try {
+        const uniqueTempFolder = uuidv4()
         await esbuild.build({
             entryPoints: [p],
-            outdir: await config.getTempDir(),
+            outdir: path.join(await config.getTempDir(), uniqueTempFolder),
             bundle: true,
             platform: "node",
             format: "cjs",
@@ -41,7 +43,7 @@ export const loadJsResource = async (p: string) => {
 
         const filename = path.join(
             process.cwd(),
-            await config.getTempDir(),
+            path.join(await config.getTempDir(), uniqueTempFolder),
             path.parse(p).base)
         delete require.cache[filename];
         const fql = await require(filename)

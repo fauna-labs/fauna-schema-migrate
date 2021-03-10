@@ -57,13 +57,15 @@
     "prettier": "^2.2.1",
     "react": ">=16.8.2",
     "react-hookstore": "^1.5.1",
-    "shelljs": "^0.8.4"
+    "shelljs": "^0.8.4",
+    "uuid": "^8.3.2"
   },
   "peerDependencies": {
     "faunadb": "^4.0.3"
   },
   "devDependencies": {
     "@types/sinon": "^9.0.9",
+    "@types/uuid": "^8.3.0",
     "ava": "^3.14.0",
     "cpy-cli": "^3.1.1",
     "dotenv": "^8.2.0",
