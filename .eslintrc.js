@@ -38,19 +38,21 @@ module.exports = {
     // Someone with more indepth knowledge of the library should go through them and try to fix
     // the errors and remove these rules afterwards.
     // More specifig overrides are in the `overrides` section below
-    'prefer-spread': 'warn',
-    '@typescript-eslint/no-var-requires': 'warn',
-    'react/display-name': 'warn',
-    'no-async-promise-executor': 'warn',
+    // All temporary rules are marked with `@tmp`
+
+    'prefer-spread': 'warn', // @tmp
+    '@typescript-eslint/no-var-requires': 'warn',// @tmp
+    'react/display-name': 'warn',// @tmp
+    'no-async-promise-executor': 'warn',// @tmp
   },
   overrides: [
     {
       files: ['tests/**/*test.ts'],
       rules: {
         //TODO: remove
-        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',// @tmp
         // Sometimes you just don't need ava's `t` and eslint would flag it as unused
-        '@typescript-eslint/no-unused-vars': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',// @tmp
       },
     },
     {
@@ -58,8 +60,8 @@ module.exports = {
       // Look at these files and decide if it can be converted to use `import`
       files: ['tests/general/multi_update_noop/resources*/create_function.js'],
       rules: {
-        '@typescript-eslint/no-var-requires': 'off',
-        'no-undef': 'off',
+        '@typescript-eslint/no-var-requires': 'off',// @tmp
+        'no-undef': 'off',// @tmp
       },
     },
   ],
