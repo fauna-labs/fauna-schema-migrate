@@ -1,12 +1,11 @@
-
 import path from 'path'
 import * as fauna from 'faunadb'
-import test, { ExecutionContext } from 'ava';
+import test, { ExecutionContext } from 'ava'
 import { getSnippetsFromStrings } from '../../src/state/from-code'
 import { diffSnippets } from '../../src/migrations/diff'
 import { generateMigrations } from '../../src/migrations/generate-migration'
 import { generateMigrationLetObject } from '../../src/migrations/generate-query'
-import { prettyPrintExpr } from '../../src/fql/print';
+import { prettyPrintExpr } from '../../src/fql/print'
 
 test('we can generate a let object from code', async (t: ExecutionContext) => {
   const snippets1 = getSnippetsFromStrings([
@@ -17,7 +16,7 @@ test('we can generate a let object from code', async (t: ExecutionContext) => {
               Add(2,2)
             ))
         })`,
-    "CreateCollection({ name: 'shops' })"
+    "CreateCollection({ name: 'shops' })",
   ])
   const snippets2 = getSnippetsFromStrings([
     "CreateCollection({ name: 'books' })",
@@ -28,7 +27,7 @@ test('we can generate a let object from code', async (t: ExecutionContext) => {
               Subtract(2,2)
             ))
         })`,
-    "CreateCollection({ name: 'shops' })"
+    "CreateCollection({ name: 'shops' })",
   ])
 
   const diff = diffSnippets(snippets1, snippets2)
@@ -58,7 +57,8 @@ test('we can generate a let object from code', async (t: ExecutionContext) => {
           name: "books"
         }))
       }], true)
-      `)
+      `
+  )
 })
 
 const compareFql = (t: ExecutionContext, s1: string, s2: string) => {

@@ -1,80 +1,82 @@
-import { ResourceTypes } from "./resource-types";
+import { ResourceTypes } from './resource-types'
 
 export enum StatementType {
-    Create,
-    Update,
-    Delete
+  Create,
+  Update,
+  Delete,
 }
 
 export interface TaggedExpression {
-    name: string,
-    db: string[],
-    type?: ResourceTypes,
-    fqlExpr?: any,
-    json?: any,
-    jsonData?: any,
-    fql?: string,
-    fqlFormatted?: string,
-    statement?: StatementType
-    migration?: string
-    previousVersions?: TaggedExpression[]
+  name: string
+  db: string[]
+  type?: ResourceTypes
+  fqlExpr?: any
+  json?: any
+  jsonData?: any
+  fql?: string
+  fqlFormatted?: string
+  statement?: StatementType
+  migration?: string
+  previousVersions?: TaggedExpression[]
 }
 
 export interface ReferencedResource {
-    name: string,
-    indexableName: string,
-    type: ResourceTypes,
-    resource: TaggedExpression
+  name: string
+  indexableName: string
+  type: ResourceTypes
+  resource: TaggedExpression
 }
 
 export interface PreviousAndCurrent {
-    target?: TaggedExpression,
-    previous?: TaggedExpression,
-    ref?: any
+  target?: TaggedExpression
+  previous?: TaggedExpression
+  ref?: any
 }
 
 export interface PlannedDiff {
-    added: PreviousAndCurrent[],
-    changed: PreviousAndCurrent[],
-    unchanged: PreviousAndCurrent[],
-    deleted: PreviousAndCurrent[]
+  added: PreviousAndCurrent[]
+  changed: PreviousAndCurrent[]
+  unchanged: PreviousAndCurrent[]
+  deleted: PreviousAndCurrent[]
 }
 
 export interface PlannedDatabaseDiff {
-    added: TaggedExpression[],
-    unchanged: TaggedExpression[],
-    deleted: TaggedExpression[],
+  added: TaggedExpression[]
+  unchanged: TaggedExpression[]
+  deleted: TaggedExpression[]
 }
 
 export interface PlannedDiffPerResource {
-    [type: string]: PlannedDiff,
-
+  [type: string]: PlannedDiff
 }
 
 export interface LoadedResources {
-    [type: string]: TaggedExpression[]
+  [type: string]: TaggedExpression[]
 }
 
 export interface LoadedResourcesAndLastMigration {
-    migrations: LoadedResources,
-    lastMigration: string
-    nextMigration?: string
+  migrations: LoadedResources
+  lastMigration: string
+  nextMigration?: string
 }
 
 export interface ReferencedResources {
-    [type: string]: ReferencedResource[]
+  [type: string]: ReferencedResource[]
 }
 
-export interface MigrationRefAndTimestamp { timestamp: string, ref: any }
+export interface MigrationRefAndTimestamp {
+  timestamp: string
+  ref: any
+}
 
 export interface RollbackTargetCurrentAndSkippedMigrations {
-    target: MigrationRefAndTimestamp | null,
-    current: MigrationRefAndTimestamp,
-    skipped: MigrationRefAndTimestamp[]
+  target: MigrationRefAndTimestamp | null
+  current: MigrationRefAndTimestamp
+  skipped: MigrationRefAndTimestamp[]
 }
 
 export interface ApplyTargetCurrentAndSkippedMigrations {
-    target: string,
-    current: MigrationRefAndTimestamp | null,
-    skipped: string[]
+  target: string
+  current: MigrationRefAndTimestamp | null
+  skipped: string[]
 }

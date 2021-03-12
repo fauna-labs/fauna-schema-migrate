@@ -1,14 +1,12 @@
-
-import path from 'path'
 import * as fauna from 'faunadb'
 const q = fauna.query
-import test, { ExecutionContext } from 'ava';
+import test, { ExecutionContext } from 'ava'
 import { getSnippetsFromStrings } from '../../src/state/from-code'
 import { diffSnippets } from '../../src/migrations/diff'
 import { generateMigrations } from '../../src/migrations/generate-migration'
 import { generateApplyQuery } from '../../src/migrations/advance'
 import { generateMigrationLetObject } from '../../src/migrations/generate-query'
-import { prettyPrintExpr } from '../../src/fql/print';
+import { prettyPrintExpr } from '../../src/fql/print'
 
 test('we can generate an apply query from code', async (t: ExecutionContext) => {
   const snippets1 = getSnippetsFromStrings([
@@ -19,7 +17,7 @@ test('we can generate an apply query from code', async (t: ExecutionContext) => 
               Add(2,2)
             ))
         })`,
-    "CreateCollection({ name: 'shops' })"
+    "CreateCollection({ name: 'shops' })",
   ])
   const snippets2 = getSnippetsFromStrings([
     "CreateCollection({ name: 'books' })",
@@ -30,7 +28,7 @@ test('we can generate an apply query from code', async (t: ExecutionContext) => 
               Subtract(2,2)
             ))
         })`,
-    "CreateCollection({ name: 'shops' })"
+    "CreateCollection({ name: 'shops' })",
   ])
 
   const diff = diffSnippets(snippets1, snippets2)
@@ -39,20 +37,25 @@ test('we can generate an apply query from code', async (t: ExecutionContext) => 
 
   // Apply is just a special case that already creates the Let for you.
   const letObj = generateMigrationLetObject(migrations)
-  const customLet = q.Let(letObj,
-    q.Map(["some-custom-migration-timestamp"], q.Lambda("migration", q.Create(q.Collection("migration-collection"), {
-      data: {
-        migration: q.Var("migration")
-      }
-    }))))
+  const customLet = q.Let(
+    letObj,
+    q.Map(
+      ['some-custom-migration-timestamp'],
+      q.Lambda(
+        'migration',
+        q.Create(q.Collection('migration-collection'), {
+          data: {
+            migration: q.Var('migration'),
+          },
+        })
+      )
+    )
+  )
 
   // Apply is the equivalent of the above custom let.
-  compareFql(
-    t,
-    prettyPrintExpr(query),
-    prettyPrintExpr(customLet))
+  compareFql(t, prettyPrintExpr(query), prettyPrintExpr(customLet))
 })
 
 const compareFql = (t: ExecutionContext, s1: string, s2: string) => {
-  t.is(s1.replace(/\s/g, '').replace(/(\r\n|\n|\r)/gm, ""), s2.replace(/\s/g, '').replace(/(\r\n|\n|\r)/gm, ""))
+  t.is(s1.replace(/\s/g, '').replace(/(\r\n|\n|\r)/gm, ''), s2.replace(/\s/g, '').replace(/(\r\n|\n|\r)/gm, ''))
 }

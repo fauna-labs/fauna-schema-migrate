@@ -1,11 +1,11 @@
-import { PreviousAndCurrent, TaggedExpression } from "../types/expressions";
+import { PreviousAndCurrent, TaggedExpression } from '../types/expressions'
 
 export class UpdateIndexError extends Error {
-    constructor(m: PreviousAndCurrent[]) {
-        const names = m.map((e) => {
-            return '- ' + e.target?.name
-        })
-        const message = `Tried to update indexes with names:
+  constructor(m: PreviousAndCurrent[]) {
+    const names = m.map((e) => {
+      return '- ' + e.target?.name
+    })
+    const message = `Tried to update indexes with names:
         ${names.join('\n  ')}
 
         Indexes can't be updated and have to be recreated.
@@ -18,8 +18,8 @@ export class UpdateIndexError extends Error {
         - Update your FQL (e.g. your UDFs or update your application code) to use the new index
         - Once everything is using the new index, delete the old index
         `
-        super(message);
+    super(message)
 
-        Object.setPrototypeOf(this, UpdateIndexError.prototype);
-    }
+    Object.setPrototypeOf(this, UpdateIndexError.prototype)
+  }
 }

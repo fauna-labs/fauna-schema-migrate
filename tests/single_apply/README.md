@@ -1,4 +1,5 @@
 # Integration tests
+
 These tests are quite end-to-end instead of unit tests
 I'd love to get more fine-grained tests in the future.
 
