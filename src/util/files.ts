@@ -10,17 +10,17 @@ import { evalFQLCode } from '../fql/eval'
 import { MigrationPathAndFiles } from '../types/migrations'
 import { prettyPrintExpr } from '../fql/print'
 import { ErrorWithFilePath } from '../errors/ErrorWithFilePath'
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid'
 
 const globPromise = util.promisify(glob)
 
 export const loadFqlSnippet = async (p: string) => {
   switch (path.extname(p)) {
-    case ".js":
+    case '.js':
       return await loadJsResource(p)
-    case ".ts":
+    case '.ts':
       return await loadTsResource(p)
-    case ".fql":
+    case '.fql':
       return await loadFqlResource(p)
     default:
       console.error(`unexpected extension ${p}`)
@@ -41,15 +41,15 @@ export const loadTsResource = async (p: string) => {
       entryPoints: [p],
       outdir: path.join(await config.getTempDir(), uniqueTempFolder),
       bundle: true,
-      platform: "node",
-      format: "cjs",
-      target: ["node10.4"],
+      platform: 'node',
+      format: 'cjs',
+      target: ['node10.4'],
     })
 
     const filename = path.join(
       process.cwd(),
       path.join(await config.getTempDir(), uniqueTempFolder),
-      path.parse(p).base.replace(".ts", ".js"),
+      path.parse(p).base.replace('.ts', '.js')
     )
     delete require.cache[filename]
     const fql = await require(filename)
@@ -69,20 +69,20 @@ export const loadJsResource = async (p: string) => {
       entryPoints: [p],
       outdir: path.join(await config.getTempDir(), uniqueTempFolder),
       bundle: true,
-      platform: "node",
-      format: "cjs",
-      target: ["node10.4"]
-    });
+      platform: 'node',
+      format: 'cjs',
+      target: ['node10.4'],
+    })
 
     const filename = path.join(
       process.cwd(),
       path.join(await config.getTempDir(), uniqueTempFolder),
-      path.parse(p).base)
-    delete require.cache[filename];
+      path.parse(p).base
+    )
+    delete require.cache[filename]
     const fql = await require(filename)
     return fql.default
-  } 
-  catch (err) {
+  } catch (err) {
     throw new ErrorWithFilePath(err, p)
   }
 }
@@ -92,16 +92,13 @@ export const loadFqlResource = async (p: string) => {
     const data = await loadApplicationFile(p)
     const fql = evalFQLCode(data)
     return fql
-  } 
-  catch (err) {
+  } catch (err) {
     throw new ErrorWithFilePath(err, p)
   }
 }
 
 export const loadApplicationFile = async (file: string): Promise<string> => {
-  return fs.readFileSync(
-    path.join(process.cwd(), file), "utf8"
-    )
+  return fs.readFileSync(path.join(process.cwd(), file), 'utf8')
 }
 
 export const writeApplicationFile = async (file: string, content: string) => {
@@ -126,16 +123,14 @@ export const retrieveAllResourceChildDb = async (atChildDbPath: string[] = []) =
   const fullPath = childDbPathToFullPath(resourcesDir, atChildDbPath, childDbsDir)
   const paths = await retrieveAllResourceChildDbPaths(fullPath, childDbsDir)
 
-  return paths
-  .map((p) => {
+  return paths.map((p) => {
     const splpath = p.split(path.sep)
     let previous = false
     const acc: string[] = []
     splpath.forEach((e, index) => {
       if (e === childDbsDir) {
         previous = true
-      } 
-      else if (previous) {
+      } else if (previous) {
         acc.push(e)
         previous = false
       }
@@ -150,33 +145,27 @@ export const retrieveAllResourceChildDbPaths = async (fullPath: string, childDbs
 
 const retrieveAllResourceChildDbsIter = (resourcesDir: string, childDbsDirName: string): string[] => {
   if (existsSync(resourcesDir)) {
-    const dirs = getDirectories(resourcesDir, false, "").filter((d) => {
+    const dirs = getDirectories(resourcesDir, false, '').filter((d) => {
       return d === childDbsDirName
     })
     const childrenDir = dirs && dirs.length > 0 ? dirs[0] : null
     if (!childrenDir) {
       return []
-    } 
-    else {
-      const childDirs = getDirectories(path.join(resourcesDir, childrenDir), false, "")
+    } else {
+      const childDirs = getDirectories(path.join(resourcesDir, childrenDir), false, '')
       const newResources = childDirs.map((d) => path.join(resourcesDir, childrenDir, d))
 
-      const res: any[] = newResources
-      .map((r) => retrieveAllResourceChildDbsIter(r, childDbsDirName))
+      const res: any[] = newResources.map((r) => retrieveAllResourceChildDbsIter(r, childDbsDirName))
 
-      return newResources.concat(
-        [].concat.apply([], res)
-        )
+      return newResources.concat([].concat.apply([], res))
     }
-  } 
-  else {
+  } else {
     return []
   }
 }
 
 export const retrieveAllMigrations = async (atChildDbPath: string[] = []): Promise<string[]> => {
-
-    const childDbsDir = await config.getChildDbsDirName()
+  const childDbsDir = await config.getChildDbsDirName()
   const migrationsDir = await config.getMigrationsDir()
 
   const fullPath = childDbPathToFullPath(path.join(migrationsDir), atChildDbPath, childDbsDir)
@@ -184,27 +173,43 @@ export const retrieveAllMigrations = async (atChildDbPath: string[] = []): Promi
   return migrationSubdirs
 }
 
-
 // retrieves the last version of each migration resource before a given timestamp
 // since we are rolling back that migration we need to know what the original state was
 // of that resource.
-export const retrieveLastMigrationVersionAndPathsForMigrationBefore = async (atChildDbPath: string[], before: string | null, ignoreChildDbs: boolean = true): Promise<MigrationPathAndFiles[]> => {
+export const retrieveLastMigrationVersionAndPathsForMigrationBefore = async (
+  atChildDbPath: string[],
+  before: string | null,
+  ignoreChildDbs: boolean = true
+): Promise<MigrationPathAndFiles[]> => {
   const childDbsDir = await config.getChildDbsDirName()
   const migrationsDir = await config.getMigrationsDir()
   const fullPath = childDbPathToFullPath(path.join(migrationsDir), atChildDbPath, childDbsDir)
   let migrationSubdirs = getMigrationDirectories(fullPath, true, childDbsDir)
   migrationSubdirs = getAllStrsBeforeEqual(migrationSubdirs, before)
-  return await Promise.all(migrationSubdirs.map(async (migration) => {
+  return await Promise.all(
+    migrationSubdirs.map(async (migration) => {
       let migrationFolder = migration
       migrationFolder = migration.replace(/:/g, '_')
-      const jsResults = await retrieveAllPathsInPattern(path.join(fullPath, migrationFolder),`**${path.sep}*.js`, ignoreChildDbs)
-      const tsResults = await retrieveAllPathsInPattern(path.join(fullPath, migrationFolder),`**${path.sep}*.ts`, ignoreChildDbs)
-      const fqlResults = await retrieveAllPathsInPattern(path.join(fullPath, migrationFolder),`**${path.sep}*.fql`, ignoreChildDbs)
+      const jsResults = await retrieveAllPathsInPattern(
+        path.join(fullPath, migrationFolder),
+        `**${path.sep}*.js`,
+        ignoreChildDbs
+      )
+      const tsResults = await retrieveAllPathsInPattern(
+        path.join(fullPath, migrationFolder),
+        `**${path.sep}*.ts`,
+        ignoreChildDbs
+      )
+      const fqlResults = await retrieveAllPathsInPattern(
+        path.join(fullPath, migrationFolder),
+        `**${path.sep}*.fql`,
+        ignoreChildDbs
+      )
       return {
-        files: [...jsResults,...tsResults, ...fqlResults],
+        files: [...jsResults, ...tsResults, ...fqlResults],
         migration: migration,
       }
-    }),
+    })
   )
 }
 
@@ -224,8 +229,7 @@ const getAllStrsBeforeEqual = (strs: string[], before: string | null) => {
   for (let str of strs) {
     if (before === null || str <= before) {
       res.push(str)
-    } 
-    else {
+    } else {
       return res
     }
   }
@@ -245,67 +249,56 @@ const getMigrationDirectories = (source: string, ignoreChildDbs: boolean, childD
 const getDirectories = (source: string, ignoreChildDbs: boolean, childDbsDir: string) => {
   if (existsSync(source)) {
     return readdirSync(source)
-      .map(name => path.join(source, name))
+      .map((name) => path.join(source, name))
       .filter(isDirectory)
       .filter((dir) => {
         if (!ignoreChildDbs) {
           return true
-        } 
-        else {
+        } else {
           const split = dir.split(path.sep)
           return split[split.length - 1] !== childDbsDir
         }
       })
-      .map(p => {
+      .map((p) => {
         const regex = new RegExp('([^\\' + path.sep + ']*)\\' + path.sep + '*$')
         const res: any = p.match(regex)
         const folder: string = res[1]
         return folder
       })
-  } 
-  else {
+  } else {
     const folders: string[] = []
     return folders
   }
 }
 
-
 const retrieveAllPathsInPattern = async (basedir: string, pattern: string, ignoreChildDbs: boolean) => {
   // Load the resources but ignore the children databases.
   // we'll load these recursively in the planner.
   if (ignoreChildDbs) {
-    return await globPromise(
-      path.join(await basedir, pattern), 
-      {
+    return await globPromise(path.join(await basedir, pattern), {
       ignore: [
-        path.join(basedir, "**", await config.getChildDbsDirName(), `**${path.sep}*`),
-        path.join(basedir, "**", await config.getChildDbsDirName())
-      ]
+        path.join(basedir, '**', await config.getChildDbsDirName(), `**${path.sep}*`),
+        path.join(basedir, '**', await config.getChildDbsDirName()),
+      ],
     })
-  } 
-  else {
-    return await globPromise(
-      path.join(await basedir, pattern))
+  } else {
+    return await globPromise(path.join(await basedir, pattern))
   }
 }
 
 export const generateDefaultDirs = async () => {
-  const folders = await Promise.all([
-    config.getResourcesDir(), 
-    config.getMigrationsDir(),
-  ])
+  const folders = await Promise.all([config.getResourcesDir(), config.getMigrationsDir()])
   // Todo, provide option to have nested generation!
   // maybe --childdbs=local, local.service1,local.service2, etc..
   folders.forEach((folder) => {
     const fullPath = path.join(process.cwd(), folder)
-    shell.mkdir('-p', fullPath);
+    shell.mkdir('-p', fullPath)
   })
-
 }
 
 export const generateMigrationDir = async () => {
   const fullPath = path.join(process.cwd(), await config.getMigrationsDir())
-  shell.mkdir('-p', fullPath);
+  shell.mkdir('-p', fullPath)
 }
 
 export const deleteMigrationDir = async () => {
@@ -315,8 +308,6 @@ export const deleteMigrationDir = async () => {
 export const deleteTempDir = async () => {
   shell.rm('-rf', await config.getTempDir())
 }
-
-
 
 export const arrayToApplicationPath = (filePath: string[]) => {
   const fileFullPath = path.join(process.cwd(), ...filePath)
@@ -329,11 +320,15 @@ export const writeNewMigration = async (atChildDbPath: string[], migrations: Tag
     migrations.forEach((mig) => {
       mig.fqlFormatted = prettyPrintExpr(mig.fqlExpr)
       const statement = StatementType[<StatementType>mig.statement]
-      fs.writeFileSync(path.join(newMigrationDir,
-          `${statement.toString().toLowerCase()}-${mig.type?.toString().toLowerCase()}-${mig.name}.fql`), mig.fqlFormatted)
+      fs.writeFileSync(
+        path.join(
+          newMigrationDir,
+          `${statement.toString().toLowerCase()}-${mig.type?.toString().toLowerCase()}-${mig.name}.fql`
+        ),
+        mig.fqlFormatted
+      )
     })
   }
-
 }
 
 export const writeNewMigrationDir = async (atChildDbPath: string[], time: string) => {
@@ -346,18 +341,19 @@ export const writeNewMigrationDir = async (atChildDbPath: string[], time: string
   return fullPath
 }
 
-const childDbPathToFullPath = (rootDir: string, atChildDbPath: string[], childDbName: string, time: string = ""): string => {
+const childDbPathToFullPath = (
+  rootDir: string,
+  atChildDbPath: string[],
+  childDbName: string,
+  time: string = ''
+): string => {
   if (atChildDbPath.length > 0) {
     const fullPaths: any[] = atChildDbPath.map((name) => {
-      return [
-        childDbName,
-         name
-        ]
+      return [childDbName, name]
     })
 
     return path.join(rootDir, ...[].concat.apply([], fullPaths), time)
-  } 
-  else {
+  } else {
     return path.join(rootDir, time)
   }
 }
@@ -368,15 +364,11 @@ export const filePathToDatabase = (childDbFolderName: string, filePath: string):
   filePath.split(path.sep).forEach((p, index) => {
     if (p === childDbFolderName) {
       previousWasDbFolder = true
-    } 
-    else if (previousWasDbFolder) {
+    } else if (previousWasDbFolder) {
       childDb.push(p)
       previousWasDbFolder = false
     }
   })
 
-
   return childDb
 }
-
-
