@@ -139,7 +139,7 @@ Or run `fauna-schema-migrate run` to test it out interactively. All commands can
 
 4. **Verify the migration** 
 
-   he tool is still in beta and relies heavily on comparison of FQL json formats. It has been tested in several advanced scenarios. When you start using it early on. Verify whether the migration results are correct in the migrations folder. The migration folder will contain different migrations folders with a timestamp as name. Each generated migration contains an .fql file for each resource that was created/updated/deleted. Below is an example structure: 
+   The tool is still in beta and relies heavily on comparison of FQL json formats. It has been tested in several advanced scenarios. When you start using it early on. Verify whether the migration results are correct in the migrations folder. The migration folder will contain different migrations folders with a timestamp as name. Each generated migration contains an .fql file for each resource that was created/updated/deleted. Below is an example structure: 
 
    ```
    fauna > migrations > 2021-01-25T20:49:16.074Z > create-collection-accounts.fql
