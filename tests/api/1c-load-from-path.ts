@@ -12,6 +12,6 @@ test('snippets can be loaded from JS paths', async (t: ExecutionContext) => {
 })
 
 test('snippets can be loaded from TS paths', async (t: ExecutionContext) => {
-  const snippets = await getSnippetsFromPaths(['tests/api/resourcesTS/accounts.ts'])
+  const snippets = await getSnippetsFromPaths(['tests/api/resourcesTS/_accounts.ts'])
   t.is(snippets.Collection.length, 1)
 })
