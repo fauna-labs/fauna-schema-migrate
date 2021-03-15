@@ -5,3 +5,4 @@ yalc.lock
 !.env.**.example
 */tests/migrations/**
 dist
+fauna/temp

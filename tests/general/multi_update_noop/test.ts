@@ -2,7 +2,6 @@ import path from 'path'
 import test, { ExecutionContext } from 'ava'
 import { fullApply, setupFullTest, destroyFullTest } from '../../_helpers'
 import { getAllCloudResources } from '../../../src/state/from-cloud'
-import { getCurrentAndTargetMigration } from '../../../src/migrations/advance'
 import { retrieveAllMigrations } from '../../../src/util/files'
 
 const testPath = path.relative(process.cwd(), __dirname)
