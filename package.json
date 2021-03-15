@@ -66,6 +66,7 @@
     "faunadb": "^4.0.3"
   },
   "devDependencies": {
+    "@types/scheduler": "^0.16.1",
     "@types/sinon": "^9.0.9",
     "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^4.17.0",
