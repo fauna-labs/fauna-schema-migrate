@@ -14,7 +14,7 @@
     "test": "ava -T 200s --fail-fast",
     "install-peers": "install-peers -f",
     "prepare": "tsc && cpy 'templates/*.js' '../dist/' --cwd=src --parents",
-    "fmt": "yarn lint && yarn format",
+    "fmt": "npm run lint && npm run format",
     "format": "prettier --write . ",
     "lint": "eslint . --ext .ts,.js,.tsx --fix"
   },
