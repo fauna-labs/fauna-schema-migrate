@@ -30,8 +30,8 @@ test('conflicting (circular) dependencies test', async (t: ExecutionContext) => 
     coll2.jsonData.data.metadata,
     "some metadata for this collection, even if it's strange we'll link it to some other collection"
   )
-  t.is(coll1.jsonData.data.role['value'].id, 'collection2')
-  t.is(coll2.jsonData.data.role['value'].id, 'collection1')
+  t.is(coll1.jsonData.data.role.value.id, 'collection2')
+  t.is(coll2.jsonData.data.role.value.id, 'collection1')
 })
 
 test.after(async (t: ExecutionContext) => {

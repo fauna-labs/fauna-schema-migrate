@@ -4,7 +4,7 @@ import {
   MigrationRefAndTimestamp,
   StatementType,
   TaggedExpression,
-  RollbackTargetCurrentAndSkippedMigrations as RollbackTargetCurrentAndSkippedMigrations,
+  RollbackTargetCurrentAndSkippedMigrations,
   ApplyTargetCurrentAndSkippedMigrations,
 } from '../types/expressions'
 import { ResourceTypes } from '../types/resource-types'

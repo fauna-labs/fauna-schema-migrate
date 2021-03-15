@@ -70,7 +70,7 @@ program.on('command:*', function (operands) {
   process.exitCode = 1
 })
 
-if (process.argv.length == 2) {
+if (process.argv.length === 2) {
   console.info(program.helpInformation())
   process.exitCode = 1
 } else {

@@ -9,9 +9,8 @@ import { MessageFun } from './numbered-message'
 import { Task } from '../../tasks'
 import Spinner from 'ink-spinner'
 import SyntaxHighlight from 'ink-syntax-highlight'
-import { PlannedDiffPerResource, PreviousAndCurrent, TaggedExpression } from '../../types/expressions'
+import { PlannedDiffPerResource, TaggedExpression } from '../../types/expressions'
 import { ResourceTypes } from '../../types/resource-types'
-import migrate from '../../tasks/migrate'
 import { ErrorWithFilePath } from '../../errors/ErrorWithFilePath'
 
 const version = require('./../../../package.json').version
@@ -225,10 +224,10 @@ const renderMigrationItems = (
   amount: number
 ) => {
   const result: any[] = []
-  if (allCloudMigrations.length == 0) {
+  if (allCloudMigrations.length === 0) {
     result.push(renderMigrationItem(`migration_item_${id}_${-1}`, ' '.repeat(24), 'cloud state'))
   }
-  if (direction == 'rollback') {
+  if (direction === 'rollback') {
     if (allCloudMigrations.length - amount < 0 && allCloudMigrations.length !== 0) {
       result.push(renderMigrationItem(`migration_item_${id}_${-1}`, ' '.repeat(24), 'rollback target'))
     }
@@ -241,7 +240,7 @@ const renderMigrationItems = (
         result.push(renderMigrationItem(`migration_item_${id}_${index}`, l, ''))
       }
     })
-  } else if (direction == 'apply') {
+  } else if (direction === 'apply') {
     localMigrations.forEach((l, index) => {
       if (index === allCloudMigrations.length + amount - 1) {
         result.push(renderMigrationItem(`migration_item_${id}_${-1}`, l, 'apply target'))
@@ -259,7 +258,7 @@ const renderMigrationItems = (
         result.push(renderMigrationItem(`migration_item_${id}_${index}`, l, ''))
       }
     })
-    if (allCloudMigrations.length == localMigrations.length) {
+    if (allCloudMigrations.length === localMigrations.length) {
       result.push(renderMigrationItem(`migration_item_${id}_${-1}`, ' '.repeat(24), 'apply target'))
     }
   }

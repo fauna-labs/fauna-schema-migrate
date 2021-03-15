@@ -1,7 +1,5 @@
-import path from 'path'
 import test, { ExecutionContext } from 'ava'
 import { getSnippetsFromStrings } from '../../src/state/from-code'
-import { diffSnippets } from '../../src/migrations/diff'
 
 test('snippets can be loaded from strings', async (t: ExecutionContext) => {
   const snippets = getSnippetsFromStrings([

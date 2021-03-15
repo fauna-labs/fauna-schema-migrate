@@ -1,10 +1,10 @@
-const cloneDeep = require('lodash.clonedeep')
-
 import { WrongMigrationTypeError } from '../errors/WrongCreateTypeError'
 import { WrongResourceTypeError } from '../errors/WrongResourceTypeError'
 import { TaggedExpression, StatementType } from '../types/expressions'
 import { ResourceTypes, TypeResult } from '../types/resource-types'
 import { camelToSnakeCase, getJsonData } from './transform'
+
+const cloneDeep = require('lodash.clonedeep')
 
 export const addNamesAndTypes = (snippets: TaggedExpression[]) => {
   snippets.forEach((s) => {

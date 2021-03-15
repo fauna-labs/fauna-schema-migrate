@@ -1,5 +1,4 @@
 import * as fauna from 'faunadb'
-const q = fauna.query
 import test, { ExecutionContext } from 'ava'
 import { getSnippetsFromStrings } from '../../src/state/from-code'
 import { diffSnippets } from '../../src/migrations/diff'
@@ -7,6 +6,7 @@ import { generateMigrations } from '../../src/migrations/generate-migration'
 import { generateRollbackQuery } from '../../src/migrations/rollback'
 import { generateMigrationLetObject } from '../../src/migrations/generate-query'
 import { prettyPrintExpr } from '../../src/fql/print'
+const q = fauna.query
 
 test('we can generate an rollback query from code', async (t: ExecutionContext) => {
   const snippets1 = getSnippetsFromStrings([

@@ -1,9 +1,9 @@
-const equalDeep = require('deep-equal')
-
 import { planDatabaseMigrations, planMigrations } from '../migrations/plan'
 import { writeMigrations, generateMigrations } from '../migrations/generate-migration'
 import { interactiveShell } from '../interactive-shell/interactive-shell'
 import { TaggedExpression } from '../types/expressions'
+
+const equalDeep = require('deep-equal')
 
 const migrate = async () => {
   const time = new Date().toISOString()
@@ -54,7 +54,7 @@ const findChildDatabaseExpressions = (db: string[], databaseDiff: TaggedExpressi
   const prefix = db
   return databaseDiff.filter((expr) => {
     const childPath = expr.db.concat([expr.name])
-    return childPath.length == prefix.length + 1 && equalDeep(childPath.slice(0, prefix.length), prefix)
+    return childPath.length === prefix.length + 1 && equalDeep(childPath.slice(0, prefix.length), prefix)
   })
 }
 

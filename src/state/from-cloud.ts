@@ -1,10 +1,10 @@
-const cloneDeep = require('lodash.clonedeep')
-
 import * as fauna from 'faunadb'
-import { LoadedResources, TaggedExpression } from '../types/expressions'
+import { LoadedResources, TaggedExpression, MigrationRefAndTimestamp } from '../types/expressions'
 import { ResourceTypes } from '../types/resource-types'
-import { MigrationRefAndTimestamp } from '../types/expressions'
+
 import { config } from '../util/config'
+
+const cloneDeep = require('lodash.clonedeep')
 
 const q = fauna.query
 const {

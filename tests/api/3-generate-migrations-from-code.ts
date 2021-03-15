@@ -1,4 +1,3 @@
-import path from 'path'
 import test, { ExecutionContext } from 'ava'
 import { getSnippetsFromStrings } from '../../src/state/from-code'
 import { diffSnippets } from '../../src/migrations/diff'
@@ -32,7 +31,7 @@ test('we can generatemigrations from code', async (t: ExecutionContext) => {
   const migrations = generateMigrations(diff)
 
   // function is transformed to update statement.
-  const fooFunction: TaggedExpression | undefined = migrations.find((x: any) => x.name === 'foo')
+  const fooFunction: TaggedExpression | undefined = migrations.find((x: TaggedExpression) => x.name === 'foo')
   t.is(fooFunction?.statement, StatementType.Update)
   compareFql(
     t,
@@ -41,17 +40,19 @@ test('we can generatemigrations from code', async (t: ExecutionContext) => {
   )
 
   // users remains a create statement.
-  const usersCollection: TaggedExpression | undefined = migrations.find((x: any) => x.name === 'users')
+  const usersCollection: TaggedExpression | undefined = migrations.find((x: TaggedExpression) => x.name === 'users')
   t.is(usersCollection?.statement, StatementType.Create)
   compareFql(t, usersCollection?.fql as string, `CreateCollection({name: "users"})`)
 
   // books remains a create statement.
-  const booksCollection: TaggedExpression | undefined = migrations.find((x: any) => x.name === 'books')
+  const booksCollection: TaggedExpression | undefined = migrations.find((x: TaggedExpression) => x.name === 'books')
   t.is(booksCollection?.statement, StatementType.Create)
   compareFql(t, booksCollection?.fql as string, `CreateCollection({name: "books"})`)
 
   // accounts remains a create statement.
-  const accountsCollection: TaggedExpression | undefined = migrations.find((x: any) => x.name === 'accounts')
+  const accountsCollection: TaggedExpression | undefined = migrations.find(
+    (x: TaggedExpression) => x.name === 'accounts'
+  )
   t.is(accountsCollection?.statement, StatementType.Delete)
   compareFql(t, accountsCollection?.fql as string, `Delete(Collection("accounts"))`)
 })

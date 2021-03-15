@@ -1,18 +1,13 @@
-const equalDeep = require('deep-equal')
-const cloneDeep = require('lodash.clonedeep')
-
 import {
   TaggedExpression,
   PlannedDiff,
   LoadedResources,
   StatementType,
   PlannedDiffPerResource,
-  PlannedDatabaseDiff,
 } from '../types/expressions'
 import { UpdateIndexError } from '../errors/UpdateIndexError'
 import { ResourceTypes } from '../types/resource-types'
 import {
-  explicitelySetAllParameters,
   transformCreateToDelete,
   transformCreateToUpdate,
   transformDbPathToCreate,
@@ -23,6 +18,11 @@ import {
   transformUpdateToUpdate,
 } from '../fql/transform'
 import deepEqual from 'deep-equal'
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const equalDeep = require('deep-equal')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const cloneDeep = require('lodash.clonedeep')
 
 interface NamedValue {
   name: string
@@ -58,8 +58,8 @@ export const diffSnippets = (currentExpressions: LoadedResources, targetExpressi
   const migrationDiff: PlannedDiffPerResource = {}
 
   Object.keys(currentExpressions).forEach((type: string) => {
-    const fromPerType: any = cloneDeep(currentExpressions[type])
-    const targetPerType: any = cloneDeep(targetExpressions[type])
+    const fromPerType: TaggedExpression[] = cloneDeep(currentExpressions[type])
+    const targetPerType: TaggedExpression[] = cloneDeep(targetExpressions[type])
     migrationDiff[type] = createPairsForType(fromPerType, targetPerType)
   })
 
@@ -134,7 +134,7 @@ export const transformDiffToExpressions = (diff: PlannedDiffPerResource): Tagged
   const expressions: TaggedExpression[] = []
   for (const resourceType in ResourceTypes) {
     const diffForType = diff[resourceType]
-    diffForType.added.map((prevCurr) => {
+    diffForType.added.forEach((prevCurr) => {
       if (prevCurr.target?.statement === StatementType.Update) {
         expressions.push(transformUpdateToCreate(prevCurr.target))
       } else if (prevCurr.target?.statement === StatementType.Create) {
@@ -144,7 +144,7 @@ export const transformDiffToExpressions = (diff: PlannedDiffPerResource): Tagged
       }
     })
 
-    diffForType.changed.map((prevCurr) => {
+    diffForType.changed.forEach((prevCurr) => {
       // CHANGED
       // changed in rollback means that the migrations we are rolling back did an update.
       // The previous statement can be both a Create as an Update and since the resource
@@ -160,7 +160,7 @@ export const transformDiffToExpressions = (diff: PlannedDiffPerResource): Tagged
       }
     })
 
-    diffForType.deleted.map((prevCurr) => {
+    diffForType.deleted.forEach((prevCurr) => {
       // ADDED
       // deleted in rollback means that the migrations we are rolling back added a resource.
       // The previous statement should therefore be a CREATE or UDPATE statement and

@@ -28,7 +28,7 @@ test('generate create_function and update_function migration', async (t: Executi
     ],
   }
 
-  t.is(JSON.stringify(result.Function[0].jsonData.body['value'].expr, null, 2), JSON.stringify(functionBody, null, 2))
+  t.is(JSON.stringify(result.Function[0].jsonData.body.value.expr, null, 2), JSON.stringify(functionBody, null, 2))
   await fullApply(testPath, ['resources2'])
   result = await getAllCloudResources(faunaClient)
   functionBody = {
@@ -41,7 +41,7 @@ test('generate create_function and update_function migration', async (t: Executi
       },
     ],
   }
-  t.is(JSON.stringify(result.Function[0].jsonData.body['value'].expr, null, 2), JSON.stringify(functionBody, null, 2))
+  t.is(JSON.stringify(result.Function[0].jsonData.body.value.expr, null, 2), JSON.stringify(functionBody, null, 2))
 })
 
 test.after.always(async (t: ExecutionContext) => {

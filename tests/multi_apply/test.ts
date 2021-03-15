@@ -1,9 +1,7 @@
 import path from 'path'
 import test, { ExecutionContext } from 'ava'
-import { fullApply, setupFullTest, destroyFullTest, rollback, multiStepFullApply } from '../_helpers'
+import { setupFullTest, destroyFullTest, multiStepFullApply } from '../_helpers'
 import { getAllCloudResources } from '../../src/state/from-cloud'
-import { LoadedResources } from '../../src/types/expressions'
-import { ResourceTypes } from '../../src/types/resource-types'
 
 const testPath = path.relative(process.cwd(), __dirname)
 

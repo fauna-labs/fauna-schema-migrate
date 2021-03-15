@@ -1,9 +1,9 @@
-const version = require('./../../../package.json').version
-
 import * as React from 'react'
 import SelectInput from './select-input'
 import { tasks, Task } from '../../tasks'
 import { faunaPurple2 } from '../colors'
+
+const version = require('./../../../package.json').version
 
 interface Props {
   handleTaskChoice: any

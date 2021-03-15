@@ -1,4 +1,4 @@
-var faunadb = require('faunadb'),
+const faunadb = require('faunadb'),
   q = faunadb.query
 
 export default q.CreateFunction({

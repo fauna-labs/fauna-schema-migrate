@@ -80,8 +80,8 @@ const findAllReferences = (resourcesFQL: LoadedResources): ReferencedResources =
     const snakeCaseItem = camelToSnakeCase(referenceType)
     // create a strucure of the form { index: { index: ... }}
     const structure: any = {}
-    structure['raw'] = {}
-    structure['raw'][snakeCaseItem] = '*' // value doesn't matter.
+    structure.raw = {}
+    structure.raw[snakeCaseItem] = '*' // value doesn't matter.
 
     // search in all resources
     for (const resourceType in ResourceTypes) {

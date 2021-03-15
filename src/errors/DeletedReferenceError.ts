@@ -1,10 +1,10 @@
-import { ReferencedResource, TaggedExpression } from '../types/expressions'
+import { TaggedExpression } from '../types/expressions'
 
 export class DeletedReferenceError extends Error {
-  constructor(te_referenced: TaggedExpression, te: TaggedExpression) {
+  constructor(teReferenced: TaggedExpression, te: TaggedExpression) {
     const message = `
 The following resource was deleted
-    type: ${te_referenced.type}, name: ${te_referenced.name}
+    type: ${teReferenced.type}, name: ${teReferenced.name}
 yet was referenced from:
     type: ${te.type}, name: ${te.name}
         `

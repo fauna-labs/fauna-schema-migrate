@@ -1,4 +1,3 @@
-import path from 'path'
 import * as fauna from 'faunadb'
 import test, { ExecutionContext } from 'ava'
 import { getSnippetsFromStrings } from '../../src/state/from-code'

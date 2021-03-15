@@ -1,6 +1,9 @@
 import * as fauna from 'faunadb'
 import cloneDeep from 'lodash.clonedeep'
 
+import { StatementType, TaggedExpression } from '../types/expressions'
+import { ResourceTypes } from '../types/resource-types'
+
 const {
   Update,
   Delete,
@@ -20,9 +23,6 @@ const {
   Query,
   Lambda,
 } = fauna.query
-
-import { StatementType, TaggedExpression } from '../types/expressions'
-import { ResourceTypes } from '../types/resource-types'
 
 export const createStub = (expr: TaggedExpression) => {
   // Just create an empty stub from a create expression.
@@ -82,20 +82,19 @@ const addRequiredProps = (expr: TaggedExpression, obj: any) => {
   switch (expr.type) {
     case ResourceTypes.Function:
       obj.body = Query(Lambda('x', Var('x')))
-      return
+      break
     case ResourceTypes.AccessProvider:
       // let's take an auth0 issueras dummy
       obj.issuer = 'https://faunadb-auth0.auth0.com/'
       obj.jwks_uri = 'https://faunadb-auth0.auth0.com.well-known/jwks.json'
-      return
+      break
     case ResourceTypes.Role:
       obj.privileges = []
-      return
+      break
     default:
-      // Some (e.g. collection, role) don't have required props.
-      // We don't stub indexes since they can't live without a source.
-      // instead indexes are always moved to the end.
-      return
+    // Some (e.g. collection, role) don't have required props.
+    // We don't stub indexes since they can't live without a source.
+    // instead indexes are always moved to the end.
   }
 }
 
