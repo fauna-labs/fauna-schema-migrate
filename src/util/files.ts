@@ -15,12 +15,47 @@ import { v4 as uuidv4 } from 'uuid'
 const globPromise = util.promisify(glob)
 
 export const loadFqlSnippet = async (p: string) => {
-  if (p.endsWith('.js')) {
-    return await loadJsResource(p)
-  } else if (p.endsWith('.fql')) {
-    return await loadFqlResource(p)
-  } else {
-    console.error(`unexpected extension ${p}`)
+  switch (path.extname(p)) {
+    case '.js':
+      return await loadJsResource(p)
+    case '.ts':
+      return await loadTsResource(p)
+    case '.fql':
+      return await loadFqlResource(p)
+    default:
+      console.error(`unexpected extension ${p}`)
+      break
+  }
+}
+
+/**
+ * Fundamentally the same as `loadJsResource` with a small tweak:
+ * esbuild would output this as `<fileName>.js` which is fine, however the internal
+ * filename is still `<fileName>.ts`. So we manually replace the extension before
+ * continuing.
+ */
+export const loadTsResource = async (p: string) => {
+  try {
+    const uniqueTempFolder = uuidv4()
+    await esbuild.build({
+      entryPoints: [p],
+      outdir: path.join(await config.getTempDir(), uniqueTempFolder),
+      bundle: true,
+      platform: 'node',
+      format: 'cjs',
+      target: ['node10.4'],
+    })
+
+    const filename = path.join(
+      process.cwd(),
+      path.join(await config.getTempDir(), uniqueTempFolder),
+      path.parse(p).base.replace('.ts', '.js')
+    )
+    delete require.cache[filename]
+    const fql = await require(filename)
+    return fql.default
+  } catch (err) {
+    throw new ErrorWithFilePath(err, p)
   }
 }
 
@@ -72,13 +107,14 @@ export const writeApplicationFile = async (file: string, content: string) => {
   return fileFullPath
 }
 
-export const retrieveAllResourcePaths = async (atChildDbPath: string[] = [], ignoreChildDbs = true) => {
+export const retrieveAllResourcePaths = async (atChildDbPath: string[] = [], ignoreChildDbs: boolean = true) => {
   const resourcesDir = await config.getResourcesDir()
   const childDbsDir = await config.getChildDbsDirName()
   const fullPath = childDbPathToFullPath(resourcesDir, atChildDbPath, childDbsDir)
   const jsResults = await retrieveAllPathsInPattern(fullPath, `**${path.sep}*.js`, ignoreChildDbs)
+  const tsResults = await retrieveAllPathsInPattern(fullPath, `**${path.sep}*.ts`, ignoreChildDbs)
   const fqlResults = await retrieveAllPathsInPattern(fullPath, `**${path.sep}*.fql`, ignoreChildDbs)
-  return jsResults.concat(fqlResults)
+  return [...jsResults, ...tsResults, ...fqlResults]
 }
 
 export const retrieveAllResourceChildDb = async (atChildDbPath: string[] = []) => {
@@ -143,7 +179,7 @@ export const retrieveAllMigrations = async (atChildDbPath: string[] = []): Promi
 export const retrieveLastMigrationVersionAndPathsForMigrationBefore = async (
   atChildDbPath: string[],
   before: string | null,
-  ignoreChildDbs = true
+  ignoreChildDbs: boolean = true
 ): Promise<MigrationPathAndFiles[]> => {
   const childDbsDir = await config.getChildDbsDirName()
   const migrationsDir = await config.getMigrationsDir()
@@ -159,13 +195,18 @@ export const retrieveLastMigrationVersionAndPathsForMigrationBefore = async (
         `**${path.sep}*.js`,
         ignoreChildDbs
       )
+      const tsResults = await retrieveAllPathsInPattern(
+        path.join(fullPath, migrationFolder),
+        `**${path.sep}*.ts`,
+        ignoreChildDbs
+      )
       const fqlResults = await retrieveAllPathsInPattern(
         path.join(fullPath, migrationFolder),
         `**${path.sep}*.fql`,
         ignoreChildDbs
       )
       return {
-        files: jsResults.concat(fqlResults),
+        files: [...jsResults, ...tsResults, ...fqlResults],
         migration: migration,
       }
     })
@@ -174,7 +215,7 @@ export const retrieveLastMigrationVersionAndPathsForMigrationBefore = async (
 
 const getStrAfter = (strs: string[], after: string) => {
   strs = strs.sort()
-  for (const str of strs) {
+  for (let str of strs) {
     if (str > after) {
       return str
     }
@@ -184,8 +225,8 @@ const getStrAfter = (strs: string[], after: string) => {
 
 const getAllStrsBeforeEqual = (strs: string[], before: string | null) => {
   strs = strs.sort()
-  const res = []
-  for (const str of strs) {
+  let res = []
+  for (let str of strs) {
     if (before === null || str <= before) {
       res.push(str)
     } else {
@@ -300,7 +341,12 @@ export const writeNewMigrationDir = async (atChildDbPath: string[], time: string
   return fullPath
 }
 
-const childDbPathToFullPath = (rootDir: string, atChildDbPath: string[], childDbName: string, time = ''): string => {
+const childDbPathToFullPath = (
+  rootDir: string,
+  atChildDbPath: string[],
+  childDbName: string,
+  time: string = ''
+): string => {
   if (atChildDbPath.length > 0) {
     const fullPaths: any[] = atChildDbPath.map((name) => {
       return [childDbName, name]
@@ -313,7 +359,7 @@ const childDbPathToFullPath = (rootDir: string, atChildDbPath: string[], childDb
 }
 
 export const filePathToDatabase = (childDbFolderName: string, filePath: string): string[] => {
-  const childDb: string[] = []
+  let childDb: string[] = []
   let previousWasDbFolder = false
   filePath.split(path.sep).forEach((p, index) => {
     if (p === childDbFolderName) {
