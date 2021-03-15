@@ -1,5 +1,5 @@
-import chalk from "chalk";
-import { retrieveAllResourcePaths } from "../util/files"
+import chalk from 'chalk'
+import { retrieveAllResourcePaths } from '../util/files'
 
 // Not used atm.
 
@@ -23,8 +23,6 @@ import { retrieveAllResourcePaths } from "../util/files"
 // validate --fix would then be an option to reset the state of your database
 // back to your migrations. Reach out if this makes sense/is necessary.
 
-const validateApply = async () => {
+const validateApply = async () => Promise.resolve()
 
-};
-
-export default validateApply;
+export default validateApply

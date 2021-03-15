@@ -1,8 +1,8 @@
-import { ReferencedResource } from "../types/expressions";
+import { ReferencedResource } from '../types/expressions'
 
 export class UndefinedReferenceError extends Error {
-    constructor(te: ReferencedResource) {
-        const message = `
+  constructor(te: ReferencedResource) {
+    const message = `
 The following resource is not defined anywhere in the resource folders
     type: ${te.type}, name: ${te.name}
 and was referenced from:
@@ -11,8 +11,8 @@ and was referenced from:
 todo: add a boolean to bypass this error in case users
       want to reference resources that were defined manually.
         `
-        super(message);
+    super(message)
 
-        Object.setPrototypeOf(this, UndefinedReferenceError.prototype);
-    }
+    Object.setPrototypeOf(this, UndefinedReferenceError.prototype)
+  }
 }

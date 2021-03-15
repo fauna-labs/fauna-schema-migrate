@@ -1,12 +1,12 @@
-import { TaggedExpression } from "../types/expressions";
+import { TaggedExpression } from '../types/expressions'
 
 export class ErrorWithFilePath extends Error {
-    filePath: string
+  filePath: string
 
-    constructor(m: Error, filePath: string) {
-        super(m.message);
-        this.stack = (new Error()).stack;
-        this.filePath = filePath
-        Object.setPrototypeOf(this, ErrorWithFilePath.prototype);
-    }
+  constructor(m: Error, filePath: string) {
+    super(m.message)
+    this.stack = new Error().stack
+    this.filePath = filePath
+    Object.setPrototypeOf(this, ErrorWithFilePath.prototype)
+  }
 }

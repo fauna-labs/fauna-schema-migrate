@@ -215,18 +215,16 @@ function baseEvalFQL(fql: string, q: any) {
     CurrentIdentity,
     HasCurrentIdentity,
     CurrentToken,
-    HasCurrentToken
+    HasCurrentToken,
   } = q
 
   // eslint-disable-next-line
   try {
     return fql.match(/^\s*{(.*\n*)*}\s*$/) ? eval(`(${fql})`) : eval(fql)
-  }
-  catch (err) {
+  } catch (err) {
     if (err instanceof SyntaxError) {
       throw new EvalFqlError(err, fql)
     }
     throw err
   }
 }
-

@@ -1,5 +1,5 @@
-import chalk from "chalk";
-import { retrieveAllResourcePaths } from "../util/files"
+import chalk from 'chalk'
+import { retrieveAllResourcePaths } from '../util/files'
 
 // Not used atm.
 
@@ -7,8 +7,6 @@ import { retrieveAllResourcePaths } from "../util/files"
 // of an existing database and stores it as resource files to allow you to get started.
 // Reach out if this makes sense/is necessary.
 
-const copy = async () => {
+const copy = async () => Promise.resolve()
 
-};
-
-export default copy;
+export default copy

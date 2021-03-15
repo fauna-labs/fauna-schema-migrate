@@ -1,7 +1,7 @@
-import { PatternAndIndexName } from "../types/patterns";
+import { PatternAndIndexName } from '../types/patterns'
 
-var cloneDeep = require('lodash.clonedeep')
-var equalDeep = require('deep-equal');
+const cloneDeep = require('lodash.clonedeep')
+const equalDeep = require('deep-equal')
 
 const toJsonFun = (object: any, key: string, value: any) => {
     if (value && value.toJSON) {
@@ -10,10 +10,10 @@ const toJsonFun = (object: any, key: string, value: any) => {
 }
 
 const traverse = (o: any, transformFun: any): any => {
-    for (var i in o) {
-        transformFun(o, i, o[i]);
-        if (o[i] !== null && typeof (o[i]) == "object") {
-            traverse(o[i], transformFun);
+    for (const i in o) {
+        transformFun(o, i, o[i])
+        if (o[i] !== null && typeof o[i] === 'object') {
+            traverse(o[i], transformFun)
         }
     }
 }
@@ -23,31 +23,28 @@ const sameStructure = (obj1: any, obj2: any): any => {
     try {
         sameStructureIter(obj1, obj2)
         return true
-    }
-    catch (err) {
+    } catch (err) {
         if (err.message === 'notequal') {
             return false
-        }
-        else {
+        } else {
             throw err
         }
     }
 }
 
 const sameStructureIter = (obj1: any, obj2: any): any => {
-    for (var key in obj1) {
-        if (key !== "isFaunaExpr") {
-            if (!obj2.hasOwnProperty(key)) {
-                throw Error("notequal")
+    for (const key in obj1) {
+        if (key !== 'isFaunaExpr') {
+            if (!(key in obj2)) {
+                throw Error('notequal')
             }
-            if (obj1[key] !== null && typeof (obj1[key]) == "object") {
-                sameStructureIter(obj1[key], obj2[key]);
+            if (obj1[key] !== null && typeof obj1[key] === 'object') {
+                return sameStructureIter(obj1[key], obj2[key])
             }
         }
-        return true
     }
+    return true
 }
-
 
 /* Meant to search for JSON patterns, e.g.
  *  - { index: { index: 'nameofindex' }}
@@ -62,19 +59,17 @@ const findNamedPattern = (o: any, patAndName: PatternAndIndexName): string[] => 
 
 const findNamedPatternIter = (previousKey: string, o: any, patAndName: PatternAndIndexName): string[] => {
     let result: any[] = []
-    for (var i in o) {
-        const found = equalDeep(o, patAndName.pattern);
+    for (const i in o) {
+        const found = equalDeep(o, patAndName.pattern)
         if (found && previousKey !== 'object') {
             result.push(patAndName.indexName)
         }
-        if (o[i] !== null && typeof (o[i]) == "object") {
+        if (o[i] !== null && typeof o[i] === 'object') {
             result = result.concat(findNamedPatternIter(i, o[i], patAndName))
         }
     }
     return [].concat.apply([], result)
 }
-
-
 
 /* Meant to search for json structures (ignoring values)
  * this function will return the json snippets that were a match
@@ -94,26 +89,22 @@ export const findStructureIter = (previousKey: string, structure: any, o: any): 
         result.push(o)
     }
 
-    for (var i in o) {
-        if (o[i] !== null && typeof (o[i]) == "object") {
+    for (const i in o) {
+        if (o[i] !== null && typeof o[i] === 'object') {
             result = result.concat(findStructureIter(i, structure, o[i]))
         }
     }
     return [].concat.apply([], result)
 }
 
-
 export const findPatterns = (o: any, patterns: PatternAndIndexName[]) => {
     try {
-        const res: any[] = patterns
-            .map((pattern) => {
-                const res = findNamedPattern(o, pattern)
-                return res
-            })
-        return [].concat.apply([], res)
-            .filter(onlyUnique)
-    }
-    catch (err) {
+        const res: any[] = patterns.map((pattern) => {
+            const res = findNamedPattern(o, pattern)
+            return res
+        })
+        return [].concat.apply([], res).filter(onlyUnique)
+    } catch (err) {
         console.error(err)
         console.error(o)
         console.error(`failed to find in the JSON of above obj`)
@@ -121,8 +112,6 @@ export const findPatterns = (o: any, patterns: PatternAndIndexName[]) => {
     }
 }
 
-
-
 const onlyUnique = (value: any, index: number, self: any) => {
-    return self.indexOf(value) === index;
+    return self.indexOf(value) === index
 }

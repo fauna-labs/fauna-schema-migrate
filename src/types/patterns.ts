@@ -1,5 +1,4 @@
 export interface PatternAndIndexName {
-    pattern: any
-    indexName: string
+  pattern: any
+  indexName: string
 }
-

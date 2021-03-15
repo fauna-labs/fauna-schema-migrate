@@ -16,8 +16,8 @@ jobs:
       # Setup node with version 12.x and NPM registry url
       - uses: actions/setup-node@v1
         with:
-          node-version: "12.x"
-          registry-url: "https://registry.npmjs.org"
+          node-version: '12.x'
+          registry-url: 'https://registry.npmjs.org'
       # Run npm install to install project packages
       - run: npm install
       # tests
@@ -28,6 +28,6 @@ jobs:
       - run: npm build
       # publish the files to NPM
       - run: npm publish --access public
-      # for publishing, npm need authorization. We add the NPM token to the environment which will take care of authorization to publish to the package
+        # for publishing, npm need authorization. We add the NPM token to the environment which will take care of authorization to publish to the package
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

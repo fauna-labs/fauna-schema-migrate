@@ -1,10 +1,10 @@
-import { prettyPrintExpr } from "../fql/print";
-import { TaggedExpression } from "../types/expressions";
-import { ResourceTypes } from "../types/resource-types";
+import { prettyPrintExpr } from '../fql/print'
+import { TaggedExpression } from '../types/expressions'
+import { ResourceTypes } from '../types/resource-types'
 
 export class WrongResourceTypeError extends Error {
-    constructor(expr: TaggedExpression) {
-        const message = `
+  constructor(expr: TaggedExpression) {
+    const message = `
         Only statements that start with the functions:
           ${listCreateResourceTypes().join('\n          ')}
         are allowed in the RESOURCES folder.
@@ -13,16 +13,16 @@ export class WrongResourceTypeError extends Error {
         ${prettyPrintExpr(expr.fqlExpr)}
         --------------
         `
-        super(message);
+    super(message)
 
-        Object.setPrototypeOf(this, WrongResourceTypeError.prototype);
-    }
+    Object.setPrototypeOf(this, WrongResourceTypeError.prototype)
+  }
 }
 
 const listCreateResourceTypes = () => {
-    const res: string[] = []
-    for (let r in ResourceTypes) {
-        res.push("Create" + r)
-    }
-    return res
+  const res: string[] = []
+  for (const r in ResourceTypes) {
+    res.push('Create' + r)
+  }
+  return res
 }
