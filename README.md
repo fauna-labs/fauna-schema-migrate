@@ -255,7 +255,7 @@ These are some extensive notes on why the tool is designed as it is.
 The FaunaDB Query Language (FQL) is very different than other query languages like SQL, Cypher or ORM approaches. One of the features that are worth embracing in FQL is that writing FQL queries is essentially function composition. For example:
 
 ```javascript
-Collection("accounts"), "268431417906561542")
+Collection("accounts")
 ```
 
 is just a reference to a collection. Throw that in another function to get a reference to a document within that collection.
