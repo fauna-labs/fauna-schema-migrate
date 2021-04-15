@@ -145,6 +145,7 @@ const createClientWithOptions = (secret: string) => {
   if (process.env.FAUNADB_DOMAIN) opts.domain = process.env.FAUNADB_DOMAIN
   if (process.env.FAUNADB_SCHEME) opts.scheme = process.env.FAUNADB_SCHEME
   if (process.env.FAUNADB_PORT) opts.port = process.env.FAUNADB_PORT
+  opts.headers = { 'X-Fauna-Source': 'fauna-schema-migrate' }
   return new fauna.Client(opts)
 }
 
