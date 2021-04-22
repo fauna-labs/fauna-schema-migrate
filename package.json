@@ -21,7 +21,7 @@
   "bin": {
     "fauna-schema-migrate": "dist/cli.js"
   },
-  "license": "0BSD",
+  "license": "MIT-0",
   "bugs": {
     "url": "https://github.com/fauna-brecht/fauna-schema-migrate/issues"
   },
