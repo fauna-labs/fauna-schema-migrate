@@ -1,10 +1,10 @@
 # NPM Publish is the name for this action
-name: NPM Publish
+name: NPM Publish Main
 
 # This action will trigger on every release get created
 on:
   push:
-    branches: [master]
+    branches: [main]
 
 # Job will run on a ubuntu instance
 jobs:

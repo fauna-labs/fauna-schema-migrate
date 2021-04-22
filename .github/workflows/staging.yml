@@ -1,5 +1,5 @@
 # NPM Publish is the name for this action
-name: NPM Publish
+name: NPM Publish Staging
 
 # This action will trigger on every release get created
 on:
