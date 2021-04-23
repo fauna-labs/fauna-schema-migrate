@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 export const isSchemaCachingFaunaError = (e: any) => {
   const res = safeVerifyError(e, ['requestResult', 'responseContent', 'errors', 0, 'failures', 0])
   if (res && res.code === 'duplicate value') {

@@ -1,5 +1,7 @@
 # Fauna Schema Migrate (Unofficial)
 
+This repository contains unofficial patterns, sample code, or tools to help developers build more effectively with [Fauna](https://www.fauna.com/). All [Fauna Labs](https://github.com/fauna-labs) repositories are provided “as-is” and without support. By using this repository or its contents, you agree that this repository may never be officially supported and moved to the [Fauna organization](https://github.com/fauna).
+
 ## Introduction
 
 #### Goals

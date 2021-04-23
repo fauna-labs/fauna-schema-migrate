@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { prettyPrintExpr } from '../fql/print'
 import { TaggedExpression } from '../types/expressions'
 import { ResourceTypes } from '../types/resource-types'

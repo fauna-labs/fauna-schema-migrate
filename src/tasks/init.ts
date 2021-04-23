@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { config } from '../util/config'
 import * as files from '../util/files'
 import { interactiveShell } from '../interactive-shell/interactive-shell'

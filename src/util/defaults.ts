@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 export default {
   configFile: '.fauna-migrate.js',
   directories: {

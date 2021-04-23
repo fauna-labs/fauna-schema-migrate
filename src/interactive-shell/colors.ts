@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 // Todo, what about contrast?
 export const faunaPurple1 = '#601FCA'
 export const faunaPurple2 = '#7F3CED'

@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import React, { useState } from 'react'
 import { Box, Text, useInput } from 'ink'
 import { useStore } from 'react-hookstore'

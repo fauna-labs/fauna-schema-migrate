@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { PreviousAndCurrent, TaggedExpression } from '../types/expressions'
 
 export class UpdateIndexError extends Error {

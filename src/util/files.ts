@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import fs, { existsSync, lstatSync, readdirSync } from 'fs'
 import path from 'path'
 import * as esbuild from 'esbuild'

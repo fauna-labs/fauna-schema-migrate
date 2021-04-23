@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import test, { ExecutionContext } from 'ava'
 import { getSnippetsFromStrings } from '../../src/state/from-code'
 import { diffSnippets } from '../../src/migrations/diff'

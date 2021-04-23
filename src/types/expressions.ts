@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { ResourceTypes } from './resource-types'
 
 export enum StatementType {

@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import * as React from 'react'
 import SelectInput from './select-input'
 import { tasks, Task } from '../../tasks'

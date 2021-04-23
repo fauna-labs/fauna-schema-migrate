@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { ReferencedResource } from '../types/expressions'
 
 export class UndefinedReferenceError extends Error {

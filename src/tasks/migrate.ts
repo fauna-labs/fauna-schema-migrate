@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { planDatabaseMigrations, planMigrations } from '../migrations/plan'
 import { writeMigrations, generateMigrations } from '../migrations/generate-migration'
 import { interactiveShell } from '../interactive-shell/interactive-shell'

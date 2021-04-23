@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { TaggedExpression } from '../types/expressions'
 
 export const toIndexableName = (expr: TaggedExpression): string => {

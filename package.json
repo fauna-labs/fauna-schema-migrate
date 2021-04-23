@@ -23,9 +23,9 @@
   },
   "license": "MIT-0",
   "bugs": {
-    "url": "https://github.com/fauna-brecht/fauna-schema-migrate/issues"
+    "url": "https://github.com/fauna-labs/fauna-schema-migrate/issues"
   },
-  "homepage": "https://github.com/fauna-brecht/fauna-schema-migrate#readme",
+  "homepage": "https://github.com/fauna-labs/fauna-schema-migrate#readme",
   "author": "Brecht De Rooms",
   "dependencies": {
     "@babel/parser": "^7.12.7",

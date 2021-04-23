@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 CreateIndex({
   name: 'index1',
   source: Collection('collection1'),

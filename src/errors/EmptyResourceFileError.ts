@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 export class EmptyResourceFileError extends Error {
   constructor(filePath: string) {
     const message = `The following resource file did not return an FQL snippet.

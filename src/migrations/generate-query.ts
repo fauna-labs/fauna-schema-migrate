@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { CircularMigrationError } from '../errors/CircularMigrationError'
 import { findPatterns } from '../fql/json'
 import { StatementType, TaggedExpression } from '../types/expressions'

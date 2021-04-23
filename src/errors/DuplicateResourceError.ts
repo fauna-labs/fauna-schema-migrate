@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { TaggedExpression } from '../types/expressions'
 
 export class DuplicateResourceError extends Error {
