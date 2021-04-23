@@ -1,4 +1,7 @@
 /* eslint-disable */
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 
 import { query as q } from 'faunadb'
 import { EvalFqlError } from '../errors/EvalFqlError'

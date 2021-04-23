@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import * as React from 'react'
 import MessageList from './message-list'
 import Menu from './menu'

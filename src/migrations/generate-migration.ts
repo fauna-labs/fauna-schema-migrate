@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import * as fauna from 'faunadb'
 
 import { PlannedDiff, PlannedDiffPerResource, StatementType, TaggedExpression } from '../types/expressions'

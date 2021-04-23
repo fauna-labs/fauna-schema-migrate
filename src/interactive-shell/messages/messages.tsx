@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import * as React from 'react'
 import { Box, Newline, Text } from 'ink'
 import Gradient from 'ink-gradient'

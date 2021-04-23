@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { isMissingMigrationCollectionFaunaError, isSchemaCachingFaunaError } from '../errors/detect-errors'
 import { prettyPrintExpr } from '../fql/print'
 import { interactiveShell } from '../interactive-shell/interactive-shell'

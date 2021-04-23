@@ -1,3 +1,6 @@
+# Copyright Fauna, Inc.
+# SPDX-License-Identifier: MIT-0
+
 node_modules
 .yalc
 yalc.lock

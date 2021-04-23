@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { WrongMigrationTypeError } from '../errors/WrongCreateTypeError'
 import { WrongResourceTypeError } from '../errors/WrongResourceTypeError'
 import { TaggedExpression, StatementType } from '../types/expressions'

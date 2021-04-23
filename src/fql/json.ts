@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { PatternAndIndexName } from '../types/patterns'
 
 const cloneDeep = require('lodash.clonedeep')

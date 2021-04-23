@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import program from 'commander'
 import { ErrorWithFilePath } from './errors/ErrorWithFilePath'
 import { interactiveShell } from './interactive-shell/interactive-shell'

@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import React from 'react'
 import { render, Instance } from 'ink'
 import { createStore } from 'react-hookstore'

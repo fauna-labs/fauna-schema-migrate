@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import * as beautify from 'js-beautify'
 
 export const prettyPrintExpr = (expr: any) => {

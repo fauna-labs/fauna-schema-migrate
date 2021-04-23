@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import path from 'path'
 import test, { ExecutionContext } from 'ava'
 import { fullApply, setupFullTest, destroyFullTest, multiDatabaseFullApply } from '../../_helpers'

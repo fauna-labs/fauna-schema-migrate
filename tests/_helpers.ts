@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import path from 'path'
 import dotenv from 'dotenv'
 import { planMigrations } from '../src/migrations/plan'

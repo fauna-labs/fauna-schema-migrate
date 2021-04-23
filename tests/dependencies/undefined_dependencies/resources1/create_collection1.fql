@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 CreateCollection({
     name: 'collection1',
     data: { fun2: { function: 'lala2'} }

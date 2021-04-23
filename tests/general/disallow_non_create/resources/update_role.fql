@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 Update(Role("read_users"), {
   name: "read_users",
   privileges: [{

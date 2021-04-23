@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 q.CreateAccessProvider({
   name: 'Auth0-myapp',
   issuer: 'https://myapp.auth0.com/',

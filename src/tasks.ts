@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import init from './tasks/init'
 import apply from './tasks/apply'
 import migrate from './tasks/migrate'

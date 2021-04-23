@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { StatementType } from './expressions'
 
 // key and value of the enum should remain the same.

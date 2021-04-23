@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import chalk from 'chalk'
 import { writeNewMigrationDir } from '../util/files'
 

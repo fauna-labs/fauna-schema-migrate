@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import * as fauna from 'faunadb'
 import { LoadedResources, TaggedExpression, MigrationRefAndTimestamp } from '../types/expressions'
 import { ResourceTypes } from '../types/resource-types'

@@ -1,3 +1,6 @@
+// Copyright Fauna, Inc.
+// SPDX-License-Identifier: MIT-0
+
 import { addNamesAndTypes, verifyCreateStatementsOnly } from '../fql/match'
 import { TaggedExpression, LoadedResources, StatementType } from '../types/expressions'
 import { ResourceTypes } from '../types/resource-types'
