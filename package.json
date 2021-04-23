@@ -46,7 +46,7 @@
     "commander": "^2.20.0",
     "deep-equal": "^2.0.5",
     "esbuild": "^0.8.17",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "^9.1.0",
     "ink": "^3.0.8",
     "ink-big-text": "^1.2.0",
     "ink-divider": "^3.0.0",
