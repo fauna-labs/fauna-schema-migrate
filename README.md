@@ -220,7 +220,7 @@ Running `fauna-schema-migrate apply 1 nameOfChildDb1` will apply a migration on 
 
 - **Copy schema from an existing database**: users often start by testing fauna in the dashboard, it would make sense to take an existing database and download the schema as resources to continue building upon. Currently this was out of scope.
 
-- **Expose functions to use it as a library**: for integration testing purposes it might make sense to be able to run part of the functions programmatically instead of having to call it as a commandline tool The [https://github.com/fauna-brecht/fauna-schema-migrate/blob/master/tests/\_helpers.ts](https://github.com/fauna-brecht/fauna-schema-migrate/blob/master/tests/_helpers.ts) itself are a good example. You could easily provide a resource folder and use the functions to set up an integration test against Fauna such as in the snippet below.
+- **Expose functions to use it as a library**: for integration testing purposes it might make sense to be able to run part of the functions programmatically instead of having to call it as a commandline tool The [https://github.com/fauna-labs/fauna-schema-migrate/blob/master/tests/\_helpers.ts](https://github.com/fauna-labs/fauna-schema-migrate/blob/master/tests/_helpers.ts) itself are a good example. You could easily provide a resource folder and use the functions to set up an integration test against Fauna such as in the snippet below.
 
   ```
   sinon.stub(Config.prototype, 'getResourcesDir')
@@ -274,7 +274,7 @@ const account = Ref(accountCollection,"268431417906561542")
 ...
 ```
 
-But you can imagine when queries implement complex transactional logic or start joining extensively that this becomes very useful. It's something we take advantage of in many examples such as [Fwitter](https://css-tricks.com/rethinking-twitter-as-a-serverless-app/) or [the authentication skeletons](https://github.com/fauna-brecht/skeleton-auth) to define return formats only once or write reusable snippets that can be easily mixed into other queries. For example, a query that creates a new user but also implements rate limitation and adds validation could be abstracted away in JavaScript as follows:
+But you can imagine when queries implement complex transactional logic or start joining extensively that this becomes very useful. It's something we take advantage of in many examples such as [Fwitter](https://css-tricks.com/rethinking-twitter-as-a-serverless-app/) or [the authentication skeletons](https://github.com/fauna-labs/skeleton-auth) to define return formats only once or write reusable snippets that can be easily mixed into other queries. For example, a query that creates a new user but also implements rate limitation and adds validation could be abstracted away in JavaScript as follows:
 
 ```javascript
 function CreateUser(email, password) {
