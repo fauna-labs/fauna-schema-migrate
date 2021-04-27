@@ -1,4 +1,4 @@
-# Fauna Schema Migrate (Unofficial)
+# Fauna Schema Migrate
 
 This repository contains unofficial patterns, sample code, or tools to help developers build more effectively with [Fauna](https://www.fauna.com/). All [Fauna Labs](https://github.com/fauna-labs) repositories are provided “as-is” and without support. By using this repository or its contents, you agree that this repository may never be officially supported and moved to the [Fauna organization](https://github.com/fauna).
 
@@ -243,10 +243,6 @@ Running `fauna-schema-migrate apply 1 nameOfChildDb1` will apply a migration on 
 - **Validate schema against cloud**: we could in theory validate whether migrations are valid depending on what is present in cloud to avoid detecting problems at the last possible moment when users have changed their database schema manually. E.g. we could detect when a role is updated that refers to a deleted collection. Currently the transaction would abort and throw an error which is probably good enough. It might still be useful to verify whether someone has manually tampered with the cloud schema and see the difference and/or fix it if there is a difference.
 
 Please let us know your requirements so we can decide what would be a good next step.
-
-### Unofficial
-
-The tool is currently unofficial since it's essentially developed by a Developer Advocate who felt the need to facilitate his own work flow as well as help users along the way. As long as the tool is hosted under my personal user (fauna-brecht) it will remain unofficial. Once the tool seems to fulfill the need there is for managing fauna resources and we have gather some feedback we will look into more official support/maintenance.
 
 ## Philosophy
 

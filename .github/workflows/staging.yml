@@ -20,17 +20,17 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       # Rename the package for staging
       - run: npm install --global json
-      - run: json -I -f package.json -e 'this.name="@fauna-databrecht/staging-fauna-schema-migrate"' && json -I -f package.json -e 'this.bin={"staging-fauna-schema-migrate":"./dist/index.js"}'
+      - run: json -I -f package.json -e 'this.name="@fauna-labs/staging-fauna-schema-migrate"' && json -I -f package.json -e 'this.bin={"staging-fauna-schema-migrate":"./dist/index.js"}'
       # Run npm install to install project packages
       - run: npm install
       # tests
       - run: npm test
         env:
-          FAUNA_ADMIN_KEY: ${{ secrets.FAUNA_ADMIN_KEY }}
+          FAUNA_ADMIN_KEY: ${{ secrets.FAUNA_ADMIN_KEY_STAGING }}
       # npm build to build the project
       - run: npm build
       # publish the files to NPM
       - run: npm publish --access public
         # for publishing, npm need authorization. We add the NPM token to the environment which will take care of authorization to publish to the package
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
