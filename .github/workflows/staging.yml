@@ -13,10 +13,10 @@ jobs:
     steps:
       # Checkout the code
       - uses: actions/checkout@v2
-      # Setup node with version 12.x and NPM registry url
-      - uses: actions/setup-node@v1
+      # Setup node with version 14.x and NPM registry url
+      - uses: actions/setup-node@v2
         with:
-          node-version: '12.x'
+          node-version: '14.x'
           registry-url: 'https://registry.npmjs.org'
       # Rename the package for staging
       - run: npm install --global json
