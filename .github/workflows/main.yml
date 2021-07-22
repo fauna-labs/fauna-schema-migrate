@@ -13,10 +13,10 @@ jobs:
     steps:
       # Checkout the code
       - uses: actions/checkout@v2
-      # Setup node with version 14.x and NPM registry url
-      - uses: actions/setup-node@v2
+      # Setup node with version 12.x and NPM registry url
+      - uses: actions/setup-node@v1
         with:
-          node-version: '14.x'
+          node-version: '12.x'
           registry-url: 'https://registry.npmjs.org'
       # Run npm install to install project packages
       - run: npm install
