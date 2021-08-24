@@ -52,7 +52,7 @@
     "ink-divider": "^3.0.0",
     "ink-gradient": "^2.0.0",
     "ink-link": "^2.0.0",
-    "ink-select-input": "github:fauna-labs/ink-select-input",
+    "ink-select-input": "^4.2.0",
     "ink-spinner": "^4.0.1",
     "ink-syntax-highlight": "^1.0.1",
     "js-beautify": "^1.13.0",
