@@ -1,6 +1,8 @@
-# Fauna Schema Migrate
-
 This repository contains unofficial patterns, sample code, or tools to help developers build more effectively with [Fauna](https://www.fauna.com/). All [Fauna Labs](https://github.com/fauna-labs) repositories are provided “as-is” and without support. By using this repository or its contents, you agree that this repository may never be officially supported and moved to the [Fauna organization](https://github.com/fauna).
+
+---
+
+# Fauna Schema Migrate
 
 ## Introduction
 
@@ -18,10 +20,10 @@ Schema is a confusing name but typically what we search for for this sort of thi
 
 #### Setup
 
-Install the tool in a repository that has the faunadb javascript driver installed. The javascript driver is a peer dependency and will therefore not be pulled in by the tool. It makes more sense to rely on the same fauna driver as the repository to allow users to be in control of that version. T
+Install the tool in a repository that has the faunadb javascript driver installed. The javascript driver is a peer dependency and will therefore not be pulled in by the tool. It makes more sense to rely on the same fauna driver as the repository to allow users to be in control of that version.
 
 ```
-npm install fauna-schema-migrate
+npm install @fauna-labs/fauna-schema-migrate
 ```
 
 Run interactively with npx:
@@ -46,7 +48,7 @@ This driver contains some minor fixes to the FQL formatting which are required f
 
 #### Available commands
 
-Run `fauna-schema-migrate` to see all commands and extra options.
+Run `npx fauna-schema-migrate` to see all commands and extra options.
 
 ```shell
 Commands:
@@ -58,11 +60,11 @@ Commands:
   apply [amount] [childDb...]     Apply unapplied migrations against the database
 ```
 
-Or run `fauna-schema-migrate run` to test it out interactively. All commands can be run interactively as well by using run. The command parameters from rollback and apply are not (yet) accessible interactively though.
+Or run `npx fauna-schema-migrate run` to test it out interactively. All commands can be run interactively as well by using run. The command parameters from rollback and apply are not (yet) accessible interactively though.
 
 #### Flow
 
-1. **Initialize** **standard folders** with `fauna-schema-migrate init` or by using the interactive `run` command.
+1. **Initialize** **standard folders** with `npx fauna-schema-migrate init` or by using the interactive `run` command.
 
    Init will generate a _fauna_ folder and a _.fauna-migrate.js_ config file. If you don't want to change anything to the default folders or default collection to store migration state, you can remove the .fauna-migrate.js file.
 
@@ -133,7 +135,7 @@ Or run `fauna-schema-migrate run` to test it out interactively. All commands can
    })
    ```
 
-3. **Generate migrations** with `fauna-schema-migrate generate` or via the interactive tool started by `run`
+3. **Generate migrations** with `npx fauna-schema-migrate generate` or via the interactive tool started by `run`
 
    Generate will look at the resources folders and the migrations folder and determine what has changed in the resources folder since the last time we ran generate. Generate will generate the FQL for the migration in .fql files. The tool will verify whether all resources that are referenced are present in the resources. For example, you can't currently create a role that secures a collection which is not present in your resources folder.
 
@@ -167,9 +169,9 @@ Or run `fauna-schema-migrate run` to test it out interactively. All commands can
 
    Once there are migrations, use apply and rollback to apply or roll back your migrations one by one on the database.
 
-   `fauna-schema-migrate apply`
+   `npx fauna-schema-migrate apply`
 
-   `fauna-schema-migrate rollback`
+   `npx fauna-schema-migrate rollback`
 
    In contrast to existing tools to aid managing fauna resources, these functions will combine all to be executed resource migrations in one transaction by using a Let statement. Either the full transaction will fail or complete, nothing will be applied partially. The migration query will be printed for educational purposes, if the print becomes big you can opt to remove it by passing -n or --no-print .
 
@@ -177,7 +179,7 @@ Or run `fauna-schema-migrate run` to test it out interactively. All commands can
 
 6. **Optionally** **verify the state.**
 
-   `fauna-schema-migrate state`
+   `npx fauna-schema-migrate state`
 
 ## Extras
 
@@ -193,7 +195,7 @@ Or run `fauna-schema-migrate run` to test it out interactively. All commands can
 
 ##### Faster local development with a child database
 
-One of the parameters, FAUNA_CHILD_DB is useful in development in case you often find yourself completely nuking the database and reapply everything from scratch. In that case, you might bump into the cache which requires you to wait for 60 seconds before recreating the resources. FAUNA_CHILD_DB will create your resources in a child database instead of in the database that the admin key points at. When using FAUNA_CHILD_DB and rolling back before the first transactions (e.g. with `fauna-schema-migrate rollback all`) the rollback will nuke the database instead of applying the rollback which essentially avoids the 60 seconds cache.
+One of the parameters, FAUNA_CHILD_DB is useful in development in case you often find yourself completely nuking the database and reapply everything from scratch. In that case, you might bump into the cache which requires you to wait for 60 seconds before recreating the resources. FAUNA_CHILD_DB will create your resources in a child database instead of in the database that the admin key points at. When using FAUNA_CHILD_DB and rolling back before the first transactions (e.g. with `npx fauna-schema-migrate rollback all`) the rollback will nuke the database instead of applying the rollback which essentially avoids the 60 seconds cache.
 
 ##### Managing multiple databases
 
@@ -206,11 +208,11 @@ fauna > resources > ... resources for the root db ...
                         > dbs > nameOfChild1OfChildDb2 > ...
 ```
 
-The 'dbs' name can be configured in the config. When running `fauna-schema-migrate generate` the tool will generate migrations to create child databases as well as generate migrations for all resources within the child databases. The above would result in a migration on the root database to create the two child databases and a dbs folder within the migrations folder that will contain migrations for all child database etc. Migrations of child databases are applied completely separate from the root database. We can currently not update multiple databases transactionally and some generate steps might not have a new migration for a specific database. Therefore, it might not make sense to have an apply command over multiple databases.
+The 'dbs' name can be configured in the config. When running `npx fauna-schema-migrate generate` the tool will generate migrations to create child databases as well as generate migrations for all resources within the child databases. The above would result in a migration on the root database to create the two child databases and a dbs folder within the migrations folder that will contain migrations for all child database etc. Migrations of child databases are applied completely separate from the root database. We can currently not update multiple databases transactionally and some generate steps might not have a new migration for a specific database. Therefore, it might not make sense to have an apply command over multiple databases.
 
-When running `fauna-schema-migrate apply` or `fauna-schema-migrate rollback` only the database migrations of one database will be applied depending on the parameters, by default that will be the root database which the admin key points at. Therefore, running `fauna-schema-migrate apply` without parameters will run the migrations of the root database.
+When running `npx fauna-schema-migrate apply` or `npx fauna-schema-migrate rollback` only the database migrations of one database will be applied depending on the parameters, by default that will be the root database which the admin key points at. Therefore, running `npx fauna-schema-migrate apply` without parameters will run the migrations of the root database.
 
-Running `fauna-schema-migrate apply 1 nameOfChildDb1` will apply a migration on the first child database. Running `fauna-schema-migrate apply 1 nameOfChildDb2 namdOfChild1OfChildDb2` would apply a migration on the child of the second child databases. This functionality is **not (yet)** available in the interactive version.
+Running `npx fauna-schema-migrate apply 1 nameOfChildDb1` will apply a migration on the first child database. Running `npx fauna-schema-migrate apply 1 nameOfChildDb2 namdOfChild1OfChildDb2` would apply a migration on the child of the second child databases. This functionality is **not (yet)** available in the interactive version.
 
 ## Where to go from now?
 
