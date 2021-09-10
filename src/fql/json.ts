@@ -36,6 +36,21 @@ const sameStructure = (obj1: any, obj2: any): any => {
 }
 
 const sameStructureIter = (obj1: any, obj2: any): any => {
+    // Need a type check for strings per https://github.com/fauna-labs/fauna-schema-migrate/issues/65
+    // See also https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/in_operator_no_object
+    // If both are strings, return whether they are equal
+    if (typeof obj1 === 'string' && typeof obj2 === 'string') {
+        if (obj1 === obj2) {
+            return true
+        } else {
+            throw new Error('notequal')
+        }
+    }
+    // If only one is a string, throw an error
+    if (typeof obj1 !== 'object' || typeof obj2 !== 'object')
+        throw new Error('notequal')
+    
+    // If neither is a string, keep the original for block
     for (const key in obj1) {
         if (key !== 'isFaunaExpr') {
             if (!(key in obj2)) {
