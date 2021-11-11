@@ -63,7 +63,7 @@
     "uuid": "^8.3.2"
   },
   "peerDependencies": {
-    "faunadb": "^4.0.3"
+    "faunadb": "^4.4.1"
   },
   "devDependencies": {
     "@types/scheduler": "^0.16.1",
