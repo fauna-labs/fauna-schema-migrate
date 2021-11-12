@@ -79,7 +79,7 @@
     "eslint-plugin-ava": "^11.0.0",
     "eslint-plugin-prettier": "^3.3.1",
     "eslint-plugin-react": "^7.22.0",
-    "faunadb": "^4.1.1",
+    "faunadb": "^4.4.1",
     "install-peers-cli": "^2.2.0",
     "prettier": "^2.2.1",
     "sinon": "^9.2.2",
