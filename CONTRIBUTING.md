@@ -28,6 +28,12 @@ Issues should be used to report problems, request new features, or discuss poten
 
 If you find an Issue that addresses the problem you're having, please add your own reproduction information to the existing issue rather than creating a new issue. Adding a [reaction](https://github.blog/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) also indicates that a particular problem affects more than just the reporter.
 
+### Commit
+In order to properly commit, please make sure you do `git add <your_file>` then run the script
+`npm run commit`
+
+It will walk you through a 5 step wizard where you first identify a *type* of change, a short description (usually the feature name e.g add changelog w packages git-cz & generate-changelog) which we use to create a changelog, then a longer description for clarity, then if there are any breaking changes and finally the issue that this commit is linked to.
+
 ### Pull Requests
 
 PRs to Fauna Labs repositories are always welcome and can be a quick way to get your fix or improvement slated for the next release. In general, PRs should:
