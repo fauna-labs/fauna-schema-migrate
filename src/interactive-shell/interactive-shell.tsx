@@ -1,11 +1,9 @@
 // Copyright Fauna, Inc.
 // SPDX-License-Identifier: MIT-0
 
-import React from 'react'
-import { render, Instance } from 'ink'
+import { Instance } from 'ink'
 import { createStore } from 'react-hookstore'
 
-import Shell from './components/shell'
 import {
   askAdminKey,
   notifyBoxedCode,
@@ -14,13 +12,14 @@ import {
   notifyTaskProcessing,
   notifyUnexpectedError,
   notifyWarning,
-  renderHeader,
   renderMigrationState,
   renderPlan,
 } from './messages/messages'
-import { NumberedMessage, MessageFun } from './messages/numbered-message'
+import { MessageFun } from './messages/numbered-message'
+import { renderWelcomeMessage } from './messages/messagesV2';
 import { runTask } from '../tasks'
 import { PlannedDiffPerResource } from '../types/expressions'
+import { renderMenu } from './components/newMenu'
 const version = require('./../../package.json').version
 
 export enum ShellState {
@@ -42,18 +41,19 @@ class InteractiveShell {
   private result: Instance | null = null
   private userInput = ''
 
-  constructor() {
-    this.start = this.start.bind(this)
-    this.close = this.close.bind(this)
-    this.handleMenuSelection = this.handleMenuSelection.bind(this)
-    this.handleUserInput = this.handleUserInput.bind(this)
-  }
+  // constructor() {
+  //   this.start = this.start.bind(this)
+  //   this.close = this.close.bind(this)
+  //   this.handleMenuSelection = this.handleMenuSelection.bind(this)
+  //   this.handleUserInput = this.handleUserInput.bind(this)
+  // }
 
   start(interactive = true) {
     if (!this.result && process.env.NODE_ENV !== 'test') {
       if (!process.env.FAUNA_LEGACY) {
-        this.addMessage(renderHeader())
-        this.result = render(this.renderComponents())
+        // this.addMessage(renderHeader());
+        console.log(renderWelcomeMessage(version));
+        renderMenu();
       } else {
         const title = 'Fauna'
         const subtitle = 'Schema Migrate ' + version
@@ -74,10 +74,6 @@ class InteractiveShell {
     if (this.result) {
       this.result.unmount()
     }
-  }
-
-  renderComponents() {
-    return <Shell handleUserInput={this.handleUserInput} handleMenuSelection={this.handleMenuSelection}></Shell>
   }
 
   async handleMenuSelection(item: any) {
