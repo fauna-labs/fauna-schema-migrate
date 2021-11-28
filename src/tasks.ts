@@ -71,7 +71,7 @@ export const runTaskByName = async (name: string, ...params: any[]) => {
 
 export const runTask = async (task: Task, interactive = false, ...params: any[]) => {
   try {
-    interactiveShell.start(interactive)
+    // interactiveShell.start(interactive)
     if (task.name !== 'run' && !process.env.FAUNA_LEGACY) {
       interactiveShell.addMessage(completedTask(task))
     }
@@ -87,6 +87,6 @@ export const runTask = async (task: Task, interactive = false, ...params: any[])
     }
     return result
   } catch (error) {
-    interactiveShell.reportError(error, interactive)
+    interactiveShell.reportError(error as any, interactive)
   }
 }
