@@ -59,7 +59,7 @@ tasks.forEach((task) => {
       try {
         await runTask(task, task.name === 'run', ...params)
       } catch (err) {
-        actionErrorHandler(err)
+        actionErrorHandler(err as Error)
       }
     })
 })
