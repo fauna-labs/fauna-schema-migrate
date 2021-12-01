@@ -1,5 +1,6 @@
 import { bold, yellow, green, red } from 'kleur'
 import { PlannedDiffPerResource, PlannedDiff } from '../types/expressions'
+import { printWithMargin } from './interactive-shell';
 const version = require('./../../package.json').version
 
 export function printHeader() {
@@ -20,6 +21,21 @@ export function printMessage(m: string, type?: 'default' | 'info' | 'success' | 
             console.log(bold().cyan().italic(m));
             break;
     }
+}
+
+export function renderMigrationsMinmal(
+    cloudTimestamps: string[], 
+    localTimestamps: string[], 
+    type: string, 
+    amount: number
+) {
+    printWithMargin(`--------- Current cloud migrations----------`, 0)
+    printWithMargin(cloudTimestamps.join('\n'), 4)
+    printWithMargin(`--------- Current local migrations ----------`, 0)
+    printWithMargin(localTimestamps.join('\n'), 4)
+    printWithMargin(`--------- Task ----------`, 0)
+    printWithMargin(`${type} ${amount} migrations`, 4)
+    console.info('\n')
 }
 
 

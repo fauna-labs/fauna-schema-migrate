@@ -194,7 +194,7 @@ To retrieve an admin key for your database, use the Security tab in dashboard ht
   }
 }
 
-const printWithMargin = (message: string, margin: number) => {
+export const printWithMargin = (message: string, margin: number) => {
   console.info(
     message
       .split('\n')
