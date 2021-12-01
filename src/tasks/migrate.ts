@@ -3,8 +3,9 @@
 
 import { planDatabaseMigrations, planMigrations } from '../migrations/plan'
 import { writeMigrations, generateMigrations } from '../migrations/generate-migration'
-import { interactiveShell } from '../interactive-shell/interactive-shell'
 import { TaggedExpression } from '../types/expressions'
+import { printMessage, printChangeTable } from '../interactive-shell/shell'
+
 
 const equalDeep = require('deep-equal')
 
@@ -33,21 +34,21 @@ const migrateOneDb = async (
     dbName = atChildDbPath.length > 0 ? `[ DB: ROOT > ${atChildDbPath.join(' > ')} ]` : '[ DB: ROOT ]'
   }
 
-  interactiveShell.startSubtask(`${dbName} Planning Migrations`)
+  printMessage(`🧬 ${dbName} Planning Migrations`)
   const planned = await planMigrations(atChildDbPath, dbExprs)
-  interactiveShell.completeSubtask(`${dbName} Planned Migrations`)
+  printMessage(`✔ ${dbName} Planned Migrations`, 'success')
+  
+  printMessage(`⚙️ ${dbName} Generating Migrations`)
 
-  interactiveShell.startSubtask(`${dbName} Generating Migrations`)
   const migrations = await generateMigrations(planned)
-  interactiveShell.completeSubtask(`${dbName} Generated Migrations`)
+  printMessage(`✔ ${dbName} Generated Migrations`, 'success')
   if (migrations.length === 0) {
-    interactiveShell.reportWarning('There is no difference, nothing to write')
-  } else {
-    interactiveShell.renderPlan(planned)
-    interactiveShell.startSubtask(`${dbName} Write migrations`)
-    await writeMigrations(atChildDbPath, migrations, time)
+    printMessage(`! There is no difference, nothing to write`, 'info')
 
-    interactiveShell.completeSubtask(`${dbName} Written migrations`)
+  } else {
+    printChangeTable(planned);
+    await writeMigrations(atChildDbPath, migrations, time)
+    printMessage(`✔ ${dbName} Written migrations`, 'success')
   }
 }
 
