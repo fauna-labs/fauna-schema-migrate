@@ -1,5 +1,12 @@
 import { bold, yellow, green, red } from 'kleur'
 import { PlannedDiffPerResource, PlannedDiff } from '../types/expressions'
+const version = require('./../../package.json').version
+
+export function printHeader() {
+    console.log(`
+█▀▀ ▄▀█ █ █ █▄ █ ▄▀█
+█▀  █▀█ █▄█ █ ▀█ █▀█   Schema Migrate ${bold().cyan(version)}`)
+}
 
 export function printMessage(m: string, type?: 'default' | 'info' | 'success' | 'error') {
     switch (type) {
