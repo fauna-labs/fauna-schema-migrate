@@ -3,10 +3,12 @@
 // Copyright Fauna, Inc.
 // SPDX-License-Identifier: MIT-0
 
+import { printMessage, printHeader } from './interactive-shell/shell'
 import program from 'commander'
 import { ErrorWithFilePath } from './errors/ErrorWithFilePath'
-import { interactiveShell } from './interactive-shell/interactive-shell'
 import { tasks, runTask } from './tasks'
+import boxen from 'boxen'
+import { bold } from 'kleur'
 
 // Global configuration of the CLI
 program
@@ -59,17 +61,21 @@ tasks.forEach((task) => {
       try {
         await runTask(task, task.name === 'run', ...params)
       } catch (err) {
-        actionErrorHandler(err)
+        actionErrorHandler(err as Error)
       }
     })
 })
 
 // On unknown command, show the user some help
 program.on('command:*', function (operands) {
-  interactiveShell.start(false)
-  interactiveShell.reportWarning(`Unknown command '${operands[0]}'`)
-  interactiveShell.printBoxedInfo(program.helpInformation())
-  interactiveShell.close()
+  printHeader()
+  printMessage(`! Unknown command '${operands[0]}'`, "info")
+  console.log(boxen(program.helpInformation(), {
+    title: bold().red().bgCyan('Help Menu'), 
+    titleAlignment: 'center',
+    padding: 1,
+    borderColor: 'cyan'
+  }));
   process.exitCode = 1
 })
 

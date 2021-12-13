@@ -3,22 +3,22 @@
 
 import { config } from '../util/config'
 import * as files from '../util/files'
-import { interactiveShell } from '../interactive-shell/interactive-shell'
+import { printMessage } from '../interactive-shell/shell'
 
 const init = async () => {
   // Create configuration file
-  interactiveShell.startSubtask(`Writing configuration file}`)
+  printMessage(`Writing configuration file`, 'info');
   const fullPath = await config.writeConfig()
   if (fullPath) {
-    interactiveShell.completeSubtask(`Wrote configuration file ${fullPath}`)
+    printMessage(`✅ Wrote configuration file ${fullPath}`, 'success');
   } else {
-    interactiveShell.completeSubtask(`Nothing to do, file exists`)
+    printMessage(`✅ Nothing to do, file exists`, 'success');
   }
 
   // Create directories
-  interactiveShell.startSubtask(`Generating default directories`)
+  printMessage(`Generating default directories`, 'info');
   await files.generateDefaultDirs()
-  interactiveShell.completeSubtask(`Generated default directories`)
+  printMessage(`✅ Generated default directories`, 'success');
 }
 
 export default init
