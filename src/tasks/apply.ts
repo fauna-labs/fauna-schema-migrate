@@ -50,9 +50,6 @@ const apply = async (amount: number | string = 1, atChildDbPath: string[] = []) 
       const databaseDiff = await retrieveDatabaseMigrationInfo(currTargetSkipped.current, currTargetSkipped.target)
       const dbName = atChildDbPath.length > 0 ? `[ DB: ROOT > ${atChildDbPath.join(' > ')} ]` : '[ DB: ROOT ]'
       let messages: string[] = []
-      // allCloudMigrationTimestamps.forEach((ts, index) => {
-      //   msg = msg + ts + migInfo.allLocalMigrations[index] + '\n';
-      // })
       
       migInfo.allLocalMigrations.forEach((l, index) => {
         let msg = '';
@@ -82,6 +79,7 @@ const apply = async (amount: number | string = 1, atChildDbPath: string[] = []) 
       printMessage(`Done applying migrations`, 'success')
     } else {
       printMessage(`     ✅ Done, no migrations to apply`, 'success')
+      process.exit(0)
     }
   } catch (error) {
     const missingMigrDescription = isMissingMigrationCollectionFaunaError(error)
