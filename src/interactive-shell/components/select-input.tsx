@@ -5,8 +5,6 @@ import * as React from 'react'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { FC } from 'react'
 import { Box, useInput } from 'ink'
-import Indicator from './select-indicator'
-import type { Props as IndicatorProps } from './select-indicator'
 import Item from './select-item'
 import type { Props as ItemProps } from './select-item'
 import deepEqual = require('deep-equal')
@@ -40,7 +38,7 @@ interface Props<V> {
   /**
    * Custom component to override the default indicator component.
    */
-  indicatorComponent?: FC<IndicatorProps>
+  indicatorComponent?: FC<any>
 
   /**
    * Custom component to override the default item component.
@@ -77,7 +75,7 @@ function SelectInput<V>({
   items = [],
   isFocused = true,
   initialIndex = 0,
-  indicatorComponent = Indicator,
+  indicatorComponent = {} as any,
   itemComponent = Item,
   limit: customLimit,
   onSelect,
