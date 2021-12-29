@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: MIT-0
 
 import * as fauna from 'faunadb'
-import { interactiveShell } from '../interactive-shell/interactive-shell'
 import { FaunaClients } from '../types/clients'
 import { retrieveAllResourceChildDb } from './files'
+import { requestAdminKey } from '../interactive-shell/shell'
 const { CreateKey, Database, Select, CreateDatabase, If, Exists, Delete } = fauna.query
 
 export class FaunaClientGenerator {
@@ -14,41 +14,41 @@ export class FaunaClientGenerator {
     this.getClient = this.getClient.bind(this)
   }
 
-  async getClient(database?: string[], reinit?: boolean, key?: string): Promise<fauna.Client> {
+  async getClient(database?: string[], reinit?: boolean, key?: string): Promise<fauna.Client | any> {
     let secret: string | undefined = key || process.env.FAUNA_ADMIN_KEY
     let client: fauna.Client | boolean = false
     if (!secret) {
-      interactiveShell.requestAdminKey()
-      secret = await interactiveShell.getUserInput()
-    }
-    if (!this.faunaClients || reinit) {
-      this.faunaClients = await getAllFaunaClients(secret)
-    }
-    if (!database) {
-      client = this.faunaClients.root.client
+      requestAdminKey()
     } else {
-      client = await getDatabaseClient(database, this.faunaClients)
-    }
-    if (!client) {
-      throw new Error(`Requested database that was not initialised ${database}`)
-    } else {
-      return client
+      if (!this.faunaClients || reinit) {
+        this.faunaClients = await getAllFaunaClients(secret)
+      }
+      if (!database) {
+        client = this.faunaClients.root.client
+      } else {
+        client = await getDatabaseClient(database, this.faunaClients)
+      }
+      if (!client) {
+        throw new Error(`Requested database that was not initialised ${database}`)
+      } else {
+        return client
+      }
     }
   }
 
-  async destroyChildDb(): Promise<fauna.Client> {
+  async destroyChildDb(): Promise<fauna.Client | any> {
     if (!process.env.FAUNA_CHILD_DB) {
       throw new Error('Asked to destroy child db, but FAUNA_CHILD_DB env is undefined')
     }
     let secret: string | undefined = process.env.FAUNA_ADMIN_KEY
     if (!secret) {
-      interactiveShell.requestAdminKey()
-      secret = await interactiveShell.getUserInput()
+      requestAdminKey()
+    } else {
+      const client = createClientWithOptions(secret)
+      return await client.query(
+        If(Exists(Database(process.env.FAUNA_CHILD_DB)), Delete(Database(process.env.FAUNA_CHILD_DB)), true)
+      )
     }
-    const client = createClientWithOptions(secret)
-    return await client.query(
-      If(Exists(Database(process.env.FAUNA_CHILD_DB)), Delete(Database(process.env.FAUNA_CHILD_DB)), true)
-    )
   }
 }
 
@@ -61,8 +61,7 @@ const getAllFaunaClients = async (secret: string) => {
   })
 
   if (!secret) {
-    interactiveShell.requestAdminKey()
-    secret = await interactiveShell.getUserInput()
+    requestAdminKey()
   }
   // TODO, dont forget to destroy keys for chidl databases again after destroying
   // the client.

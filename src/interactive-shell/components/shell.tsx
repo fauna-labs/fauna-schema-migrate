@@ -3,11 +3,9 @@
 
 import * as React from 'react'
 import MessageList from './message-list'
-import Menu from './menu'
 import { useStore } from 'react-hookstore'
 import { ShellState } from '../interactive-shell'
 import UserInput from './user-input'
-import { MessageFun } from '../messages/numbered-message'
 
 interface Props {
   handleMenuSelection: any
@@ -24,7 +22,7 @@ function Shell(props: Props): JSX.Element {
       {task !== null ? (task as JSX.Element) : null}
 
       {cliState === ShellState.UserInput ? <UserInput handleUserInput={props.handleUserInput}></UserInput> : null}
-      {cliState === ShellState.Menu ? <Menu handleTaskChoice={props.handleMenuSelection}></Menu> : null}
+      {cliState === ShellState.Menu ? <>{`Menu to be implemented`}</> : null}
     </>
   )
 }
