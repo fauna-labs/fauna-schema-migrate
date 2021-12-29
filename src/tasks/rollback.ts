@@ -3,12 +3,13 @@
 
 import { isMissingMigrationCollectionFaunaError, isSchemaCachingFaunaError } from '../errors/detect-errors'
 import { prettyPrintExpr } from '../fql/print'
-import { interactiveShell } from '../interactive-shell/interactive-shell'
+import { printWithMargin } from '../interactive-shell/interactive-shell'
 import { transformDiffToExpressions } from '../migrations/diff'
 import { retrieveRollbackMigrations, retrieveDiffCurrentTarget, generateRollbackQuery } from '../migrations/rollback'
 import { createMigrationCollection, retrieveAllCloudMigrations } from '../state/from-cloud'
 import { clientGenerator } from '../util/fauna-client'
 import { ExpectedNumberOfMigrations } from '../errors/ExpectedNumber'
+import { printMessage, renderMigrations } from '../interactive-shell/shell'
 import { config } from '../util/config'
 
 const rollback = async (amount: number | string = 1, atChildDbPath: string[] = []) => {
@@ -17,7 +18,7 @@ const rollback = async (amount: number | string = 1, atChildDbPath: string[] = [
   let client = await clientGenerator.getClient(atChildDbPath)
   let query: any = null
   try {
-    interactiveShell.startSubtask(`Retrieving current cloud migration state`)
+    printMessage(`Retrieving current cloud migration state`)
     const cloudMigrations = await retrieveAllCloudMigrations(client)
     const allCloudMigrations = cloudMigrations.map((e) => e.timestamp)
 
@@ -29,31 +30,31 @@ const rollback = async (amount: number | string = 1, atChildDbPath: string[] = [
     }
 
     const rMigs = await retrieveRollbackMigrations(cloudMigrations, amount, atChildDbPath)
-    interactiveShell.renderMigrations(allCloudMigrations, rMigs.allLocalMigrations, 'rollback', amount)
+    renderMigrations(allCloudMigrations, rMigs.allLocalMigrations, 'rollback', amount)
     // Verify whether there are migrations
     if (allCloudMigrations.length === 0) {
-      interactiveShell.completeSubtask(`Done, no migrations to rollback`)
+      printMessage(`✅ Done, no migrations to rollback`)
     }
     // If we are using Child database, nuke the whole database.
     else if (amount >= allCloudMigrations.length && process.env.FAUNA_CHILD_DB) {
-      interactiveShell.completeSubtask(`Retrieved current migration state`)
-      interactiveShell.startSubtask(`Rolling back all migrations, nuking child database instead`)
+      printMessage(`Retrieved current migration state`, 'success')
+      printMessage(`Rolling back all migrations, nuking child database instead`, 'success')
       await clientGenerator.destroyChildDb()
-      interactiveShell.completeSubtask(`Nuked child database`)
-      interactiveShell.startSubtask(`Reinitialising datase & migrations collection`)
+      printMessage(`Nuked child database`, 'success')
+      printMessage(`Reinitialising datase & migrations collection`, 'info')
       client = await clientGenerator.getClient([], true)
       await createMigrationCollection(client)
-      interactiveShell.completeSubtask(`Applied rollback`)
+      printMessage(`Applied rollback`, 'success')
     }
     // Else, normal flow, retrieve state, calculate diff, apply
     else {
-      interactiveShell.completeSubtask(`Retrieved current migration state`)
-      interactiveShell.startSubtask(`Calculating diff`)
+      printMessage(`Retrieved current migration state`, 'info')
+      printMessage(`Calculating diff`)
       const diff = await retrieveDiffCurrentTarget(rMigs.toRollback.current, rMigs.toRollback.target, atChildDbPath)
       const expressions = transformDiffToExpressions(diff)
-      interactiveShell.completeSubtask(`Calculated diff`)
+      printMessage(`Calculated diff`)
 
-      interactiveShell.startSubtask(`Generating query`)
+      printMessage(`Generating query`)
       const migrCollection = await config.getMigrationCollection()
       query = await generateRollbackQuery(
         expressions,
@@ -61,25 +62,26 @@ const rollback = async (amount: number | string = 1, atChildDbPath: string[] = [
         rMigs.toRollback.current.timestamp,
         migrCollection
       )
-      interactiveShell.completeSubtask(`Generating query`)
-      interactiveShell.printBoxedCode(prettyPrintExpr(query))
+      printMessage(`Generating query`)
+      printWithMargin(prettyPrintExpr(query), 8)
 
-      interactiveShell.startSubtask(`Applying rollback`)
+      printMessage(`Applying rollback`)
       await client.query(query)
-      interactiveShell.completeSubtask(`Applied rollback`)
+      printMessage(`Applied rollback`, 'success')
     }
   } catch (error) {
     const missingMigrDescription = isMissingMigrationCollectionFaunaError(error)
     if (missingMigrDescription) {
-      return interactiveShell.reportWarning(`The migrations collection is missing, \n did you run 'init' first?`)
+      printMessage(`The migrations collection is missing, \n did you run 'init' first?`, 'error')
+      return
     }
     const schemaDescription = isSchemaCachingFaunaError(error)
     if (schemaDescription) {
-      interactiveShell.startSubtask(`${schemaDescription}\nWaiting for 60 seconds for cache to clear`)
+      printMessage(`${schemaDescription}\nWaiting for 60 seconds for cache to clear`)
       await new Promise((resolve) => setTimeout(resolve, 60000))
-      interactiveShell.startSubtask(`Applying rollback`)
+      printMessage(`Applying rollback`, 'success')
       await client.query(query)
-      interactiveShell.completeSubtask(`Applied rollback`)
+      printMessage(`Applied rollback`, 'success')
     } else {
       throw error
     }
