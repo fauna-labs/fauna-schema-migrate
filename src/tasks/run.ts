@@ -7,8 +7,10 @@ import state from './state'
 import migrate from './migrate'
 import rollback from './rollback'
 import apply from './apply'
+import { printHeader } from '../interactive-shell/shell'
 
 const run = async () => {
+  printHeader()
   if (process.env.FAUNA_LEGACY) {
     console.warn('FAUNA_LEGACY, is not supported for the run task, ignoring the variable.')
   }
