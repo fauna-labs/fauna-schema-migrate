@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT-0
 
 import * as React from 'react'
-import MessageList from './message-list'
 import { useStore } from 'react-hookstore'
 import { ShellState } from '../interactive-shell'
 import UserInput from './user-input'
@@ -18,7 +17,6 @@ function Shell(props: Props): JSX.Element {
   const [task] = useStore('task')
   return (
     <>
-      <MessageList></MessageList>
       {task !== null ? (task as JSX.Element) : null}
 
       {cliState === ShellState.UserInput ? <UserInput handleUserInput={props.handleUserInput}></UserInput> : null}
