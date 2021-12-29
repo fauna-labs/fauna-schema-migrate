@@ -50,6 +50,13 @@ export function renderMigrationsMinmal(
 }
 
 
+export const requestAdminKey = () => {
+    const question = `Please set the FAUNA_ADMIN_KEY environment and restart the tool.
+To retrieve an admin key for your database, use the Security tab in dashboard https://dashboard.fauna.com/`
+    printWithMargin(question, 4)
+    process.exit(0)
+}
+
 export function printChangeTable(data: PlannedDiffPerResource) {
 
     const { 

@@ -37,7 +37,7 @@ const run = async () => {
       await migrate()
       break;
     case 'ROLLBACK':
-      rollback()
+      await rollback()
       break;
     case 'APPLY':
       await apply()
