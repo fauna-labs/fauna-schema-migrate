@@ -1,6 +1,6 @@
 {
-  "name": "@fauna-labs/staging-fauna-schema-migrate",
-  "version": "2.1.11",
+  "name": "@fauna-labs/fauna-schema-migrate",
+  "version": "2.1.10",
   "description": "Fauna schema migration tool that helps to manage resources such as collections, indexes, roles, functions, access providers as code.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
