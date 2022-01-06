@@ -22,13 +22,14 @@ const apply = async () => {
       rdl.cursorTo(std, 0, 0)
     }, cliSpinners.dots.interval)
 
-    printMessage(` Retrieving current cloud migration state`)
+    printMessage(` Retrieving current cloud migration state \n`)
     const migInfo = await retrieveMigrationInfo(client)
     clearInterval(isLoading)
     const allCloudMigrationTimestamps = migInfo.allCloudMigrations.map((e) => e.timestamp)
 
-    printMessage(`✔ Retrieved current migration state`, 'success')
+    printMessage(`\n✔ Retrieved current migration state`, 'success')
     renderMigrationsMinmal(allCloudMigrationTimestamps, migInfo.allLocalMigrations, 'state', 0)
+    process.exit(0)
   } catch (error) {
     const missingMigrDescription = isMissingMigrationCollectionFaunaError(error)
     if (missingMigrDescription) {

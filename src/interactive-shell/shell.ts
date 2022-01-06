@@ -23,6 +23,17 @@ export function printMessage(m: string, type?: 'default' | 'info' | 'success' | 
     }
 }
 
+
+export function renderMigrations(cloudTimestamps: string[], localTimestamps: string[], type: string, amount: number) {
+    printMessage(`--------- Current cloud migrations----------`, 'info')
+    printMessage(cloudTimestamps.join('\n'))
+    printMessage(`--------- Current local migrations ----------`, 'info')
+    printMessage(localTimestamps.join('\n'), 'success')
+    printMessage(`--------- Task ----------`, 'success')
+    printMessage(`${type} ${amount} migrations`, 'success')
+    console.info('\n')
+}
+
 export function renderMigrationsMinmal(
     cloudTimestamps: string[], 
     localTimestamps: string[], 
@@ -38,6 +49,13 @@ export function renderMigrationsMinmal(
     console.info('\n')
 }
 
+
+export const requestAdminKey = () => {
+    const question = `Please set the FAUNA_ADMIN_KEY environment and restart the tool.
+To retrieve an admin key for your database, use the Security tab in dashboard https://dashboard.fauna.com/`
+    printWithMargin(question, 4)
+    process.exit(0)
+}
 
 export function printChangeTable(data: PlannedDiffPerResource) {
 
