@@ -9,3 +9,5 @@ yalc.lock
 */tests/migrations/**
 dist
 fauna/temp
+tests/**/*/migrations
+tests/**/*/temp

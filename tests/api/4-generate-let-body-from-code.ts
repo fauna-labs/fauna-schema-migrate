@@ -43,20 +43,20 @@ test('we can generate a let object from code', async (t: ExecutionContext) => {
     t,
     prettyPrintExpr(customLet),
     `Let([{
-        var0: Select(["ref"], Delete(Collection("accounts")))
+        "var0": Select(["ref"], Delete(Collection("accounts")))
       }, {
-        var1: Select(["ref"], Update(Function("foo"), {
-          body: Query(Lambda([], Subtract(2, 2))),
-          data: null,
-          role: null
+        "var1": Select(["ref"], Update(Function("foo"), {
+          "body": Query(Lambda([], Subtract(2, 2))),
+          "data": null,
+          "role": null
         }))
       }, {
-        var2: Select(["ref"], CreateCollection({
-          name: "users"
+        "var2": Select(["ref"], CreateCollection({
+          "name": "users"
         }))
       }, {
-        var3: Select(["ref"], CreateCollection({
-          name: "books"
+        "var3": Select(["ref"], CreateCollection({
+          "name": "books"
         }))
       }], true)
       `

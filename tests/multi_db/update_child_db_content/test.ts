@@ -15,7 +15,7 @@ test.before(async (t: ExecutionContext) => {
   faunaClient = await setupFullTest(testPath)
 })
 
-test.skip('update child database contents', async (t: ExecutionContext) => {
+test('update child database contents', async (t: ExecutionContext) => {
   await multiDatabaseFullApply(
     testPath,
     ['resources1'],

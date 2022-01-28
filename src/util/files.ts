@@ -57,7 +57,7 @@ export const loadTsResource = async (p: string) => {
     delete require.cache[filename]
     const fql = await require(filename)
     return fql.default
-  } catch (err) {
+  } catch (err: any) {
     throw new ErrorWithFilePath(err, p)
   }
 }
@@ -85,7 +85,7 @@ export const loadJsResource = async (p: string) => {
     delete require.cache[filename]
     const fql = await require(filename)
     return fql.default
-  } catch (err) {
+  } catch (err: any) {
     throw new ErrorWithFilePath(err, p)
   }
 }
@@ -95,7 +95,7 @@ export const loadFqlResource = async (p: string) => {
     const data = await loadApplicationFile(p)
     const fql = evalFQLCode(data)
     return fql
-  } catch (err) {
+  } catch (err: any) {
     throw new ErrorWithFilePath(err, p)
   }
 }

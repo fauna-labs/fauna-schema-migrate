@@ -60,7 +60,7 @@ tasks.forEach((task) => {
     .action(async (...params) => {
       try {
         await runTask(task, task.name === 'run', ...params)
-      } catch (err) {
+      } catch (err: any) {
         actionErrorHandler(err as Error)
       }
     })

@@ -26,7 +26,7 @@ const sameStructure = (obj1: any, obj2: any): any => {
     try {
         sameStructureIter(obj1, obj2)
         return true
-    } catch (err) {
+    } catch (err: any) {
         if (err.message === 'notequal') {
             return false
         } else {
