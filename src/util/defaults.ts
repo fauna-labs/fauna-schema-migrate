@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 export default {
-  configFile: '.fauna-migrate.js',
+  configFile: '.fauna-migrate.cjs',
   directories: {
     root: 'fauna',
     // Below resources will be placed in the root folder
