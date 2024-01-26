@@ -8,11 +8,11 @@ This repository contains unofficial patterns, sample code, or tools to help deve
 
 **This project is deprecated and no longer in development** 
 
-Fauna has introduced a suite of officially supported schema languages and tooling which fully replace Fauna Schema Migrate. These are the [Fauna Schema Language](https://docs.fauna.com/fauna/current/cookbook/advanced/fsl/get_started_fsl) (FSL),  [Fauna Command Line Interface](https://docs.fauna.com/fauna/current/tools/shell/) (Fauna CLI), and [GitHub and GitLab integrations](https://fauna.com/blog/supercharge-your-devops-workflow-with-fauna-schema-language). Combined, these features allow you to apply DevOps priciples to database development, and incorporate schema-level changes into broader CI/CD workflows.
+Fauna has introduced a suite of officially supported schema language and tooling that fully replace Fauna Schema Migrate. These are the [Fauna Schema Language](https://docs.fauna.com/fauna/current/cookbook/advanced/fsl/get_started_fsl) (FSL),  [Fauna Command Line Interface](https://docs.fauna.com/fauna/current/tools/shell/) (Fauna CLI), and [GitHub and GitLab integrations](https://fauna.com/blog/supercharge-your-devops-workflow-with-fauna-schema-language). Together, these features allow you to apply DevOps principles to database development, and incorporate schema-level changes into broader CI/CD workflows.
 
-**The Fauna Schema Language** is a declarative language for expressing your entire database schema as a set of .fsl files. FSL files are intended to be managed in the same fashion as users manage their application code. That is, FSL files can be managed in common version revision control systems, where they can be shared, peer reviewed, version tracked, and where changes are automated into users' continuous integration and continuous deployment pipelines.
+**The Fauna Schema Language** is a declarative language for expressing your entire database schema as a set of .fsl files. FSL files are intended to be managed in the same way that as users manage their application code. That is, FSL files can be managed in common revision control systems, where they can be shared, peer-reviewed, and version tracked, and where changes are automated into users' continuous integration and continuous deployment pipelines.
 
-**The Fauna Command Line Interface** has been expanded to support management of database schema. The Fauna CLI is a standalone tool through which users use FQL to send queries, upload CSV files, and now most recently, upload or download FSL files to and from your database. It is designed to be integrated into your development workflows, and is therefore the recommended way to manage schema.
+**The Fauna Command Line Interface** has been expanded to support database schema management. The Fauna CLI is a standalone tool through which users send FQL queries, upload CSV files, and now most recently, upload or download FSL files to and from your database. It is designed to be integrated into your development workflows, and is therefore, now the recommended and officially supported way to manage schema.
 
 
 ## Introduction
@@ -251,7 +251,7 @@ Running `npx fauna-schema-migrate apply 1 nameOfChildDb1` will apply a migration
 
 - **Migration only mode:** do you only use .fql files and don't care about the separate resources folder to nicely organize resources then you might want to write migrations directly. We could offer a modus to do so to be defined in the configuration.
 
-- **No migration mode:** or would you prefer operating such a tool without migrations in a similar fashion as terraform, define resources and just update cloud.. whatever has to be done. This could also be a modus that we provide in the configuration.
+- **No migration mode:** or would you prefer operating such a tool without migrations in a similar fashion as terraform, define resources and just update cloud. whatever has to be done. This could also be a modus that we provide in the configuration.
 
 - **Validate schema against cloud**: we could in theory validate whether migrations are valid depending on what is present in cloud to avoid detecting problems at the last possible moment when users have changed their database schema manually. E.g. we could detect when a role is updated that refers to a deleted collection. Currently the transaction would abort and throw an error which is probably good enough. It might still be useful to verify whether someone has manually tampered with the cloud schema and see the difference and/or fix it if there is a difference.
 
